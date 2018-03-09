@@ -4,3 +4,5 @@ version = "0.1.0"
 authors = ["Aditya Saligrama <saligrama427@gmail.com>"]
 
 [dependencies]
+num_cpus = "1.8.0"
+rand = "0.4.2"
