@@ -7,28 +7,29 @@ use std::collections::HashMap;
 use std::io::prelude::*;
 use std::io::{Error, ErrorKind};
 use serde_json::{Deserializer, Value};
+use std::thread;
+use std::sync::{Arc, Mutex};
 
 fn handle_connection(
     mut stream: &TcpStream,
-    cache_map: &mut HashMap<String, String>,
+    cache_map: &Arc<Mutex<HashMap<String, String>>>,
 ) -> Result<(), Error> {
 
-    println!("herea");
 
     let value_iter = Deserializer::from_reader(stream).into_iter::<Value>();
-    println!("hereb");
 
     for v in value_iter {
-        println!("hereca");
+        let mut cache_map = cache_map.lock().unwrap(); //lock is created
+
         let v = v.unwrap();
-        println!("herecb");
+
         //values for return
         let mut result = String::new();
         let mut value = String::new();
         result = "NONE".to_string();
         value = "NONE".to_string();
 
-        println!("herecc");
+
         if v["Request_type"] == "PUT" {
             let key = match &v["Key"].as_str() {
                 &Some(ret) => ret,
@@ -66,16 +67,14 @@ fn handle_connection(
         }
 
         //create json to send back
-        println!("hered");
+
         let json_value = json!({
             "Result": result,
             "Value": value,
         });
         serde_json::to_writer(&mut stream, &json_value);
-        println!("heree");
+        //mutex is unlocked
     }
-    println!("heref");
-    // stream.flush()? ; // not sure if need to send the EOF every time
     Ok(())
 }
 
@@ -88,7 +87,8 @@ fn main() {
         }
     };
 
-    let mut cache_map = HashMap::<String, String>::new();
+    // let mut cache_map = HashMap::<String, String>::new();
+    let cache_map = Arc::new(Mutex::new(HashMap::<String, String>::new()));
 
     for stream in listener.incoming() {
         let mut stream = match stream {
@@ -98,12 +98,17 @@ fn main() {
                 continue;
             }
         };
-        if let Err(err) = handle_connection(&stream, &mut cache_map) {
-            if let Err(e) = stream.write(format!("{:?}", err).as_bytes()) {
-                println!("Error writing to stream {:?}", e);
+
+        let cache_map = cache_map.clone();//new cache_map "pointer" for each thread to work on
+
+        let handler = thread::spawn(move || {
+            if let Err(err) = handle_connection(&stream, &cache_map) {
+                if let Err(e) = stream.write(format!("{:?}", err).as_bytes()) {
+                   println!("Error writing to stream {:?}", e);
+                }
+                println!("{:?}", err);
             }
-            println!("{:?}", err);
-            continue;
-        }
+        });
+        // handler.join().unwrap(); //wait for all handlers to come back
     }
 }
