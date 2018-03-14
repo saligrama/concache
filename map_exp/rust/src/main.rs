@@ -6,35 +6,34 @@ use std::sync::{Arc, Mutex, atomic::{AtomicUsize, Ordering}};
 use std::thread;
 use std::env;
 use std::time::{SystemTime, Duration};
+use rand::{thread_rng, Rng};
 
 use getopts::Options;
-use rand::Rng;
 
 const TIME : u64 = 10;
 
 fn handle (cache_map : &Arc<Mutex<HashMap<i32, i32>>>, mode : u32) -> u64 {
     let time = SystemTime::now();
     let end = Duration::new(TIME, 0);
-    let half = Duration::new(TIME/2, 0);
 
     let mut ops : u64 = 0;
+    let mut rng = thread_rng();
     while time.elapsed().unwrap().le(&end) {
         let mut cache_map = cache_map.lock().unwrap();
 
         if mode == 0 {
-            let key = rand::thread_rng().gen_range(0, 256);
-            cache_map.get(&key);
+            cache_map.get(&rng.gen_range(0, 256));
         } else if mode == 1 {
-            let key = rand::thread_rng().gen_range(0, 256);
-            let val = rand::thread_rng().gen_range(0, 256);
+            let key = rng.gen_range(0, 256);
+            let val = rng.gen_range(0, 256);
             cache_map.insert(key, val);
         } else {
-            if time.elapsed().unwrap().le(&half) {
-                let key = rand::thread_rng().gen_range(0, 256);
-                let val = rand::thread_rng().gen_range(0, 256);
+            if rng.gen_weighted_bool(2) == true {
+                let key = rng.gen_range(0, 256);
+                let val = rng.gen_range(0, 256);
                 cache_map.insert(key, val);
             } else {
-                let key = rand::thread_rng().gen_range(0, 256);
+                let key = rng.gen_range(0, 256);
                 cache_map.get(&key);
             }
         }
@@ -63,7 +62,7 @@ fn main () {
 
     if mode == 0 {
         for i in 0..255 {
-            cache_map.insert(i, rand::thread_rng().gen_range(0, 256));
+            cache_map.insert(i, 1);
         }
     }
 
