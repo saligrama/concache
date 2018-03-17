@@ -14,10 +14,8 @@ def main ():
 		writer.writerow(("NumThreads", "BenchType", "NumOpsIn10Secs"))
 		for num_threads in range(1, multiprocessing.cpu_count()+1):
 			for bench_type in ["r", "w", "rw"]:
-				num_ops = 0;
 				for i in range(3):
-					num_ops += get_rust_time(num_threads, bench_type)
-				writer.writerow((num_threads, bench_type, num_ops//3))
+					writer.writerow((num_threads, bench_type, get_rust_time(num_threads, bench_type)))
 	finally:
 		f.close()
 
