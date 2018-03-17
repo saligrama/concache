@@ -8,7 +8,7 @@ def get_rust_time (num_threads, bench_type):
 	return int(output[0])
 
 def main ():
-	f = open("../results/rust_mutex.csv", "wt");
+	f = open("../results/rust_mutex_bound_8thread.csv","wt");
 	try:
 		writer = csv.writer(f);
 		writer.writerow(("NumThreads", "BenchType", "NumOpsIn10Secs"))
@@ -16,7 +16,7 @@ def main ():
 			for bench_type in ["r", "w", "rw"]:
 				for i in range(3):
 					writer.writerow((num_threads, bench_type, get_rust_time(num_threads, bench_type)))
-					writer.flush()
+					f.flush()
 	finally:
 		f.close()
 
