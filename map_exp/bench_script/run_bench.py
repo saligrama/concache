@@ -16,6 +16,7 @@ def main ():
 			for bench_type in ["r", "w", "rw"]:
 				for i in range(3):
 					writer.writerow((num_threads, bench_type, get_rust_time(num_threads, bench_type)))
+					writer.flush()
 	finally:
 		f.close()
 
