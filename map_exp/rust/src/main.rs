@@ -10,7 +10,7 @@ use rand::{thread_rng, Rng};
 
 use getopts::Options;
 
-const TIME : u64 = 10;
+const TIME : u64 = 5;
 
 fn handle (cache_map : &Arc<Mutex<HashMap<i32, i32>>>, mode : u32) -> u64 {
     let time = SystemTime::now();
