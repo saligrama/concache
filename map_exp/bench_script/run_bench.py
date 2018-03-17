@@ -3,7 +3,7 @@
 import os, os.path, subprocess, sys, csv, multiprocessing
 
 def get_rust_time (num_threads, bench_type):
-	command = "cargo run --release -- -m " + bench_type + " -t " + str(num_threads)
+	command = "perflock cargo run --release -- -m " + bench_type + " -t " + str(num_threads)
 	output = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=None, shell=True, cwd="../rust").communicate()
 	return int(output[0])
 
