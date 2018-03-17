@@ -55,7 +55,7 @@ func main() {
 
 func trial (numThreads int, threadDuration int) uint64 {
 	var data = make(map[int]int)
-	var mutex = &sync.Mutex{}
+	var mutex = &sync.RWMutex{}
 	var wg sync.WaitGroup
 	var ops uint64
 	
@@ -82,9 +82,9 @@ func trial (numThreads int, threadDuration int) uint64 {
 						data[randKey] = randValue
 						mutex.Unlock()	
 					} else {
-						mutex.Lock()
+						mutex.RLock()
 						_ = data[randKey]
-						mutex.Unlock()
+						mutex.RUnlock()
 					}
 					numOperations += 1
 				}
