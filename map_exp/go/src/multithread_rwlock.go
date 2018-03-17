@@ -15,7 +15,7 @@ import (
 func main() {
 	// var data = [][]string{{"Line1", "Hello Readers of"}, {"Line2", "golangcode.com"}}
 	// fmt.Println(reflect.TypeOf(data))
-	var data = [11][4]string{{}}
+	var data = [41][4]string{{}}
 	data[0][0] = "Number Of Threads"
 	data[0][1] = "Trial 1"
 	data[0][2] = "Trial 2"
@@ -23,12 +23,12 @@ func main() {
 	fmt.Println(data)
 
 
-	for numThreads := 1; numThreads < 11; numThreads++ {
+	for numThreads := 1; numThreads < 41; numThreads++ {
 		// var numWriters int = numThreads
 		// var numReaders int = numThreads
 		data[numThreads][0] = strconv.Itoa(numThreads)
 		for trialNumber := 1; trialNumber <= 3; trialNumber++ {
-			val := trial(numThreads, 1)
+			val := trial(numThreads, 30)
 			data[numThreads][trialNumber] = strconv.FormatUint(val, 10)
 			fmt.Println(numThreads, val)
 		}
@@ -45,10 +45,10 @@ func main() {
     defer writer.Flush()
 
     for i := 0; i < len(data); i++ {
-    	numberOfThreads := data[i][0]
-    	trial1 := data[i][1]
-    	trial2 := data[i][2]
-    	trial3 := data[i][3]
+	numberOfThreads := data[i][0]
+	trial1 := data[i][1]
+	trial2 := data[i][2]
+	trial3 := data[i][3]
         writer.Write([]string{numberOfThreads, trial1, trial2, trial3})
     }
 }
@@ -58,14 +58,13 @@ func trial (numThreads int, threadDuration int) uint64 {
 	var mutex = &sync.RWMutex{}
 	var wg sync.WaitGroup
 	var ops uint64
-	
+
 	rand.Seed(time.Now().UnixNano()) //generate seed
 
 	wg.Add(numThreads) //reader, writer
 
 
 	timeStart := time.Now()
-
 	for i:=0; i < numThreads; i++ {
 		go func() {
 			defer wg.Done()
@@ -80,7 +79,7 @@ func trial (numThreads int, threadDuration int) uint64 {
 						var randValue = rand.Int() %256
 						mutex.Lock()
 						data[randKey] = randValue
-						mutex.Unlock()	
+						mutex.Unlock()
 					} else {
 						mutex.RLock()
 						_ = data[randKey]
@@ -98,4 +97,4 @@ func trial (numThreads int, threadDuration int) uint64 {
 	opsFinal := atomic.LoadUint64(&ops)
     // fmt.Println("ops:", opsFinal)
     return opsFinal
-}	
+}
