@@ -46,7 +46,6 @@ func trial (numGoroutines int, threadDuration int, readWrite string) (uint64, ti
 				for i := 0; i < 10000; i++ {
 					var constant = rand.Int()%2 //read or write
 					if readWrite == "rw" {
-						fmt.Println("RW here")
 						if constant % 2 == 0 {
 							mutex.Lock()
 							data[constant] = constant
@@ -72,7 +71,6 @@ func trial (numGoroutines int, threadDuration int, readWrite string) (uint64, ti
 						fmt.Println("Not proper choice.")
 						break
 					}
-					
 				}
 			}
 			// fmt.Println("Number of Operations from Writer #", from, ": ", numOperations)
@@ -82,7 +80,7 @@ func trial (numGoroutines int, threadDuration int, readWrite string) (uint64, ti
 	wg.Wait() //wait for the goroutines to finish
 	totalDuration := time.Since(timeStart)
 	opsFinal := atomic.LoadUint64(&ops)
-	
+
 	// fmt.Println(opsFinal)
 
     return opsFinal, totalDuration
