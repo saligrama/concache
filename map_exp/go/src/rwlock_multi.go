@@ -6,18 +6,24 @@ import (
 	"fmt"
 	"time"
 	"sync/atomic"
+	"os"
 )
 
 func main() {
-	for numThreads := 1; numThreads < 9; numThreads++ {
+	fmt.Println("numGoroutines numTrial accessType totalOps totalDur opsPerSecond")
+	for numGoroutines := 1; numGoroutines < 9; numGoroutines++ {
 		for trialNumber := 1; trialNumber <= 3; trialNumber++ {
-			val, dur := trial(numThreads, 5)
-			fmt.Println(numThreads, trialNumber, val, dur, float64(val)/dur.Seconds())
+			if len(os.Args) == 2 {
+				val, dur := trial(numGoroutines, 5, os.Args[1])
+				fmt.Println(numGoroutines, trialNumber, os.Args[1], val, dur, float64(val)/dur.Seconds())
+			} else {
+				fmt.Println("Not proper number of argument given.")
+			}
 		}
 	}
 }
 
-func trial (numThreads int, threadDuration int) (uint64, time.Duration) {
+func trial (numGoroutines int, threadDuration int, readWrite string) (uint64, time.Duration) {
 	var data = make(map[int]int)
 	var mutex = &sync.RWMutex{}
 	var wg sync.WaitGroup
@@ -25,12 +31,12 @@ func trial (numThreads int, threadDuration int) (uint64, time.Duration) {
 
 	rand.Seed(time.Now().UnixNano()) //generate seed
 
-	wg.Add(numThreads) //reader, writer
+	wg.Add(numGoroutines) //reader, writer
 
 
 	timeStart := time.Now()
 
-	for i:=0; i < numThreads; i++ {
+	for i:=0; i < numGoroutines; i++ {
 		go func(from int) {
 			defer wg.Done()
 			var numOperations uint64 = 0
@@ -39,17 +45,34 @@ func trial (numThreads int, threadDuration int) (uint64, time.Duration) {
 				//just some random key/values
 				for i := 0; i < 10000; i++ {
 					var constant = rand.Int()%2 //read or write
-					if constant % 2 == 0 {
+					if readWrite == "rw" {
+						fmt.Println("RW here")
+						if constant % 2 == 0 {
+							mutex.Lock()
+							data[constant] = constant
+							mutex.Unlock()
+							numOperations += 1
+						} else {
+							mutex.RLock()
+							_ = data[constant]
+							mutex.RUnlock()
+							numOperations += 1
+						}
+					} else if readWrite == "r" {
 						mutex.Lock()
 						data[constant] = constant
 						mutex.Unlock()
 						numOperations += 1
-					} else {
+					} else if readWrite == "w" {
 						mutex.RLock()
 						_ = data[constant]
 						mutex.RUnlock()
 						numOperations += 1
+					} else {
+						fmt.Println("Not proper choice.")
+						break
 					}
+					
 				}
 			}
 			// fmt.Println("Number of Operations from Writer #", from, ": ", numOperations)
