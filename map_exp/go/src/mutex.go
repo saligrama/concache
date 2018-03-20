@@ -21,25 +21,27 @@ func main() {
 	last, _ := strconv.Atoi(os.Args[2])
 	numTrials, _ := strconv.Atoi(os.Args[3])
 
-	fmt.Println("numGoroutines numTrials accessType totalOps opsPerSecond totalDur")
+	fmt.Println("numGoroutines numTrials totalOps(r) opsPerSecond(r) totalDur(r)")
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "r")
-			fmt.Println(numGoroutines, trialNumber, "r", val, float64(val)/dur.Seconds(), dur)
+			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
 		}
 	}
 
+	fmt.Println("numGoroutines numTrials totalOps(w) opsPerSecond(w) totalDur(w)")
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "w")
-			fmt.Println(numGoroutines, trialNumber, "w", val, float64(val)/dur.Seconds(), dur)
+			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
 		}
 	}
 
+	fmt.Println("numGoroutines numTrials totalOps(rw) opsPerSecond(rw) totalDur(rw)")
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "rw")
-			fmt.Println(numGoroutines, trialNumber, "rw", val, float64(val)/dur.Seconds(), dur)
+			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
 		}
 	}
 }
