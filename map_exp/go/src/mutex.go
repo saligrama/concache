@@ -6,26 +6,38 @@ import (
 	"fmt"
 	"time"
 	"sync/atomic"
+	"os"
+	"strconv"
 )
 
 func main() {
-	fmt.Println("numGoroutines numTrial accessType totalOps opsPerSecond totalDur")
-	for numGoroutines := 1; numGoroutines < 9; numGoroutines++ {
-		for trialNumber := 1; trialNumber <= 3; trialNumber++ {
+	// go run mutex.go 1 3 2, --> start with 1 goroutine, ends with 3 goroutines, with 2 tests.
+	if len(os.Args) != 4 {
+		fmt.Println("Not enough arguments")
+		return
+	}
+	// path, _ := strconv.Atoi(os.Args[0])
+	first, _ := strconv.Atoi(os.Args[1])
+	last, _ := strconv.Atoi(os.Args[2])
+	numTrials, _ := strconv.Atoi(os.Args[3])
+
+	fmt.Println("numGoroutines numTrials accessType totalOps opsPerSecond totalDur")
+	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
+		for trialNumber := first; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "r")
 			fmt.Println(numGoroutines, trialNumber, "r", val, float64(val)/dur.Seconds(), dur)
 		}
 	}
 
-	for numGoroutines := 1; numGoroutines < 9; numGoroutines++ {
-		for trialNumber := 1; trialNumber <= 3; trialNumber++ {
+	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
+		for trialNumber := first; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "w")
 			fmt.Println(numGoroutines, trialNumber, "w", val, float64(val)/dur.Seconds(), dur)
 		}
 	}
 
-	for numGoroutines := 1; numGoroutines < 9; numGoroutines++ {
-		for trialNumber := 1; trialNumber <= 3; trialNumber++ {
+	for numGoroutines := 1; numGoroutines <= last; numGoroutines++ {
+		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "rw")
 			fmt.Println(numGoroutines, trialNumber, "rw", val, float64(val)/dur.Seconds(), dur)
 		}
@@ -61,9 +73,9 @@ func trial (numGoroutines int, threadDuration int, readWrite string) (uint64, ti
 							mutex.Unlock()
 							numOperations += 1
 						} else {
-							mutex.RLock()
+							mutex.Lock()
 							_ = data[constant]
-							mutex.RUnlock()
+							mutex.Unlock()
 							numOperations += 1
 						}
 					} else if readWrite == "r" {
