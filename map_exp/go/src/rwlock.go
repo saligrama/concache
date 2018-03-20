@@ -6,19 +6,28 @@ import (
 	"fmt"
 	"time"
 	"sync/atomic"
-	"os"
 )
 
 func main() {
-	fmt.Println("numGoroutines numTrial accessType totalOps totalDur opsPerSecond")
+	fmt.Println("numGoroutines numTrial accessType totalOps opsPerSecond totalDur")
 	for numGoroutines := 1; numGoroutines < 9; numGoroutines++ {
 		for trialNumber := 1; trialNumber <= 3; trialNumber++ {
-			if len(os.Args) == 2 {
-				val, dur := trial(numGoroutines, 5, os.Args[1])
-				fmt.Println(numGoroutines, trialNumber, os.Args[1], val, dur, float64(val)/dur.Seconds())
-			} else {
-				fmt.Println("Not proper number of argument given.")
-			}
+			val, dur := trial(numGoroutines, 5, "r")
+			fmt.Println(numGoroutines, trialNumber, "r", val, float64(val)/dur.Seconds(), dur)
+		}
+	}
+
+	for numGoroutines := 1; numGoroutines < 9; numGoroutines++ {
+		for trialNumber := 1; trialNumber <= 3; trialNumber++ {
+			val, dur := trial(numGoroutines, 5, "w")
+			fmt.Println(numGoroutines, trialNumber, "w", val, float64(val)/dur.Seconds(), dur)
+		}
+	}
+
+	for numGoroutines := 1; numGoroutines < 9; numGoroutines++ {
+		for trialNumber := 1; trialNumber <= 3; trialNumber++ {
+			val, dur := trial(numGoroutines, 5, "rw")
+			fmt.Println(numGoroutines, trialNumber, "rw", val, float64(val)/dur.Seconds(), dur)
 		}
 	}
 }
