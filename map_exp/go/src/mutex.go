@@ -23,20 +23,20 @@ func main() {
 
 	fmt.Println("numGoroutines numTrials accessType totalOps opsPerSecond totalDur")
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
-		for trialNumber := first; trialNumber <= numTrials; trialNumber++ {
+		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "r")
 			fmt.Println(numGoroutines, trialNumber, "r", val, float64(val)/dur.Seconds(), dur)
 		}
 	}
 
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
-		for trialNumber := first; trialNumber <= numTrials; trialNumber++ {
+		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "w")
 			fmt.Println(numGoroutines, trialNumber, "w", val, float64(val)/dur.Seconds(), dur)
 		}
 	}
 
-	for numGoroutines := 1; numGoroutines <= last; numGoroutines++ {
+	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "rw")
 			fmt.Println(numGoroutines, trialNumber, "rw", val, float64(val)/dur.Seconds(), dur)

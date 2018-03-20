@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	// go run rwlock.go 1 3 2, --> start with 1 goroutine, ends with 3 goroutines, with 2 tests.
 	if len(os.Args) != 4 {
 		fmt.Println("Not enough arguments")
 		return
@@ -21,21 +22,21 @@ func main() {
 	numTrials, _ := strconv.Atoi(os.Args[3])
 
 	fmt.Println("numGoroutines numTrials accessType totalOps opsPerSecond totalDur")
-	for numGoroutines := first; numGoroutines < last; numGoroutines++ {
-		for trialNumber := first; trialNumber <= numTrials; trialNumber++ {
+	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
+		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "r")
 			fmt.Println(numGoroutines, trialNumber, "r", val, float64(val)/dur.Seconds(), dur)
 		}
 	}
 
-	for numGoroutines := first; numGoroutines < last; numGoroutines++ {
-		for trialNumber := first; trialNumber <= numTrials; trialNumber++ {
+	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
+		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "w")
 			fmt.Println(numGoroutines, trialNumber, "w", val, float64(val)/dur.Seconds(), dur)
 		}
 	}
 
-	for numGoroutines := 1; numGoroutines < last; numGoroutines++ {
+	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "rw")
 			fmt.Println(numGoroutines, trialNumber, "rw", val, float64(val)/dur.Seconds(), dur)
