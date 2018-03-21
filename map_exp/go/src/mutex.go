@@ -80,12 +80,12 @@ func trial (numGoroutines int, threadDuration int, readWrite string) (uint64, ti
 							mutex.Unlock()
 							numOperations += 1
 						}
-					} else if readWrite == "r" {
+					} else if readWrite == "w" {
 						mutex.Lock()
 						data[constant] = constant
 						mutex.Unlock()
 						numOperations += 1
-					} else if readWrite == "w" {
+					} else if readWrite == "r" {
 						mutex.Lock()
 						_ = data[constant]
 						mutex.Unlock()
