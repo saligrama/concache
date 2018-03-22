@@ -24,7 +24,7 @@ func main() {
 
 	fmt.Println("numGoroutines numTrials totalOps(r) opsPerSecond(r) totalDur(r)")
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
-		runtime.GOMAXPROC(numGoroutines)
+		runtime.GOMAXPROCS(numGoroutines)
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "r")
 			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
@@ -33,7 +33,7 @@ func main() {
 
 	fmt.Println("numGoroutines numTrials totalOps(w) opsPerSecond(w) totalDur(w)")
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
-		runtime.GOMAXPROC(numGoroutines)
+		runtime.GOMAXPROCS(numGoroutines)
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "w")
 			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
@@ -42,7 +42,7 @@ func main() {
 
 	fmt.Println("numGoroutines numTrials totalOps(rw) opsPerSecond(rw) totalDur(rw)")
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
-		runtime.GOMAXPROC(numGoroutines)
+		runtime.GOMAXPROCS(numGoroutines)
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, 5, "rw")
 			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
