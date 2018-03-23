@@ -6,7 +6,7 @@ def get_rust_time (num_threads, bench_type):
         if num_threads > 10:
                 command = "perflock hwloc-bind --cpubind package:0 cargo run --release -- -l r -m " + bench_type + " -t " + str(num_threads)
         else:
-                command = "perflock hwloc-bind --physical --cpubind package:0.pu:0-18 cargo run --release -- -l r -m " + bench_type + " -t " + str(num_threads)
+                command = "perflock hwloc-bind --physical --cpubind pu:0-18 cargo run --release -- -l r -m " + bench_type + " -t " + str(num_threads)
         output = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=None, shell=True, cwd="../rust").communicate()
         return int(output[0])
 
