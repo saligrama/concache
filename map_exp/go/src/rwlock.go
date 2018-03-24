@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"runtime"
 	"runtime/pprof"
+	"log"
+	"flag"
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
