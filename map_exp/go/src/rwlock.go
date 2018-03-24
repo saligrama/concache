@@ -61,6 +61,7 @@ func main() {
 		}
 	}
 	fmt.Println("End Time:", time.Now())
+	f.Close()
 }
 
 func trial (numGoroutines int, threadDuration int, readWrite string) (uint64, time.Duration) {
