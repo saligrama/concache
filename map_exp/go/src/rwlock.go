@@ -14,24 +14,27 @@ import (
 	"flag"
 )
 
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 func main() {
-	fmt.Println("Start Time:", time.Now())
     flag.Parse()
     if *cpuprofile != "" {
         f, err := os.Create(*cpuprofile)
         if err != nil {
-            log.Fatal(err)
+            log.Fatal("could not create CPU profile: ", err)
         }
-        pprof.StartCPUProfile(f)
+        if err := pprof.StartCPUProfile(f); err != nil {
+            log.Fatal("could not start CPU profile: ", err)
+        }
         defer pprof.StopCPUProfile()
+    } else {
+    	fmt.Println("FAIl")
     }
 
 	// path, _ := strconv.Atoi(os.Args[0])
-	first, _ := strconv.Atoi(os.Args[1])
-	last, _ := strconv.Atoi(os.Args[2])
-	numTrials, _ := strconv.Atoi(os.Args[3])
+	first, _ := strconv.Atoi(os.Args[3])
+	last, _ := strconv.Atoi(os.Args[4])
+	numTrials, _ := strconv.Atoi(os.Args[5])
 
 	length := 30
 	fmt.Println("numGoroutines numTrials totalOps(r) opsPerSecond(r) totalDur(r)")
@@ -60,8 +63,8 @@ func main() {
 			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
 		}
 	}
+
 	fmt.Println("End Time:", time.Now())
-	f.Close()
 }
 
 func trial (numGoroutines int, threadDuration int, readWrite string) (uint64, time.Duration) {
