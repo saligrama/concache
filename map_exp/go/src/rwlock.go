@@ -9,24 +9,39 @@ import (
 	"os"
 	"strconv"
 	"runtime"
+	"runtime/pprof"
+	"log"
+	"flag"
 )
 
-func main() {
-	// go run mutex.go 1 3 2, --> start with 1 goroutine, ends with 3 goroutines, with 2 tests.
-	if len(os.Args) != 4 {
-		fmt.Println("Not enough arguments")
-		return
-	}
-	// path, _ := strconv.Atoi(os.Args[0])
-	first, _ := strconv.Atoi(os.Args[1])
-	last, _ := strconv.Atoi(os.Args[2])
-	numTrials, _ := strconv.Atoi(os.Args[3])
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
+func main() {
+    flag.Parse()
+    if *cpuprofile != "" {
+        f, err := os.Create(*cpuprofile)
+        if err != nil {
+            log.Fatal("could not create CPU profile: ", err)
+        }
+        if err := pprof.StartCPUProfile(f); err != nil {
+            log.Fatal("could not start CPU profile: ", err)
+        }
+        defer pprof.StopCPUProfile()
+    } else {
+    	fmt.Println("FAIl")
+    }
+
+	// path, _ := strconv.Atoi(os.Args[0])
+	first, _ := strconv.Atoi(os.Args[3])
+	last, _ := strconv.Atoi(os.Args[4])
+	numTrials, _ := strconv.Atoi(os.Args[5])
+
+	length := 30
 	fmt.Println("numGoroutines numTrials totalOps(r) opsPerSecond(r) totalDur(r)")
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
 		runtime.GOMAXPROCS(numGoroutines)
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
-			val, dur := trial(numGoroutines, 5, "r")
+			val, dur := trial(numGoroutines, length, "r")
 			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
 		}
 	}
@@ -35,7 +50,7 @@ func main() {
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
 		runtime.GOMAXPROCS(numGoroutines)
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
-			val, dur := trial(numGoroutines, 5, "w")
+			val, dur := trial(numGoroutines, length, "w")
 			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
 		}
 	}
@@ -44,10 +59,12 @@ func main() {
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
 		runtime.GOMAXPROCS(numGoroutines)
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
-			val, dur := trial(numGoroutines, 5, "rw")
+			val, dur := trial(numGoroutines, length, "rw")
 			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
 		}
 	}
+
+	fmt.Println("End Time:", time.Now())
 }
 
 func trial (numGoroutines int, threadDuration int, readWrite string) (uint64, time.Duration) {
