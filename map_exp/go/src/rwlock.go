@@ -9,9 +9,25 @@ import (
 	"os"
 	"strconv"
 	"runtime"
+	"runtime/pprof"
 )
 
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+
 func main() {
+	flag.Parse()
+    if *cpuprofile != "" {
+        f, err := os.Create(*cpuprofile)
+        if err != nil {
+            log.Fatal("could not create CPU profile: ", err)
+        }
+        if err := pprof.StartCPUProfile(f); err != nil {
+            log.Fatal("could not start CPU profile: ", err)
+        }
+        defer pprof.StopCPUProfile()
+    }
+
 	// go run mutex.go 1 3 2, --> start with 1 goroutine, ends with 3 goroutines, with 2 tests.
 	if len(os.Args) != 4 {
 		fmt.Println("Not enough arguments")
@@ -48,6 +64,18 @@ func main() {
 			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
 		}
 	}
+
+	if *memprofile != "" {
+        f, err := os.Create(*memprofile)
+        if err != nil {
+            log.Fatal("could not create memory profile: ", err)
+        }
+        runtime.GC() // get up-to-date statistics
+        if err := pprof.WriteHeapProfile(f); err != nil {
+            log.Fatal("could not write memory profile: ", err)
+        }
+        f.Close()
+    }
 }
 
 func trial (numGoroutines int, threadDuration int, readWrite string) (uint64, time.Duration) {
