@@ -33,7 +33,7 @@ func main() {
 	last, _ := strconv.Atoi(os.Args[2])
 	numTrials, _ := strconv.Atoi(os.Args[3])
 
-	length = 30
+	length := 30
 	fmt.Println("numGoroutines numTrials totalOps(r) opsPerSecond(r) totalDur(r)")
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
 		runtime.GOMAXPROCS(numGoroutines)
