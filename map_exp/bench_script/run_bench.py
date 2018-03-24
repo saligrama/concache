@@ -8,12 +8,12 @@ def get_rust_time (num_threads, bench_type):
         return int(output[0])
 
 def main ():
-	f = open("../results/rust_rwlock_ro_nobound.csv","wt");
+	f = open("../results/rust_rwlock_membind.csv","wt");
 	try:
 		writer = csv.writer(f);
 		writer.writerow(("NumThreads", "BenchType", "NumOpsIn5Secs"))
 		for num_threads in [1, 2, 4, 8, 16]:
-			for bench_type in ["r"]:
+			for bench_type in ["r", "w", "rw"]:
 				for i in range(3):
 					writer.writerow((num_threads, bench_type, get_rust_time(num_threads, bench_type)))
 					f.flush()
