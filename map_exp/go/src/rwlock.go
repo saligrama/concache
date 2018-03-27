@@ -12,6 +12,7 @@ import (
 	"runtime/pprof"
 	"log"
 	"flag"
+	"math"
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
@@ -37,30 +38,30 @@ func main() {
 	numTrials, _ := strconv.Atoi(os.Args[5])
 
 	length := 30
-	fmt.Println("numGoroutines numTrials totalOps(r) opsPerSecond(r) totalDur(r)")
+	fmt.Println("numGoroutines totalOps(r) opsPerSecond(r)")
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
 		runtime.GOMAXPROCS(numGoroutines)
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, length, "r")
-			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
+			fmt.Println(Pow(numGoroutines,2), trialNumber, val, float64(val)/dur.Seconds())
 		}
 	}
 
-	fmt.Println("numGoroutines numTrials totalOps(w) opsPerSecond(w) totalDur(w)")
+	fmt.Println("numGoroutines totalOps(w) opsPerSecond(w)")
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
 		runtime.GOMAXPROCS(numGoroutines)
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, length, "w")
-			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
+			fmt.Println(Pow(numGoroutines, 2), trialNumber, val, float64(val)/dur.Seconds())
 		}
 	}
 
-	fmt.Println("numGoroutines numTrials totalOps(rw) opsPerSecond(rw) totalDur(rw)")
+	fmt.Println("numGoroutines totalOps(rw) opsPerSecond(rw)")
 	for numGoroutines := first; numGoroutines <= last; numGoroutines++ {
 		runtime.GOMAXPROCS(numGoroutines)
 		for trialNumber := 1; trialNumber <= numTrials; trialNumber++ {
 			val, dur := trial(numGoroutines, length, "rw")
-			fmt.Println(numGoroutines, trialNumber, val, float64(val)/dur.Seconds(), dur)
+			fmt.Println(Pow(numGoroutines,2), trialNumber, val, float64(val)/dur.Seconds())
 		}
 	}
 
