@@ -15,7 +15,8 @@ impl Hashmap {
 		let num_of_buckets: usize = 16;
 		let mut new_hashmap = Hashmap {nbuckets: num_of_buckets, map: Vec::with_capacity(num_of_buckets)};
 		new_hashmap.map.resize(num_of_buckets, Vec::new());
-		return new_hashmap
+
+		new_hashmap
 	}
 
 	fn insert (&mut self, key: usize, value: usize) {
@@ -25,7 +26,13 @@ impl Hashmap {
 		let hash: usize = hasher.finish() as usize;
 
 		//push the key and value tuple into the map
-		self.map[hash.rem(self.nbuckets)].push((key, value));
+		for &mut (k,ref mut v) in &mut self.map[hash % self.nbuckets] {
+			if (k == key) {
+				*v = value;
+				return
+			}
+		}
+		self.map[hash % self.nbuckets].push((key, value));
 	}
 
 	fn get (&self, key: usize) -> Option<usize>  {
@@ -35,7 +42,7 @@ impl Hashmap {
 		let hash: usize = hasher.finish() as usize;
 
 		//search for key value and return Some(value), otherwise return None
-		for &(k,v) in &self.map[hash.rem(self.nbuckets)] {
+		for &(k,v) in &self.map[hash % self.nbuckets] {
 			if (k == key) {
 				return Some(v)
 			}
@@ -54,6 +61,7 @@ fn main() {
 	new_hashmap.insert(1,1);
 	new_hashmap.insert(2,5);
 	new_hashmap.insert(3,2);
+	new_hashmap.insert(3,1);
 
 	println!("result: {:?}", new_hashmap.get(3));
 
