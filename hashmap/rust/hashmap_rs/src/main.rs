@@ -20,19 +20,24 @@ impl Hashmap {
 	}
 
 	fn insert (&mut self, key: usize, value: usize) {
+
 		//hasher to hash stuff
 		let mut hasher = DefaultHasher::new();
 		key.hash(&mut hasher);
 		let hash: usize = hasher.finish() as usize;
+		let index = hash % self.nbuckets;
+
+
+		let ref mut bucket = self.map[index];
 
 		//push the key and value tuple into the map
-		for &mut (k,ref mut v) in &mut self.map[hash % self.nbuckets] {
+		for &mut (k,ref mut v) in &mut *bucket {
 			if (k == key) {
 				*v = value;
 				return
 			}
 		}
-		self.map[hash % self.nbuckets].push((key, value));
+		bucket.push((key, value));
 	}
 
 	fn get (&self, key: usize) -> Option<usize>  {
