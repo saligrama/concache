@@ -11,8 +11,7 @@ struct Hashmap {
 }
 
 impl Hashmap {
-	fn new() -> Self {
-		let num_of_buckets: usize = 16;
+	fn new(num_of_buckets: usize) -> Self {
 		let mut new_hashmap = Hashmap {nbuckets: num_of_buckets, map: Vec::with_capacity(num_of_buckets)};
 		new_hashmap.map.resize(num_of_buckets, Vec::new());
 
@@ -56,20 +55,41 @@ impl Hashmap {
 
 		// self.map[key.rem(self.nbuckets)].iter().find(|&&(k,_)| k == key).map(|&(_,v)|v) //equivalent to the above search function
 	}
+
+	fn resize (&mut self, newsize: usize) -> Self {
+		println!("resize: {}", newsize);
+		let mut new_hashmap = Hashmap::new(newsize);
+		for ref mut bucket in &self.map {
+			for &(k, v) in &mut bucket.iter() {
+				new_hashmap.insert(k, v);
+			}
+		}
+		new_hashmap
+	}
 }
 
 fn main() {
-
-	let mut new_hashmap = Hashmap::new();
+	println!("Program Start!");
+	let mut new_hashmap = Hashmap::new(16); //init with 16 buckets
 	new_hashmap.map[0].push((1,2));
 
 	new_hashmap.insert(1,1);
 	new_hashmap.insert(2,5);
+	new_hashmap.insert(12,5);
+	new_hashmap.insert(13,7);
+	new_hashmap.insert(0,0);
+	new_hashmap.insert(20,3);
 	new_hashmap.insert(3,2);
 	new_hashmap.insert(3,1);
+	new_hashmap.insert(20,5);
 
-	println!("result: {:?}", new_hashmap.get(3));
+	println!("get(3): {:?}", new_hashmap.get(3));
+	println!("get(20): {:?}", new_hashmap.get(20));
+	println!("Before Resize {:?}", new_hashmap.map);
 
-	println!("{:?}", new_hashmap.map);
+	let mut new_hashmap = new_hashmap.resize(64);
+
+
+	println!("After Resize {:?}", new_hashmap.map);
     println!("Program Done!");
 }
