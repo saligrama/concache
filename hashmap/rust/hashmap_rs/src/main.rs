@@ -83,13 +83,51 @@ fn main() {
 	new_hashmap.insert(3,1);
 	new_hashmap.insert(20,5);
 
-	println!("get(3): {:?}", new_hashmap.get(3));
-	println!("get(20): {:?}", new_hashmap.get(20));
 	println!("Before Resize {:?}", new_hashmap.map);
 
 	let mut new_hashmap = new_hashmap.resize(64);
 
-
 	println!("After Resize {:?}", new_hashmap.map);
     println!("Program Done!");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+
+    fn hashmap_works () {
+		let mut new_hashmap = Hashmap::new(16); //init with 16 buckets
+		// new_hashmap.map[0].push((1,2)); //manually push
+
+		//input values
+		new_hashmap.insert(1,1);
+		new_hashmap.insert(2,5);
+		new_hashmap.insert(12,5);
+		new_hashmap.insert(13,7);
+		new_hashmap.insert(0,0);
+		new_hashmap.insert(20,3);
+		new_hashmap.insert(3,2);
+		new_hashmap.insert(3,1);
+		new_hashmap.insert(20,5);
+
+		assert!(new_hashmap.get(20).unwrap() == 5);
+		assert!(new_hashmap.get(12).unwrap() == 5);
+		assert!(new_hashmap.get(1).unwrap() == 1);
+		assert!(new_hashmap.get(0).unwrap() == 0);
+		assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
+
+		let mut new_hashmap = new_hashmap.resize(64);
+
+		assert!(new_hashmap.map.len() == 64); //make sure it is correct length
+
+		//try the same asserts
+		assert!(new_hashmap.get(20).unwrap() == 5);
+		assert!(new_hashmap.get(12).unwrap() == 5);
+		assert!(new_hashmap.get(1).unwrap() == 1);
+		assert!(new_hashmap.get(0).unwrap() == 0);
+		assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
+    }
+
 }
