@@ -8,17 +8,22 @@ use std::ops::Rem;
 struct Hashmap {
 	nbuckets: usize,
 	map: Vec<Vec<(usize,usize)>>,
+	nitems: usize,
 }
 
 impl Hashmap {
 	fn new(num_of_buckets: usize) -> Self {
-		let mut new_hashmap = Hashmap {nbuckets: num_of_buckets, map: Vec::with_capacity(num_of_buckets)};
+		let mut new_hashmap = Hashmap {nbuckets: num_of_buckets, map: Vec::with_capacity(num_of_buckets), nitems: 0};
 		new_hashmap.map.resize(num_of_buckets, Vec::new());
 
 		new_hashmap
 	}
 
 	fn insert (&mut self, key: usize, value: usize) {
+		if (self.nitems / self.nbuckets >= 2) { //threshold is 2
+			let resize_value: usize = self.nbuckets * 2;
+			self.resize(resize_value); //double the size
+		}
 
 		//hasher to hash stuff
 		let mut hasher = DefaultHasher::new();
@@ -33,9 +38,11 @@ impl Hashmap {
 		for &mut (k,ref mut v) in &mut *bucket {
 			if (k == key) {
 				*v = value;
+				self.nitems += 1;
 				return
 			}
 		}
+		self.nitems += 1;
 		bucket.push((key, value));
 	}
 
@@ -56,7 +63,7 @@ impl Hashmap {
 		// self.map[key.rem(self.nbuckets)].iter().find(|&&(k,_)| k == key).map(|&(_,v)|v) //equivalent to the above search function
 	}
 
-	fn resize (&mut self, newsize: usize) -> Self {
+	fn resize (&mut self, newsize: usize) {
 		println!("resize: {}", newsize);
 		let mut new_hashmap = Hashmap::new(newsize);
 		for ref mut bucket in &self.map {
@@ -64,7 +71,9 @@ impl Hashmap {
 				new_hashmap.insert(k, v);
 			}
 		}
-		new_hashmap
+		self.map = new_hashmap.map;
+		self.nbuckets = new_hashmap.nbuckets;
+		self.nitems = new_hashmap.nitems;
 	}
 }
 
@@ -85,7 +94,7 @@ fn main() {
 
 	println!("Before Resize {:?}", new_hashmap.map);
 
-	let mut new_hashmap = new_hashmap.resize(64);
+	new_hashmap.resize(64);
 
 	println!("After Resize {:?}", new_hashmap.map);
     println!("Program Done!");
@@ -98,7 +107,7 @@ mod tests {
     #[test]
 
     fn hashmap_works () {
-		let mut new_hashmap = Hashmap::new(16); //init with 16 buckets
+		let mut new_hashmap = Hashmap::new(2); //init with 16 buckets
 		// new_hashmap.map[0].push((1,2)); //manually push
 
 		//input values
@@ -107,26 +116,31 @@ mod tests {
 		new_hashmap.insert(12,5);
 		new_hashmap.insert(13,7);
 		new_hashmap.insert(0,0);
+
+		assert_eq!(new_hashmap.map.capacity(), 4); //should be 4 after you attempt the 5th insert
+
 		new_hashmap.insert(20,3);
 		new_hashmap.insert(3,2);
 		new_hashmap.insert(3,1);
 		new_hashmap.insert(20,5);
 
-		assert!(new_hashmap.get(20).unwrap() == 5);
-		assert!(new_hashmap.get(12).unwrap() == 5);
-		assert!(new_hashmap.get(1).unwrap() == 1);
-		assert!(new_hashmap.get(0).unwrap() == 0);
+		assert_eq!(new_hashmap.map.capacity(), 8); //should be 8 after you attempt the 9th insert		
+
+		assert_eq!(new_hashmap.get(20).unwrap(), 5);
+		assert_eq!(new_hashmap.get(12).unwrap(), 5);
+		assert_eq!(new_hashmap.get(1).unwrap(), 1);
+		assert_eq!(new_hashmap.get(0).unwrap(), 0);
 		assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
 
-		let mut new_hashmap = new_hashmap.resize(64);
+		new_hashmap.resize(64);
 
-		assert!(new_hashmap.map.len() == 64); //make sure it is correct length
+		assert_eq!(new_hashmap.map.capacity(), 64); //make sure it is correct length
 
-		//try the same asserts
-		assert!(new_hashmap.get(20).unwrap() == 5);
-		assert!(new_hashmap.get(12).unwrap() == 5);
-		assert!(new_hashmap.get(1).unwrap() == 1);
-		assert!(new_hashmap.get(0).unwrap() == 0);
+		//try the same assert_eqs
+		assert_eq!(new_hashmap.get(20).unwrap(), 5);
+		assert_eq!(new_hashmap.get(12).unwrap(), 5);
+		assert_eq!(new_hashmap.get(1).unwrap(), 1);
+		assert_eq!(new_hashmap.get(0).unwrap(), 0);
 		assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
     }
 
