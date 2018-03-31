@@ -1,5 +1,9 @@
 package main
 
+import (
+  "sync"
+)
+
 const AVG_PER_BIN_THRESH int = 4
 
 type Entry struct {
@@ -7,10 +11,15 @@ type Entry struct {
   val int32
 }
 
+type Bin struct {
+  lock *sync.RWMutex
+  entries []Entry
+}
+
 type HashMap struct {
   nbuckets int
   size int
-  mp [][]Entry
+  mp []Bin
 }
 
 func index (key int32, mod int) int {
@@ -25,8 +34,8 @@ func (m *HashMap) resize () {
   ret := New(m.nbuckets * 2)
 
   for i := range m.mp {
-    for j := range m.mp[i] {
-      ret.Put(m.mp[i][j].key, m.mp[i][j].val)
+    for j := range m.mp[i].entries {
+      ret.Put(m.mp[i].entries[j].key, m.mp[i].entries[j].val)
     }
   }
 
@@ -38,14 +47,19 @@ func New(size int) (*HashMap) {
   ret := new(HashMap)
   ret.nbuckets = size
   ret.size = 0
-  ret.mp = make([][]Entry, size)
+  ret.mp = make([]Bin, size)
+  for i := range ret.mp {
+    ret.mp[i] = Bin{lock: &sync.RWMutex{}, entries: make([]Entry, 0)}
+  }
   return ret
 }
 
 func (m *HashMap) Get (key int32) (int32, bool) {
   ndx := index(key, m.nbuckets)
   bin := m.mp[ndx]
-  for _, entry := range bin {
+  bin.lock.RLock()
+  defer bin.lock.RUnlock()
+  for _, entry := range bin.entries {
     if entry.key == key {
       return entry.val, true
     }
@@ -61,8 +75,10 @@ func (m *HashMap) Put (key int32, value int32) bool {
   ndx := index(key, m.nbuckets)
   bin := m.mp[ndx]
 
-  for i := range bin {
-    entry := &bin[i]
+  bin.lock.Lock()
+  defer bin.lock.Unlock()
+  for i := range bin.entries {
+    entry := &bin.entries[i]
     if entry.key == key {
       entry.val = value
       return true
@@ -74,7 +90,7 @@ func (m *HashMap) Put (key int32, value int32) bool {
   }
 
   entry := Entry{key: key, val: value}
-  bin = append(bin, entry)
+  bin.entries = append(bin.entries, entry)
   m.mp[ndx] = bin
   m.size++
 

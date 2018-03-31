@@ -7,8 +7,8 @@ func main () {
   m.Put(0, 0)
   fmt.Println(m.nbuckets)
   for i := range m.mp {
-    for j := range m.mp[i] {
-      fmt.Println(m.mp[i][j])
+    for j := range m.mp[i].entries {
+      fmt.Println(m.mp[i].entries[j])
     }
   }
   m.Put(0, 0)
@@ -19,8 +19,8 @@ func main () {
   m.Put(5, 0)
   fmt.Println(m.nbuckets)
   for i := range m.mp {
-    for j := range m.mp[i] {
-      fmt.Println(m.mp[i][j])
+    for j := range m.mp[i].entries {
+      fmt.Println(m.mp[i].entries[j])
     }
   }
 }
