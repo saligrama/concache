@@ -39,9 +39,6 @@ func New(size int) (*HashMap) {
   ret.nbuckets = size
   ret.size = 0
   ret.mp = make([][]Entry, size)
-  for i := range ret.mp {
-    ret.mp[i] = make([]Entry, 0)
-  }
   return ret
 }
 
