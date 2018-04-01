@@ -3,36 +3,42 @@
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+use std::sync::{RwLock};
 use std::ops::Rem;
 
 struct Hashmap {
 	nbuckets: usize,
-	map: Vec<Vec<(usize,usize)>>,
+	map: Vec<RwLock<Vec<(usize,usize)>>>,
 	nitems: usize,
 }
 
 impl Hashmap {
 	fn new(num_of_buckets: usize) -> Self {
 		let mut new_hashmap = Hashmap {nbuckets: num_of_buckets, map: Vec::with_capacity(num_of_buckets), nitems: 0};
-		new_hashmap.map.resize(num_of_buckets, Vec::new());
-
+		// new_hashmap.map.resize(num_of_buckets, Vec::new());
+		for _ in 0..num_of_buckets {
+			let new_rwlock_vec = RwLock::new(Vec::new());
+			new_hashmap.map.push(new_rwlock_vec);
+		}
+		
 		new_hashmap
 	}
 
 	fn insert (&mut self, key: usize, value: usize) {
+		// check for resize
 		if (self.nitems / self.nbuckets >= 2) { //threshold is 2
 			let resize_value: usize = self.nbuckets * 2;
 			self.resize(resize_value); //double the size
 		}
 
-		//hasher to hash stuff
 		let mut hasher = DefaultHasher::new();
 		key.hash(&mut hasher);
 		let hash: usize = hasher.finish() as usize;
 		let index = hash % self.nbuckets;
 
-
-		let ref mut bucket = self.map[index];
+		// println!("index: {}", index);
+		let mut w = self.map[index].write().unwrap(); //give write access
+		let ref mut bucket = *w;
 
 		//push the key and value tuple into the map
 		for &mut (k,ref mut v) in &mut *bucket {
@@ -47,13 +53,14 @@ impl Hashmap {
 	}
 
 	fn get (&self, key: usize) -> Option<usize>  {
-		//hash more stuff
 		let mut hasher = DefaultHasher::new();
 		key.hash(&mut hasher);
 		let hash: usize = hasher.finish() as usize;
+		let index = hash % self.nbuckets;
 
+		let mut r = self.map[index].read().unwrap();
 		//search for key value and return Some(value), otherwise return None
-		for &(k,v) in &self.map[hash % self.nbuckets] {
+		for &(k,v) in r.iter() {
 			if (k == key) {
 				return Some(v)
 			}
@@ -66,8 +73,11 @@ impl Hashmap {
 	fn resize (&mut self, newsize: usize) {
 		println!("resize: {}", newsize);
 		let mut new_hashmap = Hashmap::new(newsize);
-		for ref mut bucket in &self.map {
-			for &(k, v) in &mut bucket.iter() {
+
+		for ref bucket in &self.map {
+			let mut w = bucket.write().unwrap(); //give write access
+
+			for &(k, v) in &mut w.iter() {
 				new_hashmap.insert(k, v);
 			}
 		}
@@ -80,7 +90,7 @@ impl Hashmap {
 fn main() {
 	println!("Program Start!");
 	let mut new_hashmap = Hashmap::new(16); //init with 16 buckets
-	new_hashmap.map[0].push((1,2));
+	// new_hashmap.map[0].push((1,2));
 
 	new_hashmap.insert(1,1);
 	new_hashmap.insert(2,5);
