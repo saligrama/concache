@@ -72,25 +72,19 @@ func (m *HashMap) Put (key int32, value int32) bool {
   */
 
   ndx := index(key, m.nbuckets)
-  bin := m.mp[ndx]
 
-  bin.lock.Lock()
-  defer bin.lock.Unlock()
-  for i := range bin.entries {
-    entry := &bin.entries[i]
+  m.mp[ndx].lock.Lock()
+  defer m.mp[ndx].lock.Unlock()
+  for i := range m.mp[ndx].entries {
+    entry := &m.mp[ndx].entries[i]
     if entry.key == key {
       entry.val = value
       return true
     }
   }
 
-  if m.size == m.nbuckets {
-    return false
-  }
-
   entry := Entry{key: key, val: value}
-  bin.entries = append(bin.entries, entry)
-  m.mp[ndx] = bin
+  m.mp[ndx].entries = append(m.mp[ndx].entries, entry)
   atomic.AddUint32(&m.size, 1);
 
   return true
