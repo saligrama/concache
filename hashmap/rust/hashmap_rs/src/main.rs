@@ -35,7 +35,7 @@ impl Hashmap {
 	}
 
 	fn insert (&self, key: usize, value: usize) {
-		let ref inner_table = &self.table.read().unwrap();//need read access
+		let inner_table = self.table.read().unwrap();//need read access
 
 		// check for resize
 		// let num_item: usize = inner_table.nitems.load(Ordering::Relaxed);
@@ -68,14 +68,14 @@ impl Hashmap {
 	}
 
 	fn get (&self, key: usize) -> Option<usize>  {
-		let ref inner_table = &self.table.read().unwrap();//need read access
+		let inner_table = self.table.read().unwrap();//need read access
 
 		let mut hasher = DefaultHasher::new();
 		key.hash(&mut hasher);
 		let hash: usize = hasher.finish() as usize;
 		let index = hash % inner_table.nbuckets;
 
-		let mut r = inner_table.map[index].read().unwrap();
+		let r = inner_table.map[index].read().unwrap();
 		//search for key value and return Some(value), otherwise return None
 		for &(k,v) in r.iter() {
 			if k == key {
@@ -88,14 +88,16 @@ impl Hashmap {
 	}
 
 	fn resize (&self, newsize: usize) {
-		let ref inner_table = &self.table.write().unwrap();
+		//check if resize is actually needed
+
+		let mut inner_table = self.table.write().unwrap();
 
 		println!("resize: {}", newsize);
 		let new_hashmap = Hashmap::new(newsize);
-		let ref new = new_hashmap.table.write().unwrap();
+		let new = &new_hashmap.table.write().unwrap();
 
-		for ref bucket in &new.map {
-			let mut w = bucket.write().unwrap(); //give write access
+		for bucket in inner_table.map.iter() {
+			let w = bucket.write().unwrap(); //give write access
 
 			for &(k, v) in &mut w.iter() {
 				new_hashmap.insert(k, v);
@@ -110,7 +112,7 @@ impl Hashmap {
 
 fn main() {
 	println!("Program Start!");
-	let mut new_hashmap = Arc::new(Hashmap::new(16)); //init with 16 buckets
+	let new_hashmap = Arc::new(Hashmap::new(16)); //init with 16 buckets
 
 	let h = new_hashmap.clone();
 	h.insert(1,1);
@@ -126,7 +128,7 @@ fn main() {
 	let read = h.table.read().unwrap(); //let it read it
 	println!("Before Resize {:?}", read.map);
 
-	new_hashmap.resize(64);
+	// new_hashmap.resize(64);
 
 	// println!("After Resize {:?}", new_hashmap.map);
     println!("Program Done!");
