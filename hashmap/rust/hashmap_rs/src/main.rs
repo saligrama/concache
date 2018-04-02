@@ -10,62 +10,72 @@ use std::sync::{Arc, RwLock};
 use std::sync::atomic::{AtomicUsize, Ordering};	
 use rand::{thread_rng, Rng};
 
-struct Hashmap {
+struct Table {
 	nbuckets: usize,
 	map: Vec<RwLock<Vec<(usize,usize)>>>,
-	nitems: Arc<AtomicUsize>,
+	nitems: AtomicUsize,
+}
+
+struct Hashmap {
+	table: RwLock<Table>
 }
 
 impl Hashmap {
 	fn new(num_of_buckets: usize) -> Self {
-		let mut new_hashmap = Hashmap {nbuckets: num_of_buckets, map: Vec::with_capacity(num_of_buckets), nitems: Arc::new(AtomicUsize::new(0))};
+		let mut new_table = Table {nbuckets: num_of_buckets, map: Vec::with_capacity(num_of_buckets), nitems: AtomicUsize::new(0)};
 		// new_hashmap.map.resize(num_of_buckets, Vec::new());
 		for _ in 0..num_of_buckets {
 			let new_rwlock_vec = RwLock::new(Vec::new());
-			new_hashmap.map.push(new_rwlock_vec);
+			new_table.map.push(new_rwlock_vec);
 		}
+
+		let new_hashmap = Hashmap { table: RwLock::new(new_table) };
 		
 		new_hashmap
 	}
 
 	fn insert (&self, key: usize, value: usize) {
+		let ref inner_table = &self.table.read().unwrap();//need read access
 
 		// check for resize
-		// if (self.nitems / self.nbuckets >= 2) { //threshold is 2
-		// 	let resize_value: usize = self.nbuckets * 2;
+		// let num_item: usize = inner_table.nitems.load(Ordering::Relaxed);
+		// if (num_item / inner_table.nbuckets >= 2) { //threshold is 2
+		// 	let resize_value: usize = inner_table.nbuckets * 2;
 		// 	self.resize(resize_value); //double the size
 		// }
 
 		let mut hasher = DefaultHasher::new();
 		key.hash(&mut hasher);
 		let hash: usize = hasher.finish() as usize;
-		let index = hash % self.nbuckets;
+		let index = hash % inner_table.nbuckets;
 
 		// println!("index: {}", index);
-		let mut w = self.map[index].write().unwrap(); //give write access
+		let mut w = inner_table.map[index].write().unwrap(); //give write access
 		let ref mut bucket = *w;
 
 		//push the key and value tuple into the map
 		for &mut (k,ref mut v) in &mut *bucket {
 			if k == key {
 				*v = value;
-				let acount = self.nitems.clone();
-				acount.fetch_add(1, Ordering::SeqCst);
+				// let acount = self.nitems;
+				&inner_table.nitems.fetch_add(1, Ordering::SeqCst);
 				return
 			}
 		}
-		let acount = self.nitems.clone();
-		acount.fetch_add(1, Ordering::SeqCst);
+		// let acount = self.nitems;
+		&inner_table.nitems.fetch_add(1, Ordering::SeqCst);
 		bucket.push((key, value));
 	}
 
 	fn get (&self, key: usize) -> Option<usize>  {
+		let ref inner_table = &self.table.read().unwrap();//need read access
+
 		let mut hasher = DefaultHasher::new();
 		key.hash(&mut hasher);
 		let hash: usize = hasher.finish() as usize;
-		let index = hash % self.nbuckets;
+		let index = hash % inner_table.nbuckets;
 
-		let mut r = self.map[index].read().unwrap();
+		let mut r = inner_table.map[index].read().unwrap();
 		//search for key value and return Some(value), otherwise return None
 		for &(k,v) in r.iter() {
 			if k == key {
@@ -77,20 +87,24 @@ impl Hashmap {
 		// self.map[key.rem(self.nbuckets)].iter().find(|&&(k,_)| k == key).map(|&(_,v)|v) //equivalent to the above search function
 	}
 
-	fn resize (&mut self, newsize: usize) {
-		println!("resize: {}", newsize);
-		let mut new_hashmap = Hashmap::new(newsize);
+	fn resize (&self, newsize: usize) {
+		let ref inner_table = &self.table.write().unwrap();
 
-		for ref bucket in &self.map {
+		println!("resize: {}", newsize);
+		let new_hashmap = Hashmap::new(newsize);
+		let ref new = new_hashmap.table.write().unwrap();
+
+		for ref bucket in &new.map {
 			let mut w = bucket.write().unwrap(); //give write access
 
 			for &(k, v) in &mut w.iter() {
 				new_hashmap.insert(k, v);
 			}
 		}
-		self.map = new_hashmap.map;
-		self.nbuckets = new_hashmap.nbuckets;
-		self.nitems = new_hashmap.nitems;
+
+		inner_table.map = new.map;
+		inner_table.nitems = new.nitems;
+		inner_table.nbuckets = new.nbuckets;
 	}
 }
 
@@ -109,9 +123,10 @@ fn main() {
 	h.insert(3,1);
 	h.insert(20,5);
 
-	println!("Before Resize {:?}", h.map);
+	let read = h.table.read().unwrap(); //let it read it
+	println!("Before Resize {:?}", read.map);
 
-	// new_hashmap.resize(64);
+	new_hashmap.resize(64);
 
 	// println!("After Resize {:?}", new_hashmap.map);
     println!("Program Done!");
