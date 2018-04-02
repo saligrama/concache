@@ -94,7 +94,7 @@ impl Hashmap {
 
 		println!("resize: {}", newsize);
 		let new_hashmap = Hashmap::new(newsize);
-		let new = &new_hashmap.table.write().unwrap();
+		let ref new = &new_hashmap.table.write().unwrap();
 
 		for bucket in inner_table.map.iter() {
 			let w = bucket.write().unwrap(); //give write access
