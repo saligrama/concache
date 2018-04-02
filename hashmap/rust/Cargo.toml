@@ -1,0 +1,11 @@
+[package]
+name = "hashmap"
+version = "0.1.0"
+authors = ["Jon Gjengset <jon@thesquareplanet.com>"]
+
+[dependencies]
+rand = "0.4"
+
+[[bin]]
+name = "src"
+path = "main.rs"
