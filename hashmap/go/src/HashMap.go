@@ -2,6 +2,7 @@ package main
 
 import (
   "sync"
+  "sync/atomic"
 )
 
 const AVG_PER_BIN_THRESH int = 4
@@ -17,17 +18,13 @@ type Bin struct {
 }
 
 type HashMap struct {
-  nbuckets int
-  size int
+  nbuckets uint32
+  size uint32
   mp []Bin
 }
 
-func index (key int32, mod int) int {
-  return int(hash(key)) % mod
-}
-
-func hash (key int32) int {
-  return int(key)
+func index (key int32, mod uint32) int {
+  return int(key % int32(mod))
 }
 
 func (m *HashMap) resize () {
@@ -43,7 +40,7 @@ func (m *HashMap) resize () {
   m.mp = ret.mp
 }
 
-func New(size int) (*HashMap) {
+func New(size uint32) (*HashMap) {
   ret := new(HashMap)
   ret.nbuckets = size
   ret.size = 0
@@ -68,9 +65,11 @@ func (m *HashMap) Get (key int32) (int32, bool) {
 }
 
 func (m *HashMap) Put (key int32, value int32) bool {
+  /*
   if m.size/m.nbuckets > 0 {
     m.resize()
   }
+  */
 
   ndx := index(key, m.nbuckets)
   bin := m.mp[ndx]
@@ -92,7 +91,7 @@ func (m *HashMap) Put (key int32, value int32) bool {
   entry := Entry{key: key, val: value}
   bin.entries = append(bin.entries, entry)
   m.mp[ndx] = bin
-  m.size++
+  atomic.AddUint32(&m.size, 1);
 
   return true
 }
