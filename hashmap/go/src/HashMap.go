@@ -5,7 +5,7 @@ import (
   "sync/atomic"
 )
 
-const AVG_PER_BIN_THRESH int = 4
+const AVG_PER_BIN_THRESH uint32 = 4
 
 type Entry struct {
   key int32
@@ -20,6 +20,7 @@ type Bin struct {
 type HashMap struct {
   nbuckets uint32
   size uint32
+  lock *sync.RWMutex
   mp []Bin
 }
 
@@ -36,7 +37,7 @@ func (m *HashMap) resize () {
     }
   }
 
-  m.nbuckets = ret.nbuckets
+  atomic.SwapUint32(&m.nbuckets, ret.nbuckets)
   m.mp = ret.mp
 }
 
@@ -44,6 +45,7 @@ func New(size uint32) (*HashMap) {
   ret := new(HashMap)
   ret.nbuckets = size
   ret.size = 0
+  ret.lock = &sync.RWMutex{}
   ret.mp = make([]Bin, size)
   for i := range ret.mp {
     ret.mp[i] = Bin{lock: &sync.RWMutex{}, entries: make([]Entry, 0)}
@@ -52,6 +54,8 @@ func New(size uint32) (*HashMap) {
 }
 
 func (m *HashMap) Get (key int32) (int32, bool) {
+  m.lock.RLock()
+  defer m.lock.RUnlock()
   ndx := index(key, m.nbuckets)
   bin := m.mp[ndx]
   bin.lock.RLock()
@@ -65,12 +69,14 @@ func (m *HashMap) Get (key int32) (int32, bool) {
 }
 
 func (m *HashMap) Put (key int32, value int32) bool {
-  /*
-  if m.size/m.nbuckets > 0 {
+  if atomic.LoadUint32(&m.size)/m.nbuckets > AVG_PER_BIN_THRESH {
+    m.lock.Lock()
     m.resize()
+    m.lock.Unlock()
   }
-  */
 
+  m.lock.RLock()
+  defer m.lock.RUnlock()
   ndx := index(key, m.nbuckets)
 
   m.mp[ndx].lock.Lock()
