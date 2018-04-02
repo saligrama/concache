@@ -1,11 +1,7 @@
 [package]
-name = "hashmap"
+name = "rust"
 version = "0.1.0"
-authors = ["Jon Gjengset <jon@thesquareplanet.com>"]
+authors = ["Aditya Saligrama <saligrama427@gmail.com>"]
 
 [dependencies]
-rand = "0.4"
-
-[[bin]]
-name = "src"
-path = "main.rs"
+rand = "0.4.2"
