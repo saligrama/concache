@@ -1,2 +1,9 @@
-Conclusions
-Upon first glance, Rust is a language that mainly relies on the compiler to aid the programmer in coding as opposed to Golang which 
+Conclusion
+Rust seeks to provide safe code at compile time at the expense of ease of use while on the otherhand, Golang seeks to provide ease of use at the expense of somewhat unsafe code. 
+
+Rust provides helpful compiler features to aid the programmer such as the ability to detect races, dangerous accesses to mutability and reference of an object, and other suggestions that would otherwise cause the program to break down at runtime. Due to its extensive number of compiler features, this generally results in far more time spent debugging errors and warnings proposed by the compiler. Additionally, the extra features also cause to code to be generally more dense creating more difficult to read code. However, the extensive checking done by the compiler gives the programmer the liberty of not needing to use excessive print statements to debug incorrect code as it will be likely detected by the rust compiler. 
+
+On the otherhand, Golang offers far more freedom over the code than Rust at the expense of possibly unsafe, dangerous code. The compiler is far less restrictive and will not stop the programmer writing incorrect code, making only few corrections. Golang code is easier to make it past compile time at the expense of more time used in the debugging stage during runtime. Programmers will likely need to use print statements or other mechanisms to detect incorrections in their code. However, the lack of restrictions on the code from the compiler helps to create generally less dense code that is easier to read in contrast to Rust code.
+
+Rust and Golang have two major trade offs in terms of usability, the safety that the language provides internally versus the ease of use and simplicity that the languages offers externally.
+
