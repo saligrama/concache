@@ -213,11 +213,8 @@ mod tests {
 
     #[test]
     fn hashmap_concurr() {
-        let mut new_hashmap = Arc::new(Hashmap::new(16)); //init with 16 buckets
-                                                          // new_hashmap.map[0].push((1,2));
-
+        let mut new_hashmap = Arc::new(Hashmap::new(16)); //init with 16 buckets                                                   // new_hashmap.map[0].push((1,2));
         let mut threads = vec![];
-
         let nthreads = 10;
         for _ in 0..nthreads {
             let new_hashmap = new_hashmap.clone();
@@ -237,10 +234,8 @@ mod tests {
                 }
             }));
         }
-
         for t in threads {
             t.join().unwrap();
         }
     }
-
 }
