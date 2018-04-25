@@ -62,12 +62,11 @@ impl LinkedList {
 
 		}
 	}
+
 	fn print(&mut self) {
 		println!("Printing List!");
 		if self.head.get_mut().is_null() { //is the a way to get the non mut pointer?
-			println!("Head is NULL.");
 		} else {
-			println!("Head is NOT NULL.");
 			let mut curr_node: &Node;
 			let mut curr_ptr = &self.head; //not sure if needed atomic needed here
 			// unsafe {
@@ -82,6 +81,26 @@ impl LinkedList {
 				curr_ptr = &curr_node.next;
 			}
 		}
+	}
+
+	fn get(&mut self, key: usize) -> Option<usize> {
+		if !self.head.get_mut().is_null() { //is the a way to get the non mut pointer?
+			let mut curr_node: &Node;
+			let mut curr_ptr = &self.head; //not sure if needed atomic needed here
+
+			//go until finds the NULL pointer
+			while (!curr_ptr.load(Ordering::SeqCst).is_null()) {
+				unsafe {
+					curr_node = &*curr_ptr.load(Ordering::SeqCst);
+					if curr_node.data.0 == key {
+						let value = curr_node.data.1.lock().unwrap(); //underlying value
+						return Some(*value);
+					}
+				}
+				curr_ptr = &curr_node.next;
+			}
+		}
+		None
 	}
 }
 
@@ -219,8 +238,11 @@ fn main() {
 	new_linked_list.insert((3, 4));
 	new_linked_list.insert((5, 8));
 	new_linked_list.insert((4, 6));
-
 	new_linked_list.print();
+
+	assert_eq!(new_linked_list.get(3).unwrap(), 4);
+	assert_eq!(new_linked_list.get(5).unwrap(), 8);
+	assert_eq!(new_linked_list.get(2), None);
 	println!("Finished.");
 }
 
