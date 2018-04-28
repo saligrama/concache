@@ -25,10 +25,9 @@ struct LinkedList {
 
 impl LinkedList {
 	fn new() -> Self {
-		let mut ll = LinkedList {	
+		LinkedList {	
 			head: AtomicPtr::new(ptr::null_mut()),
-		};
-		ll
+		}
 	}
 
 	fn insert(&mut self, value: (usize, usize)) {
@@ -41,25 +40,45 @@ impl LinkedList {
 		if self.head.get_mut().is_null() {
 			self.head.compare_and_swap(ptr::null_mut(), Box::into_raw(new_node), Ordering::SeqCst);
 		} else {
-			let mut curr_node: &Node;
-			let mut curr_ptr = &self.head; //not sure if needed atomic needed here
+			let mut no_change = true;
+			let mut node_ptr = Box::into_raw(new_node);
 
-			//go until finds the NULL pointer
-			while (!curr_ptr.load(Ordering::SeqCst).is_null()) {
-				unsafe {
-					curr_node = &*curr_ptr.load(Ordering::SeqCst);
-				}
-				curr_ptr = &curr_node.next;
+			while no_change {
+				let mut curr_node: &Node;
+				let mut curr_ptr = &self.head; //not sure if needed atomic needed here
+				let mut raw_ptr = curr_ptr.load(Ordering::SeqCst);
+				let mut swap_yn = true;
 
-				if curr_node.data.0 == value.0 {
-					let mut change_value = curr_node.data.1.lock().unwrap();
-					*change_value = value.1;
-					return
+				//go until finds the NULL pointer
+				while (!raw_ptr.is_null()) {
+					println!("stuck! {:?}", raw_ptr);
+					;
+					unsafe {
+						curr_node = &*raw_ptr;
+					}
+					curr_ptr = &curr_node.next;
+					println!("loading");
+					raw_ptr = curr_ptr.load(Ordering::SeqCst);
+
+					if curr_node.data.0 == value.0 {
+						let mut change_value = curr_node.data.1.lock().unwrap();
+						*change_value = value.1;
+						swap_yn = false; //no need for swap at the end
+						no_change = false;
+						break;
+					}
+					println!("curr node {:?}", curr_node)
 				}
+				println!("here!");
+				//insert at the new pointer
+				if swap_yn {
+					let ret_ptr = curr_ptr.compare_and_swap(ptr::null_mut(), node_ptr, Ordering::SeqCst);
+					println!("{:?}", ret_ptr);
+					if ret_ptr == ptr::null_mut() {
+						no_change = false;	
+					}
+				}	
 			}
-			//insert at the new pointer
-			curr_ptr.compare_and_swap(ptr::null_mut(), Box::into_raw(new_node), Ordering::SeqCst);
-
 		}
 	}
 
@@ -69,16 +88,16 @@ impl LinkedList {
 		} else {
 			let mut curr_node: &Node;
 			let mut curr_ptr = &self.head; //not sure if needed atomic needed here
-			// unsafe {
-			// 	println!("{:?}", *curr_ptr.load(Ordering::SeqCst));	
-			// }
+			let mut raw_ptr = curr_ptr.load(Ordering::SeqCst);
+
 			//go until finds the NULL pointer
-			while (!curr_ptr.load(Ordering::SeqCst).is_null()) {
+			while (!raw_ptr.is_null()) {
 				unsafe {
-					curr_node = &*curr_ptr.load(Ordering::SeqCst);
+					curr_node = &*raw_ptr;
 					println!("{:?}", curr_node);	
 				}
 				curr_ptr = &curr_node.next;
+				raw_ptr = curr_ptr.load(Ordering::SeqCst);
 			}
 		}
 	}
@@ -87,17 +106,19 @@ impl LinkedList {
 		if !self.head.get_mut().is_null() { //is the a way to get the non mut pointer?
 			let mut curr_node: &Node;
 			let mut curr_ptr = &self.head; //not sure if needed atomic needed here
+			let mut raw_ptr = curr_ptr.load(Ordering::SeqCst);
 
 			//go until finds the NULL pointer
-			while (!curr_ptr.load(Ordering::SeqCst).is_null()) {
+			while (!raw_ptr.is_null()) {
 				unsafe {
-					curr_node = &*curr_ptr.load(Ordering::SeqCst);
+					curr_node = &*raw_ptr;
 					if curr_node.data.0 == key {
 						let value = curr_node.data.1.lock().unwrap(); //underlying value
 						return Some(*value);
 					}
 				}
 				curr_ptr = &curr_node.next;
+				raw_ptr = curr_ptr.load(Ordering::SeqCst);
 			}
 		}
 		None
