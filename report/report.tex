@@ -1,5 +1,7 @@
 \documentclass{article}
 
+\usepackage{multicol}
+
 \begin{document}
 \title{Comparing Features of Rust and Go for Writing Concurrent Hash Maps}
 
@@ -7,6 +9,8 @@
 
 \maketitle
 
+\begin{multicols}{2}
+[
 \input{sections/introduction}
 
 \input{sections/prob_statement}
@@ -14,5 +18,6 @@
 \input{sections/analysis}
 
 \input{sections/conclusions}
-
+]
+\end{multicols}
 \end{document}
