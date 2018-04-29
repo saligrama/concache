@@ -6,9 +6,124 @@ extern crate rand;
 use rand::{thread_rng, Rng};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, RwLock};
+use std::sync::atomic::{AtomicUsize, Ordering, AtomicPtr};
+use std::sync::{Arc, RwLock, Mutex};
 use std::thread;
+use std::ptr;
+
+#[derive(Debug)]
+struct Node {
+	data: (usize, Mutex<usize>),
+	next: AtomicPtr<Node>,
+	// next: *const Node, //not sure if const is right
+}
+
+#[derive(Debug)]
+struct LinkedList {
+	head: AtomicPtr<Node>,
+}
+
+impl LinkedList {
+	fn new() -> Self {
+		LinkedList {	
+			head: AtomicPtr::new(ptr::null_mut()),
+		}
+	}
+
+	fn insert(&mut self, value: (usize, usize)) {
+		//Make new Node
+		let mut new_node = Box::new (Node {
+			data: (value.0, Mutex::new(value.1)), 
+			next: AtomicPtr::new(ptr::null_mut()),
+		});
+
+		if self.head.get_mut().is_null() {
+			self.head.compare_and_swap(ptr::null_mut(), Box::into_raw(new_node), Ordering::SeqCst);
+		} else {
+			let mut no_change = true;
+			let mut node_ptr = Box::into_raw(new_node);
+
+			while no_change {
+				let mut curr_node: &Node;
+				let mut curr_ptr = &self.head; //not sure if needed atomic needed here
+				let mut raw_ptr = curr_ptr.load(Ordering::SeqCst);
+				let mut swap_yn = true;
+
+				//go until finds the NULL pointer
+				while (!raw_ptr.is_null()) {
+					println!("stuck! {:?}", raw_ptr);
+					;
+					unsafe {
+						curr_node = &*raw_ptr;
+					}
+					curr_ptr = &curr_node.next;
+					println!("loading");
+					raw_ptr = curr_ptr.load(Ordering::SeqCst);
+
+					if curr_node.data.0 == value.0 {
+						let mut change_value = curr_node.data.1.lock().unwrap();
+						*change_value = value.1;
+						swap_yn = false; //no need for swap at the end
+						no_change = false;
+						break;
+					}
+					println!("curr node {:?}", curr_node)
+				}
+				println!("here!");
+				//insert at the new pointer
+				if swap_yn {
+					let ret_ptr = curr_ptr.compare_and_swap(ptr::null_mut(), node_ptr, Ordering::SeqCst);
+					println!("{:?}", ret_ptr);
+					if ret_ptr == ptr::null_mut() {
+						no_change = false;	
+					}
+				}	
+			}
+		}
+	}
+
+	fn print(&mut self) {
+		println!("Printing List!");
+		if self.head.get_mut().is_null() { //is the a way to get the non mut pointer?
+		} else {
+			let mut curr_node: &Node;
+			let mut curr_ptr = &self.head; //not sure if needed atomic needed here
+			let mut raw_ptr = curr_ptr.load(Ordering::SeqCst);
+
+			//go until finds the NULL pointer
+			while (!raw_ptr.is_null()) {
+				unsafe {
+					curr_node = &*raw_ptr;
+					println!("{:?}", curr_node);	
+				}
+				curr_ptr = &curr_node.next;
+				raw_ptr = curr_ptr.load(Ordering::SeqCst);
+			}
+		}
+	}
+
+	fn get(&mut self, key: usize) -> Option<usize> {
+		if !self.head.get_mut().is_null() { //is the a way to get the non mut pointer?
+			let mut curr_node: &Node;
+			let mut curr_ptr = &self.head; //not sure if needed atomic needed here
+			let mut raw_ptr = curr_ptr.load(Ordering::SeqCst);
+
+			//go until finds the NULL pointer
+			while (!raw_ptr.is_null()) {
+				unsafe {
+					curr_node = &*raw_ptr;
+					if curr_node.data.0 == key {
+						let value = curr_node.data.1.lock().unwrap(); //underlying value
+						return Some(*value);
+					}
+				}
+				curr_ptr = &curr_node.next;
+				raw_ptr = curr_ptr.load(Ordering::SeqCst);
+			}
+		}
+		None
+	}
+}
 
 struct Table {
     nbuckets: usize,
@@ -138,30 +253,18 @@ impl Hashmap {
 }
 
 fn main() {
-    println!("Program Start!");
-    let new_hashmap = Arc::new(Hashmap::new(16)); //init with 16 buckets
+	let mut new_linked_list = LinkedList::new();
+	println!("{:?}", new_linked_list);
+	new_linked_list.insert((3, 2));
+	new_linked_list.insert((3, 4));
+	new_linked_list.insert((5, 8));
+	new_linked_list.insert((4, 6));
+	new_linked_list.print();
 
-    let h = new_hashmap.clone();
-    h.insert(1, 1);
-    h.insert(2, 5);
-    h.insert(12, 5);
-    h.insert(13, 7);
-    h.insert(0, 0);
-    h.insert(20, 3);
-    h.insert(3, 2);
-    h.insert(3, 1);
-    h.insert(20, 5);
-
-    let read = h.table.read().unwrap(); //let it read it
-    println!("Before Resize {:?}", read.map);
-    drop(read);
-
-    h.resize(64);
-
-    let read = h.table.read().unwrap(); //let it read it
-    println!("After Resize {:?}", read.map);
-    drop(read);
-    println!("Program Done!");
+	assert_eq!(new_linked_list.get(3).unwrap(), 4);
+	assert_eq!(new_linked_list.get(5).unwrap(), 8);
+	assert_eq!(new_linked_list.get(2), None);
+	println!("Finished.");
 }
 
 #[cfg(test)]
