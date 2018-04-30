@@ -1,6 +1,6 @@
 #![feature(integer_atomics)]
 
-use std::sync::{Arc, Mutex, RwLock, atomic::*};
+use std::sync::{Mutex, RwLock, atomic::*};
 use std::ptr;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
@@ -106,11 +106,11 @@ impl Table {
     fn new (nbuckets : usize) -> Self {
         let mut v = Vec::with_capacity(nbuckets);
 
-        for i in 0..nbuckets {
+        for _i in 0..nbuckets {
             v.push(LinkedList::new());
         }
 
-        let mut ret = Table {
+        let ret = Table {
             bsize: AtomicUsize::new(nbuckets),
             size: AtomicUsize::new(0),
             mp: RwLock::new(v)
@@ -120,8 +120,8 @@ impl Table {
     }
 
     fn resize (&mut self, nbuckets : usize) {
-        let v = (&self).mp.write().unwrap();
         let new = Table::new(nbuckets);
+        let mut v = (&self).mp.write().unwrap();
         let bsize = self.bsize.load(Ordering::SeqCst);
         for i in 0..bsize {
             let ll = &v[i];
@@ -139,7 +139,7 @@ impl Table {
             }
         }
 
-        mem::replace(&mut v, new.mp.write().unwrap());
+        mem::replace(&mut v, (&new).mp.write().unwrap());
         self.bsize.compare_and_swap(bsize, nbuckets, Ordering::SeqCst);
     }
 
