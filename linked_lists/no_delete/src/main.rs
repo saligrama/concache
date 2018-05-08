@@ -10,6 +10,8 @@ use std::sync::atomic::{AtomicUsize, Ordering, AtomicPtr};
 use std::sync::{Arc, RwLock, Mutex};
 use std::thread;
 use std::ptr;
+use std::marker::PhantomData;
+
 
 #[derive(Debug)]
 struct Node {
@@ -21,6 +23,25 @@ struct Node {
 #[derive(Debug)]
 struct LinkedList {
 	head: AtomicPtr<Node>,
+}
+
+struct LinkedListIterator<'a> {
+    current: *mut Node,
+    marker: PhantomData<'a>,
+}
+
+impl<'a> Iterator for LinkedListIterator<'a> {
+    type Item = *mut Node;
+    fn next(&mut self) -> Option<*mut Node> {
+    	unsafe {
+    		let node = *self.current;	
+    		if (*node).next.load(Ordering::SeqCst).is_null() {
+        		None
+	        } else {
+	        	Some((*node).next.load(Ordering::SeqCst))
+	        }
+    	}
+    }
 }
 
 impl LinkedList {
