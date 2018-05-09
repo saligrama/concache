@@ -27,18 +27,19 @@ struct LinkedList {
 
 struct LinkedListIterator<'a> {
     current: *mut Node,
-    marker: PhantomData<'a>,
+    marker: PhantomData<&'a ()>,
 }
+
 
 impl<'a> Iterator for LinkedListIterator<'a> {
     type Item = *mut Node;
     fn next(&mut self) -> Option<*mut Node> {
     	unsafe {
-    		let node = *self.current;	
-    		if (*node).next.load(Ordering::SeqCst).is_null() {
+    		let node = &*self.current;	
+    		if node.next.load(Ordering::SeqCst).is_null() {
         		None
 	        } else {
-	        	Some((*node).next.load(Ordering::SeqCst))
+	        	Some(node.next.load(Ordering::SeqCst))
 	        }
     	}
     }
@@ -51,14 +52,15 @@ impl LinkedList {
 		}
 	}
 
-	fn insert(&mut self, value: (usize, usize)) {
+	//might change to accet a just values instead because tuples is confusing
+	fn insert(&self, value: (usize, usize)) {
 		//Make new Node
 		let mut new_node = Box::new (Node {
 			data: (value.0, Mutex::new(value.1)), 
 			next: AtomicPtr::new(ptr::null_mut()),
 		});
 
-		if self.head.get_mut().is_null() {
+		if self.head.load(Ordering::SeqCst).is_null() {
 			self.head.compare_and_swap(ptr::null_mut(), Box::into_raw(new_node), Ordering::SeqCst);
 		} else {
 			let mut no_change = true;
@@ -71,14 +73,12 @@ impl LinkedList {
 				let mut swap_yn = true;
 
 				//go until finds the NULL pointer
-				while (!raw_ptr.is_null()) {
-					println!("stuck! {:?}", raw_ptr);
-					;
+				while !raw_ptr.is_null() {
+
 					unsafe {
 						curr_node = &*raw_ptr;
 					}
 					curr_ptr = &curr_node.next;
-					println!("loading");
 					raw_ptr = curr_ptr.load(Ordering::SeqCst);
 
 					if curr_node.data.0 == value.0 {
@@ -90,7 +90,6 @@ impl LinkedList {
 					}
 					println!("curr node {:?}", curr_node)
 				}
-				println!("here!");
 				//insert at the new pointer
 				if swap_yn {
 					let ret_ptr = curr_ptr.compare_and_swap(ptr::null_mut(), node_ptr, Ordering::SeqCst);
@@ -100,12 +99,12 @@ impl LinkedList {
 					}
 				}	
 			}
-		}
+		} 
 	}
 
-	fn print(&mut self) {
+	fn print(&self) {
 		println!("Printing List!");
-		if self.head.get_mut().is_null() { //is the a way to get the non mut pointer?
+		if self.head.load(Ordering::SeqCst).is_null() { //is the a way to get the non mut pointer?
 		} else {
 			let mut curr_node: &Node;
 			let mut curr_ptr = &self.head; //not sure if needed atomic needed here
@@ -123,8 +122,8 @@ impl LinkedList {
 		}
 	}
 
-	fn get(&mut self, key: usize) -> Option<usize> {
-		if !self.head.get_mut().is_null() { //is the a way to get the non mut pointer?
+	fn get(&self, key: usize) -> Option<usize> {
+		if !self.head.load(Ordering::SeqCst).is_null() { //is the a way to get the non mut pointer?
 			let mut curr_node: &Node;
 			let mut curr_ptr = &self.head; //not sure if needed atomic needed here
 			let mut raw_ptr = curr_ptr.load(Ordering::SeqCst);
@@ -144,11 +143,19 @@ impl LinkedList {
 		}
 		None
 	}
+
+    fn iter(&self) -> LinkedListIterator { 
+    	LinkedListIterator { 
+    		current: self.head.load(Ordering::SeqCst), 
+    		marker: PhantomData,
+    	}
+    }
+
 }
 
 struct Table {
     nbuckets: usize,
-    map: Vec<RwLock<Vec<(usize, usize)>>>,
+    map: Vec<LinkedList>,
     nitems: AtomicUsize,
 }
 
@@ -161,34 +168,20 @@ impl Table {
         };
 
         for _ in 0..num_of_buckets {
-            t.map.push(RwLock::new(Vec::new()));
+            t.map.push(LinkedList::new());
         }
 
         t
     }
 
-    fn insert(&self, key: usize, value: usize) {
+    //changed to mut 
+    fn insert(&mut self, key: usize, value: usize) {
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
         let index = hash % self.nbuckets;
 
-        // println!("index: {}", index);
-        let mut w = self.map[index].write().unwrap(); //give write access
-
-        //push the key and value tuple into the map
-        for &mut (k, ref mut v) in w.iter_mut() {
-            if k == key {
-                *v = value;
-                // let acount = self.nitems;
-                // replacing does *not* increase the number of items
-                // self.nitems.fetch_add(1, Ordering::SeqCst);
-                return;
-            }
-        }
-        // let acount = self.nitems;
-        self.nitems.fetch_add(1, Ordering::SeqCst);
-        w.push((key, value));
+        self.map[index].insert((key, value));
     }
 
     fn get(&self, key: usize) -> Option<usize> {
@@ -197,26 +190,22 @@ impl Table {
         let hash: usize = hasher.finish() as usize;
         let index = hash % self.nbuckets;
 
-        let r = self.map[index].read().unwrap();
-        //search for key value and return Some(value), otherwise return None
-        for &(k, v) in r.iter() {
-            if k == key {
-                return Some(v);
-            }
-        }
-        None
-
-        // self.map[key.rem(self.nbuckets)].iter().find(|&&(k,_)| k == key).map(|&(_,v)|v) //equivalent to the above search function
+        self.map[index].get(key)
     }
 
     fn resize(&mut self, newsize: usize) {
         println!("resize: {}", newsize);
-        let new = Table::new(newsize);
+        let mut new = Table::new(newsize);
 
         for bucket in &self.map {
-            let bucket = bucket.read().unwrap();
-            for &(key, value) in bucket.iter() {
-                new.insert(key, value);
+            for node in bucket.iter() {
+            	unsafe {
+            		let k = (*node).data.0;
+	            	let v = (*node).data.1.lock().unwrap();
+	            	let v = *v;
+	                new.insert(k, v);	
+            	}
+            	
             }
         }
 
@@ -241,7 +230,7 @@ impl Hashmap {
         let inner_table = self.table.read().unwrap(); //need read access
 
         // // check for resize
-        let num_item: usize = inner_table.nitems.load(Ordering::Relaxed);
+        let num_item: usize = inner_table.nitems.load(Ordering::SeqCst);
         if (num_item / inner_table.nbuckets >= 2) { //threshold is 2
         	let resize_value: usize = inner_table.nbuckets * 2;
 
@@ -259,12 +248,9 @@ impl Hashmap {
     }
 
     fn resize(&self, newsize: usize) {
-    	// println!("HEREA!");
+    	println!("RESIZING!");
         let mut inner_table = self.table.write().unwrap();
         // println!("THERE!");
-
-
-        println!("Made it here, with value: {}", newsize);
 
         // TODO: re-check if resize is actually needed
         if inner_table.map.capacity() != newsize {
@@ -280,6 +266,8 @@ fn main() {
 	new_linked_list.insert((3, 4));
 	new_linked_list.insert((5, 8));
 	new_linked_list.insert((4, 6));
+	new_linked_list.insert((1, 8));
+	new_linked_list.insert((6, 6));
 	new_linked_list.print();
 
 	assert_eq!(new_linked_list.get(3).unwrap(), 4);
