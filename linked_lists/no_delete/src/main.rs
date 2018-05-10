@@ -36,11 +36,12 @@ impl<'a> Iterator for LinkedListIterator<'a> {
     fn next(&mut self) -> Option<*mut Node> {
     	unsafe {
     		let node = &*self.current;
-    		// println!("node iter {:?}", node);
+    		println!("prev {:?}", node);
     		if node.next.load(Ordering::SeqCst).is_null() {
         		None
 	        } else {
-	        	// println!("returning");
+	        	self.current = node.next.load(Ordering::SeqCst);
+	        	println!("after {:?}", node);
 	        	Some(node.next.load(Ordering::SeqCst))
 	        }
     	}
@@ -62,85 +63,69 @@ impl LinkedList {
 			next: AtomicPtr::new(ptr::null_mut()),
 		});
 
-		if self.head.load(Ordering::SeqCst).is_null() {
-			self.head.compare_and_swap(ptr::null_mut(), Box::into_raw(new_node), Ordering::SeqCst);
-		} else {
-			let mut no_change = true;
-			let mut node_ptr = Box::into_raw(new_node);
-
-			while no_change {
-				let mut curr_node: &Node;
-				let mut curr_ptr = &self.head; //not sure if needed atomic needed here
-				let mut raw_ptr = curr_ptr.load(Ordering::SeqCst);
-				let mut swap_yn = true;
-
-				//go until finds the NULL pointer
-				while !raw_ptr.is_null() {
-
-					unsafe {
-						curr_node = &*raw_ptr;
-					}
-					curr_ptr = &curr_node.next;
-					raw_ptr = curr_ptr.load(Ordering::SeqCst);
-
-					if curr_node.data.0 == value.0 {
-						let mut change_value = curr_node.data.1.lock().unwrap();
-						*change_value = value.1;
-						swap_yn = false; //no need for swap at the end
-						no_change = false;
-						break;
-					}
-					println!("curr node {:?}", curr_node)
-				}
-				//insert at the new pointer
-				if swap_yn {
-					let ret_ptr = curr_ptr.compare_and_swap(ptr::null_mut(), node_ptr, Ordering::SeqCst);
-					println!("{:?}", ret_ptr);
-					if ret_ptr == ptr::null_mut() {
-						no_change = false;	
-					}
-				}	
+		for loaded_next_ptr in self.iter() {
+			let next_node = unsafe { &*loaded_next_ptr };
+			if next_node.data.0 == key {
+				let mut change_value = next_node.data.1.lock().unwrap();
+				*change_value = value.1;
+				return
 			}
-		} 
+		}
+		//add on to the end if not returned already
+		let ret_ptr = curr_ptr.compare_and_swap(ptr::null_mut(), node_ptr, Ordering::SeqCst);
+
+		// if self.head.load(Ordering::SeqCst).is_null() {
+		// 	self.head.compare_and_swap(ptr::null_mut(), Box::into_raw(new_node), Ordering::SeqCst);
+		// } else {
+		// 	let mut node_ptr = Box::into_raw(new_node);
+
+		// 	loop {
+		// 		let mut curr_node: &Node;
+		// 		let mut curr_ptr = &self.head; //not sure if needed atomic needed here
+		// 		let mut raw_ptr = curr_ptr.load(Ordering::SeqCst);
+
+		// 		//go until finds the NULL pointer
+		// 		while !raw_ptr.is_null() {
+
+		// 			unsafe {
+		// 				curr_node = &*raw_ptr;
+		// 			}
+		// 			curr_ptr = &curr_node.next;
+		// 			raw_ptr = curr_ptr.load(Ordering::SeqCst);
+
+		// 			if curr_node.data.0 == value.0 {
+		// 				let mut change_value = curr_node.data.1.lock().unwrap();
+		// 				*change_value = value.1;
+		// 				return;
+		// 			}
+		// 			println!("curr node {:?}", curr_node)
+		// 		}
+		// 		//insert at the new pointer
+		// 		let ret_ptr = curr_ptr.compare_and_swap(ptr::null_mut(), node_ptr, Ordering::SeqCst);
+		// 		println!("{:?}", ret_ptr);
+		// 		return;
+		// 	}
+		// } 
 	}
 
 	fn print(&self) {
 		println!("Printing List!");
-		if self.head.load(Ordering::SeqCst).is_null() { //is the a way to get the non mut pointer?
-		} else {
-			let mut curr_node: &Node;
-			let mut curr_ptr = &self.head; //not sure if needed atomic needed here
-			let mut raw_ptr = curr_ptr.load(Ordering::SeqCst);
-
-			//go until finds the NULL pointer
-			while (!raw_ptr.is_null()) {
-				unsafe {
-					curr_node = &*raw_ptr;
-					println!("{:?}", curr_node);	
-				}
-				curr_ptr = &curr_node.next;
-				raw_ptr = curr_ptr.load(Ordering::SeqCst);
-			}
+		for loaded_next_ptr in self.iter() {
+			let next_node = unsafe { &*loaded_next_ptr };
+			println!("{:?}", next_node);
 		}
 	}
 
 	fn get(&self, key: usize) -> Option<usize> {
-		if !self.head.load(Ordering::SeqCst).is_null() { //is the a way to get the non mut pointer?
-			let mut curr_node: &Node;
-			let mut curr_ptr = &self.head; //not sure if needed atomic needed here
-			let mut raw_ptr = curr_ptr.load(Ordering::SeqCst);
-
-			//go until finds the NULL pointer
-			while (!raw_ptr.is_null()) {
-				unsafe {
-					curr_node = &*raw_ptr;
-					if curr_node.data.0 == key {
-						let value = curr_node.data.1.lock().unwrap(); //underlying value
-						return Some(*value);
-					}
-				}
-				curr_ptr = &curr_node.next;
-				raw_ptr = curr_ptr.load(Ordering::SeqCst);
+		println!("printing first");
+		self.print();
+		println!("key {:?}", key);
+		for loaded_next_ptr in self.iter() {
+			let next_node = unsafe { &*loaded_next_ptr };
+			println!("next_node: {:?}", next_node);
+			if next_node.data.0 == key {
+				let value = next_node.data.1.lock().unwrap();
+				return Some(*value);
 			}
 		}
 		None
@@ -189,6 +174,7 @@ impl Table {
     }
 
     fn get(&self, key: usize) -> Option<usize> {
+    	println!("here2");
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
@@ -249,6 +235,7 @@ impl Hashmap {
     }
 
     fn get(&self, key: usize) -> Option<usize> {
+    	println!("here1");
         let inner_table = self.table.read().unwrap(); //need read access
         inner_table.get(key)
     }
@@ -278,19 +265,29 @@ fn main() {
 	assert_eq!(new_linked_list.get(5).unwrap(), 8);
 	assert_eq!(new_linked_list.get(2), None);
 
-	for node in new_linked_list.iter() {
-		let val = unsafe{*node};
-		println!("node value {:?}", val);
-	}
+    println!("Started");
+    let mut new_hashmap = Hashmap::new(2); //init with 16 buckets
+	// new_hashmap.map[0].push((1,2)); //manually push
+    //input values
+    new_hashmap.insert(1, 1);
+    new_hashmap.insert(2, 5);
+    new_hashmap.insert(12, 5);
+    new_hashmap.insert(13, 7);
+    new_hashmap.insert(0, 0);
 
-	// let mut new_hashmap = Hashmap::new(1);
-	// new_hashmap.insert(1,3);
-	// println!("here1");
-	// new_hashmap.insert(2,4);
-	// println!("here2");
-	// new_hashmap.insert(3,6);
+    println!("testing for 4");
+    assert_eq!(new_hashmap.table.read().unwrap().map.capacity(), 4); //should be 4 after you attempt the 5th insert
 
-	// println!("Finished.");
+    new_hashmap.insert(20, 3);
+    new_hashmap.insert(3, 2);
+    new_hashmap.insert(4, 1);
+    new_hashmap.insert(5, 5);
+
+    new_hashmap.insert(20, 5); //repeated
+    new_hashmap.insert(3, 8); //repeated
+    println!("testing for 8");
+
+	println!("Finished.");
 }
 
 #[cfg(test)]
@@ -320,24 +317,25 @@ mod tests {
         new_hashmap.insert(20, 5); //repeated
         new_hashmap.insert(3, 8); //repeated
         println!("testing for 8");
-        // assert_eq!(new_hashmap.table.read().unwrap().map.capacity(), 8); //should be 8 after you attempt the 9th insert
+        assert_eq!(new_hashmap.table.read().unwrap().map.capacity(), 8); //should be 8 after you attempt the 9th insert
 
+        println!("20 value: {:?}", new_hashmap.get(20));
         assert_eq!(new_hashmap.get(20).unwrap(), 5);
-        assert_eq!(new_hashmap.get(12).unwrap(), 5);
-        assert_eq!(new_hashmap.get(1).unwrap(), 1);
-        assert_eq!(new_hashmap.get(0).unwrap(), 0);
-        assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
+        // assert_eq!(new_hashmap.get(12).unwrap(), 5);
+        // assert_eq!(new_hashmap.get(1).unwrap(), 1);
+        // assert_eq!(new_hashmap.get(0).unwrap(), 0);
+        // assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
 
         // new_hashmap.resize(64);
 
         // assert_eq!(new_hashmap.table.read().unwrap().map.capacity(), 64); //make sure it is correct length
 
         //try the same assert_eqs
-        assert_eq!(new_hashmap.get(20).unwrap(), 5);
-        assert_eq!(new_hashmap.get(12).unwrap(), 5);
-        assert_eq!(new_hashmap.get(1).unwrap(), 1);
-        assert_eq!(new_hashmap.get(0).unwrap(), 0);
-        assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
+        // assert_eq!(new_hashmap.get(20).unwrap(), 5);
+        // assert_eq!(new_hashmap.get(12).unwrap(), 5);
+        // assert_eq!(new_hashmap.get(1).unwrap(), 1);
+        // assert_eq!(new_hashmap.get(0).unwrap(), 0);
+        // assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
     }
 
     // #[test]
