@@ -339,9 +339,8 @@ mod tests {
                             assert_eq!(v.unwrap(), val);
                         }
                     }
-                    println!("hereb");
+                    println!("here");
                 }
-                println!("herea");
             }));
         }
         for t in threads {
