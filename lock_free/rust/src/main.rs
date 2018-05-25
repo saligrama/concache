@@ -7,7 +7,8 @@ use std::ptr;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
 use std::thread;
-use rand::{thread_rng, Rng};
+use rand::thread_rng;
+use std::fmt;
 
 const AVG_PER_BIN_THRESH : usize = 4;
 
@@ -48,21 +49,20 @@ impl LinkedList {
         }
     }
 
-    fn insert (&self, kv : (usize, usize)) {
+    fn insert (&self, kv : (usize, usize)) -> bool {
         let ins = Box::new(Node::new(kv.0, kv.1));
 
         if self.first.load(Ordering::SeqCst).is_null() {
             // nonexistent first node
             self.first.compare_and_swap(ptr::null_mut(), Box::into_raw(ins), Ordering::SeqCst);
         } else {
-            let mut not_mutated = false;
+            let mut not_mutated = true;
             let p = Box::into_raw(ins);
 
-            while !not_mutated {
+            while not_mutated {
                 let mut node_cur : &Node;
                 let mut ptr_cur = &self.first;
                 let mut ptr_raw = ptr_cur.load(Ordering::SeqCst);
-                let mut swap = true;
 
                 while !ptr_raw.is_null() {
                     node_cur = unsafe { &*ptr_raw };
@@ -73,20 +73,19 @@ impl LinkedList {
                     if node_cur.kv.0 == kv.0 {
                         let mut change = node_cur.kv.1.lock().unwrap();
                         *change = kv.1;
-                        swap = false;
-                        not_mutated = false;
-                        break;
+                        return false;
                     }
                 }
 
-                if swap {
-                    let ret = ptr_cur.compare_and_swap(ptr::null_mut(), p, Ordering::SeqCst);
-                    if ret == ptr::null_mut() {
-                        not_mutated = false;
-                    }
+                let ret = ptr_cur.compare_and_swap(ptr::null_mut(), p, Ordering::SeqCst);
+                if ret == ptr::null_mut() {
+                    not_mutated = false;
                 }
             }
         }
+
+        self.size.fetch_add(1, Ordering::SeqCst);
+        true
     }
 
     fn get (&self, key : usize) -> Option<usize> {
@@ -108,6 +107,35 @@ impl LinkedList {
             }
         }
         None
+    }
+}
+
+impl fmt::Display for LinkedList {
+    fn fmt (&self, f : &mut fmt::Formatter) -> fmt::Result {
+        let mut ret = String::new();
+        if !self.first.load(Ordering::SeqCst).is_null() {
+
+            let mut node_cur : &Node;
+            let mut ptr_cur = &self.first;
+            let mut ptr_raw = ptr_cur.load(Ordering::SeqCst);
+
+            while !ptr_raw.is_null() {
+                node_cur = unsafe { &*ptr_raw };
+                let key = node_cur.kv.0;
+                let value = node_cur.kv.1.lock().unwrap();
+
+                ret.push_str("(");
+                ret.push_str(&key.to_string());
+                ret.push_str(", ");
+                ret.push_str(&value.to_string());
+                ret.push_str("), ");
+
+                ptr_cur = &node_cur.next;
+                ptr_raw = ptr_cur.load(Ordering::SeqCst);
+            }
+        }
+
+        write!(f, "{}", ret)
     }
 }
 
@@ -160,8 +188,9 @@ impl Table {
 
         let ndx = h % bsize;
 
-        &self.mp[ndx].insert((key, value));
-        self.size.fetch_add(1, Ordering::SeqCst);
+        if (&self).mp[ndx].insert((key, value)) {
+            self.size.fetch_add(1, Ordering::SeqCst);
+        }
     }
 
     fn get (&self, key : usize) -> Option<usize> {
@@ -175,10 +204,22 @@ impl Table {
     }
 }
 
+impl fmt::Display for Table {
+    fn fmt (&self, f : &mut fmt::Formatter) -> fmt::Result {
+        let mut all = String::new();
+        let bsize = (&self).bsize.load(Ordering::SeqCst);
+        for i in 0..bsize {
+            all.push_str(&(&self).mp[i].to_string());
+        }
+        let ret : String = all.chars().skip(0).take(all.len() - 2).collect();
+        write!(f, "[{}]", ret)
+    }
+}
+
 impl HashMap {
     fn new () -> Self {
         HashMap {
-            table: RwLock::new(Table::new(4))
+            table: RwLock::new(Table::new(1))
         }
     }
 
@@ -200,7 +241,20 @@ impl HashMap {
 
     fn resize (&self, nbuckets : usize) {
         let mut t = (&self).table.write().unwrap();
+        println!("hi");
         t.resize(nbuckets);
+    }
+
+    fn size (&self) -> usize {
+        let t = (&self).table.read().unwrap();
+        println!("{}", t.size.load(Ordering::SeqCst));
+        t.size.load(Ordering::SeqCst)
+    }
+}
+
+impl fmt::Display for HashMap {
+    fn fmt (&self, f : &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", (&self).table.read().unwrap().to_string())
     }
 }
 
@@ -226,11 +280,12 @@ fn main() {
     new_HashMap.insert(1, 1);
     new_HashMap.insert(2, 5);
     new_HashMap.insert(12, 5);
-    new_HashMap.insert(13, 7);
+    new_HashMap.insert(12, 7);
     new_HashMap.insert(0, 0);
 
     println!("testing for 4");
-    assert_eq!(new_HashMap.table.read().unwrap().mp.capacity(), 4); //should be 4 after you attempt the 5th insert
+    println!("{}", new_HashMap.to_string());
+    assert_eq!(new_HashMap.size(), 4); //should be 4 after you attempt the 5th insert
 
     new_HashMap.insert(20, 3);
     new_HashMap.insert(3, 2);
@@ -260,7 +315,7 @@ mod tests {
         new_HashMap.insert(13, 7);
         new_HashMap.insert(0, 0);
 
-        assert_eq!(new_HashMap.table.read().unwrap().mp.capacity(), 4); //should be 4 after you attempt the 5th insert
+        assert_eq!(new_HashMap.size(), 4); //should be 4 after you attempt the 5th insert
 
         new_HashMap.insert(20, 3);
         new_HashMap.insert(3, 2);
@@ -269,7 +324,7 @@ mod tests {
 
         new_HashMap.insert(20, 5); //repeated
         new_HashMap.insert(3, 8); //repeated
-        assert_eq!(new_HashMap.table.read().unwrap().mp.capacity(), 8); //should be 8 after you attempt the 9th insert
+        assert_eq!(new_HashMap.size(), 8); //should be 8 after you attempt the 9th insert
 
         assert_eq!(new_HashMap.get(20).unwrap(), 5);
         assert_eq!(new_HashMap.get(12).unwrap(), 5);
