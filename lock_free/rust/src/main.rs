@@ -1,3 +1,7 @@
+// TODO look into adding a logger (envlogger)
+// TODO delete concurrent memory reclamation
+// TODO try crossbeam
+
 #![feature(integer_atomics)]
 
 extern crate rand;
@@ -23,12 +27,13 @@ struct LinkedList {
 }
 
 struct Table {
-    bsize: AtomicUsize,
-    size: AtomicUsize,
+    bsize: usize,
     mp: Vec<LinkedList>
 }
 
 struct HashMap {
+    bsize: usize,
+    size: AtomicUsize,
     table: RwLock<Table>
 }
 
@@ -148,8 +153,7 @@ impl Table {
         }
 
         let ret = Table {
-            bsize: AtomicUsize::new(nbuckets),
-            size: AtomicUsize::new(0),
+            bsize: nbuckets,
             mp: v
         };
 
@@ -158,8 +162,7 @@ impl Table {
 
     fn resize (&mut self, nbuckets : usize) {
         let new = Table::new(nbuckets);
-        let bsize = self.bsize.load(Ordering::SeqCst);
-        for i in 0..bsize {
+        for i in 0..self.bsize {
             let ll = &self.mp[i];
 
             let mut ptr_cur = &ll.first;
@@ -176,21 +179,17 @@ impl Table {
         }
 
         self.mp = new.mp;
-        self.bsize.compare_and_swap(bsize, nbuckets, Ordering::SeqCst);
+        self.bsize = nbuckets;
     }
 
-    fn insert (&self, key : usize, value : usize) {
-        let bsize = self.bsize.load(Ordering::SeqCst);
-
+    fn insert (&self, key : usize, value : usize) -> bool {
         let mut hsh = DefaultHasher::new();
         hsh.write_usize(key);
         let h = hsh.finish() as usize;
 
-        let ndx = h % bsize;
+        let ndx = h % self.bsize;
 
-        if (&self).mp[ndx].insert((key, value)) {
-            self.size.fetch_add(1, Ordering::SeqCst);
-        }
+        self.mp[ndx].insert((key, value))
     }
 
     fn get (&self, key : usize) -> Option<usize> {
@@ -198,17 +197,16 @@ impl Table {
         hsh.write_usize(key);
         let h = hsh.finish() as usize;
 
-        let ndx = h % self.bsize.load(Ordering::SeqCst);
+        let ndx = h % self.bsize;
 
-        (&self).mp[ndx].get(key)
+        self.mp[ndx].get(key)
     }
 }
 
 impl fmt::Display for Table {
     fn fmt (&self, f : &mut fmt::Formatter) -> fmt::Result {
         let mut all = String::new();
-        let bsize = (&self).bsize.load(Ordering::SeqCst);
-        for i in 0..bsize {
+        for i in 0..self.bsize {
             all.push_str(&(&self).mp[i].to_string());
         }
         let ret : String = all.chars().skip(0).take(all.len() - 2).collect();
@@ -219,36 +217,44 @@ impl fmt::Display for Table {
 impl HashMap {
     fn new () -> Self {
         HashMap {
+            bsize: 1,
+            size: AtomicUsize::new(0),
             table: RwLock::new(Table::new(1))
         }
     }
 
     fn insert (&self, key : usize, val : usize) {
-        let t = (&self).table.read().unwrap();
-        let bsize = t.bsize.load(Ordering::SeqCst);
-        let size = t.size.load(Ordering::SeqCst);
-        if size / bsize > AVG_PER_BIN_THRESH {
-            self.resize(bsize * 2);
+        let size = self.size.load(Ordering::SeqCst);
+        if size / self.bsize > AVG_PER_BIN_THRESH {
+            self.resize();
         }
 
-        t.insert(key, val);
+        let t = self.table.read().unwrap();
+        if t.insert(key, val) {
+            self.size.fetch_add(1, Ordering::SeqCst);
+        }
     }
 
     fn get (&self, key : usize) -> Option<usize> {
+        println!("Taking read lock for get");
         let t = (&self).table.read().unwrap();
-        t.get(key)
+        println!("Took read lock for get");
+        let ret = t.get(key);
+        println!("Releasing read lock for get");
+        ret
     }
 
-    fn resize (&self, nbuckets : usize) {
+    fn resize (&self) {
+        // TODO make sure we don't over-resize
+        println!("Taking write lock");
         let mut t = (&self).table.write().unwrap();
-        println!("hi");
-        t.resize(nbuckets);
+        println!("Took write lock");
+        t.resize(self.bsize * 2);
+        println!("Releasing write lock");
     }
 
     fn size (&self) -> usize {
-        let t = (&self).table.read().unwrap();
-        println!("{}", t.size.load(Ordering::SeqCst));
-        t.size.load(Ordering::SeqCst)
+        self.size.load(Ordering::SeqCst)
     }
 }
 
@@ -295,7 +301,7 @@ fn main() {
     new_HashMap.insert(20, 5); //repeated
     new_HashMap.insert(3, 8); //repeated
     println!("testing for 8");
-    assert_eq!(new_HashMap.table.read().unwrap().mp.capacity(), 8);
+    assert_eq!(new_HashMap.size(), 8);
 
 	println!("Finished.");
 }
@@ -332,7 +338,7 @@ mod tests {
         assert_eq!(new_HashMap.get(0).unwrap(), 0);
         assert!(new_HashMap.get(3).unwrap() != 2); // test that it changed
 
-        new_HashMap.resize(64);
+        new_HashMap.resize();
 
         assert_eq!(new_HashMap.table.read().unwrap().mp.capacity(), 64); //make sure it is correct length
 
