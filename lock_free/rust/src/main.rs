@@ -1,10 +1,20 @@
+// TODO look into adding a logger (envlogger)
+// TODO delete concurrent memory reclamation
+// TODO try crossbeam
+
 #![feature(integer_atomics)]
 
-use std::sync::{Mutex, RwLock, atomic::*};
+extern crate rand;
+
+use std::sync::{Mutex, RwLock, atomic::*, Arc};
 use std::ptr;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
-use std::mem;
+use std::thread;
+use rand::thread_rng;
+use std::fmt;
+
+const AVG_PER_BIN_THRESH : usize = 4;
 
 struct Node {
     kv: (usize, Mutex<usize>),
@@ -17,9 +27,14 @@ struct LinkedList {
 }
 
 struct Table {
-    bsize: AtomicUsize,
+    bsize: usize,
+    mp: Vec<LinkedList>
+}
+
+struct HashMap {
+    bsize: usize,
     size: AtomicUsize,
-    mp: RwLock<Vec<LinkedList>>
+    table: RwLock<Table>
 }
 
 impl Node {
@@ -39,21 +54,20 @@ impl LinkedList {
         }
     }
 
-    fn insert (&self, kv : (usize, usize)) {
+    fn insert (&self, kv : (usize, usize)) -> bool {
         let ins = Box::new(Node::new(kv.0, kv.1));
 
         if self.first.load(Ordering::SeqCst).is_null() {
             // nonexistent first node
             self.first.compare_and_swap(ptr::null_mut(), Box::into_raw(ins), Ordering::SeqCst);
         } else {
-            let mut not_mutated = false;
+            let mut not_mutated = true;
             let p = Box::into_raw(ins);
 
-            while !not_mutated {
+            while not_mutated {
                 let mut node_cur : &Node;
                 let mut ptr_cur = &self.first;
                 let mut ptr_raw = ptr_cur.load(Ordering::SeqCst);
-                let mut swap = true;
 
                 while !ptr_raw.is_null() {
                     node_cur = unsafe { &*ptr_raw };
@@ -64,20 +78,19 @@ impl LinkedList {
                     if node_cur.kv.0 == kv.0 {
                         let mut change = node_cur.kv.1.lock().unwrap();
                         *change = kv.1;
-                        swap = false;
-                        not_mutated = false;
-                        break;
+                        return false;
                     }
                 }
 
-                if swap {
-                    let ret = ptr_cur.compare_and_swap(ptr::null_mut(), p, Ordering::SeqCst);
-                    if ret == ptr::null_mut() {
-                        not_mutated = false;
-                    }
+                let ret = ptr_cur.compare_and_swap(ptr::null_mut(), p, Ordering::SeqCst);
+                if ret == ptr::null_mut() {
+                    not_mutated = false;
                 }
             }
         }
+
+        self.size.fetch_add(1, Ordering::SeqCst);
+        true
     }
 
     fn get (&self, key : usize) -> Option<usize> {
@@ -102,6 +115,35 @@ impl LinkedList {
     }
 }
 
+impl fmt::Display for LinkedList {
+    fn fmt (&self, f : &mut fmt::Formatter) -> fmt::Result {
+        let mut ret = String::new();
+        if !self.first.load(Ordering::SeqCst).is_null() {
+
+            let mut node_cur : &Node;
+            let mut ptr_cur = &self.first;
+            let mut ptr_raw = ptr_cur.load(Ordering::SeqCst);
+
+            while !ptr_raw.is_null() {
+                node_cur = unsafe { &*ptr_raw };
+                let key = node_cur.kv.0;
+                let value = node_cur.kv.1.lock().unwrap();
+
+                ret.push_str("(");
+                ret.push_str(&key.to_string());
+                ret.push_str(", ");
+                ret.push_str(&value.to_string());
+                ret.push_str("), ");
+
+                ptr_cur = &node_cur.next;
+                ptr_raw = ptr_cur.load(Ordering::SeqCst);
+            }
+        }
+
+        write!(f, "{}", ret)
+    }
+}
+
 impl Table {
     fn new (nbuckets : usize) -> Self {
         let mut v = Vec::with_capacity(nbuckets);
@@ -111,9 +153,8 @@ impl Table {
         }
 
         let ret = Table {
-            bsize: AtomicUsize::new(nbuckets),
-            size: AtomicUsize::new(0),
-            mp: RwLock::new(v)
+            bsize: nbuckets,
+            mp: v
         };
 
         ret
@@ -121,10 +162,8 @@ impl Table {
 
     fn resize (&mut self, nbuckets : usize) {
         let new = Table::new(nbuckets);
-        let mut v = (&self).mp.write().unwrap();
-        let bsize = self.bsize.load(Ordering::SeqCst);
-        for i in 0..bsize {
-            let ll = &v[i];
+        for i in 0..self.bsize {
+            let ll = &self.mp[i];
 
             let mut ptr_cur = &ll.first;
             let mut ptr_raw = ptr_cur.load(Ordering::SeqCst);
@@ -139,19 +178,18 @@ impl Table {
             }
         }
 
-        mem::replace(&mut v, (&new).mp.write().unwrap());
-        self.bsize.compare_and_swap(bsize, nbuckets, Ordering::SeqCst);
+        self.mp = new.mp;
+        self.bsize = nbuckets;
     }
 
-    fn insert (&self, key : usize, value : usize) {
+    fn insert (&self, key : usize, value : usize) -> bool {
         let mut hsh = DefaultHasher::new();
         hsh.write_usize(key);
         let h = hsh.finish() as usize;
 
-        let ndx = h % self.bsize.load(Ordering::SeqCst);
+        let ndx = h % self.bsize;
 
-        &self.mp.read().unwrap()[ndx].insert((key, value));
-        self.size.fetch_add(1, Ordering::SeqCst);
+        self.mp[ndx].insert((key, value))
     }
 
     fn get (&self, key : usize) -> Option<usize> {
@@ -159,8 +197,186 @@ impl Table {
         hsh.write_usize(key);
         let h = hsh.finish() as usize;
 
-        let ndx = h % self.bsize.load(Ordering::SeqCst);
+        let ndx = h % self.bsize;
 
-        (&self).mp.read().unwrap()[ndx].get(key)
+        self.mp[ndx].get(key)
+    }
+}
+
+impl fmt::Display for Table {
+    fn fmt (&self, f : &mut fmt::Formatter) -> fmt::Result {
+        let mut all = String::new();
+        for i in 0..self.bsize {
+            all.push_str(&(&self).mp[i].to_string());
+        }
+        let ret : String = all.chars().skip(0).take(all.len() - 2).collect();
+        write!(f, "[{}]", ret)
+    }
+}
+
+impl HashMap {
+    fn new () -> Self {
+        HashMap {
+            bsize: 1,
+            size: AtomicUsize::new(0),
+            table: RwLock::new(Table::new(1))
+        }
+    }
+
+    fn insert (&self, key : usize, val : usize) {
+        let size = self.size.load(Ordering::SeqCst);
+        if size / self.bsize > AVG_PER_BIN_THRESH {
+            self.resize();
+        }
+
+        let t = self.table.read().unwrap();
+        if t.insert(key, val) {
+            self.size.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    fn get (&self, key : usize) -> Option<usize> {
+        println!("Taking read lock for get");
+        let t = (&self).table.read().unwrap();
+        println!("Took read lock for get");
+        let ret = t.get(key);
+        println!("Releasing read lock for get");
+        ret
+    }
+
+    fn resize (&self) {
+        // TODO make sure we don't over-resize
+        println!("Taking write lock");
+        let mut t = (&self).table.write().unwrap();
+        println!("Took write lock");
+        t.resize(self.bsize * 2);
+        println!("Releasing write lock");
+    }
+
+    fn size (&self) -> usize {
+        self.size.load(Ordering::SeqCst)
+    }
+}
+
+impl fmt::Display for HashMap {
+    fn fmt (&self, f : &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", (&self).table.read().unwrap().to_string())
+    }
+}
+
+fn main() {
+	// let mut new_linked_list = LinkedList::new();
+	// println!("{:?}", new_linked_list);
+	// new_linked_list.insert((3, 2));
+	// new_linked_list.insert((3, 4));
+	// new_linked_list.insert((5, 8));
+	// new_linked_list.insert((4, 6));
+	// new_linked_list.insert((1, 8));
+	// new_linked_list.insert((6, 6));
+	// new_linked_list.print();
+
+	// assert_eq!(new_linked_list.get(3).unwrap(), 4);
+	// assert_eq!(new_linked_list.get(5).unwrap(), 8);
+	// assert_eq!(new_linked_list.get(2), None);
+
+    println!("Started");
+    let mut new_HashMap = HashMap::new(); //init with 16 buckets
+	// new_HashMap.mp[0].push((1,2)); //manually push
+    //input values
+    new_HashMap.insert(1, 1);
+    new_HashMap.insert(2, 5);
+    new_HashMap.insert(12, 5);
+    new_HashMap.insert(12, 7);
+    new_HashMap.insert(0, 0);
+
+    println!("testing for 4");
+    println!("{}", new_HashMap.to_string());
+    assert_eq!(new_HashMap.size(), 4); //should be 4 after you attempt the 5th insert
+
+    new_HashMap.insert(20, 3);
+    new_HashMap.insert(3, 2);
+    new_HashMap.insert(4, 1);
+    new_HashMap.insert(5, 5);
+
+    new_HashMap.insert(20, 5); //repeated
+    new_HashMap.insert(3, 8); //repeated
+    println!("testing for 8");
+    assert_eq!(new_HashMap.size(), 8);
+
+	println!("Finished.");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn HashMap_basics() {
+        let mut new_HashMap = HashMap::new(); //init with 2 buckets
+        //input values
+
+        new_HashMap.insert(1, 1);
+        new_HashMap.insert(2, 5);
+        new_HashMap.insert(12, 5);
+        new_HashMap.insert(13, 7);
+        new_HashMap.insert(0, 0);
+
+        assert_eq!(new_HashMap.size(), 4); //should be 4 after you attempt the 5th insert
+
+        new_HashMap.insert(20, 3);
+        new_HashMap.insert(3, 2);
+        new_HashMap.insert(4, 1);
+        new_HashMap.insert(5, 5);
+
+        new_HashMap.insert(20, 5); //repeated
+        new_HashMap.insert(3, 8); //repeated
+        assert_eq!(new_HashMap.size(), 8); //should be 8 after you attempt the 9th insert
+
+        assert_eq!(new_HashMap.get(20).unwrap(), 5);
+        assert_eq!(new_HashMap.get(12).unwrap(), 5);
+        assert_eq!(new_HashMap.get(1).unwrap(), 1);
+        assert_eq!(new_HashMap.get(0).unwrap(), 0);
+        assert!(new_HashMap.get(3).unwrap() != 2); // test that it changed
+
+        new_HashMap.resize();
+
+        assert_eq!(new_HashMap.table.read().unwrap().mp.capacity(), 64); //make sure it is correct length
+
+        // try the same assert_eqs
+        assert_eq!(new_HashMap.get(20).unwrap(), 5);
+        assert_eq!(new_HashMap.get(12).unwrap(), 5);
+        assert_eq!(new_HashMap.get(1).unwrap(), 1);
+        assert_eq!(new_HashMap.get(0).unwrap(), 0);
+        assert!(new_HashMap.get(3).unwrap() != 2); // test that it changed
+    }
+
+    #[test]
+    fn HashMap_concurr() {
+        let mut new_HashMap = Arc::new(HashMap::new()); //init with 16 buckets                                                   // new_HashMap.mp[0].push((1,2));
+        let mut threads = vec![];
+        let nthreads = 10;
+        for _ in 0..nthreads {
+            let new_HashMap = new_HashMap.clone();
+
+            threads.push(thread::spawn(move || {
+                for _ in 1..1000 {
+                    let mut rng = thread_rng();
+                    let val = rng.gen_range(0, 256);
+                    if val % 2 == 0 {
+                        new_HashMap.insert(val, val);
+                    } else {
+                        let v = new_HashMap.get(val);
+                        if (v != None) {
+                            assert_eq!(v.unwrap(), val);
+                        }
+                    }
+                    println!("here");
+                }
+            }));
+        }
+        for t in threads {
+        	println!("here");
+            t.join().unwrap();
+        }
     }
 }
