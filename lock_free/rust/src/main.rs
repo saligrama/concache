@@ -18,6 +18,7 @@ const AVG_PER_BIN_THRESH : usize = 4;
 
 struct Node {
     kv: (usize, Mutex<usize>),
+    active: AtomicBool,
     next: AtomicPtr<Node>
 }
 
@@ -41,6 +42,7 @@ impl Node {
     fn new (k : usize, v : usize) -> Self {
         Node {
             kv: (k, Mutex::new(v)),
+            active: AtomicBool::new(true),
             next: AtomicPtr::new(ptr::null_mut())
         }
     }
@@ -78,6 +80,7 @@ impl LinkedList {
                     if node_cur.kv.0 == kv.0 {
                         let mut change = node_cur.kv.1.lock().unwrap();
                         *change = kv.1;
+                        node_cur.active.compare_and_swap(true, false, Ordering::SeqCst);
                         return false;
                     }
                 }
@@ -103,6 +106,10 @@ impl LinkedList {
             while !ptr_raw.is_null() {
                 node_cur = unsafe { &*ptr_raw };
                 if node_cur.kv.0 == key {
+                    let active = node_cur.active.load(Ordering::SeqCst);
+                    if !active {
+                        return None;
+                    }
                     let value = node_cur.kv.1.lock().unwrap();
                     return Some(*value);
                 }
@@ -112,6 +119,29 @@ impl LinkedList {
             }
         }
         None
+    }
+
+    fn remove (&self, key : usize) -> bool {
+        if !self.first.load(Ordering::SeqCst).is_null() {
+
+            let mut node_cur : &Node;
+            let mut ptr_cur = &self.first;
+            let mut ptr_raw = ptr_cur.load(Ordering::SeqCst);
+
+            while !ptr_raw.is_null() {
+                node_cur = unsafe { &*ptr_raw };
+                if node_cur.kv.0 == key {
+                    if node_cur.active.compare_and_swap(true, false, Ordering::SeqCst) {
+                        return true;
+                    }
+                    return false;
+                }
+
+                ptr_cur = &node_cur.next;
+                ptr_raw = ptr_cur.load(Ordering::SeqCst);
+            }
+        }
+        false
     }
 }
 
@@ -126,17 +156,21 @@ impl fmt::Display for LinkedList {
 
             while !ptr_raw.is_null() {
                 node_cur = unsafe { &*ptr_raw };
-                let key = node_cur.kv.0;
-                let value = node_cur.kv.1.lock().unwrap();
+                let active = node_cur.active.load(Ordering::SeqCst);
+                // let active = true;
+                if active {
+                    let key = node_cur.kv.0;
+                    let value = node_cur.kv.1.lock().unwrap();
 
-                ret.push_str("(");
-                ret.push_str(&key.to_string());
-                ret.push_str(", ");
-                ret.push_str(&value.to_string());
-                ret.push_str("), ");
+                    ret.push_str("(");
+                    ret.push_str(&key.to_string());
+                    ret.push_str(", ");
+                    ret.push_str(&value.to_string());
+                    ret.push_str("), ");
 
-                ptr_cur = &node_cur.next;
-                ptr_raw = ptr_cur.load(Ordering::SeqCst);
+                    ptr_cur = &node_cur.next;
+                    ptr_raw = ptr_cur.load(Ordering::SeqCst);
+                }
             }
         }
 
@@ -201,6 +235,16 @@ impl Table {
 
         self.mp[ndx].get(key)
     }
+
+    fn remove (&self, key : usize) -> bool {
+        let mut hsh = DefaultHasher::new();
+        hsh.write_usize(key);
+        let h = hsh.finish() as usize;
+
+        let ndx = h % self.bsize;
+
+        self.mp[ndx].remove(key)
+    }
 }
 
 impl fmt::Display for Table {
@@ -242,6 +286,16 @@ impl HashMap {
         let ret = t.get(key);
         println!("Releasing read lock for get");
         ret
+    }
+
+    fn remove (&self, key : usize) {
+        println!("Taking read lock for remove");
+        let t = (&self).table.read().unwrap();
+        println!("Took read lock for remove");
+        if t.remove(key) {
+            self.size.fetch_sub(1, Ordering::SeqCst);
+        }
+        println!("Releasing read lock for remove");
     }
 
     fn resize (&self) {
@@ -302,6 +356,9 @@ fn main() {
     new_HashMap.insert(3, 8); //repeated
     println!("testing for 8");
     assert_eq!(new_HashMap.size(), 8);
+
+    new_HashMap.remove(20);
+    println!("{} {}", new_HashMap.to_string(), new_HashMap.size());
 
 	println!("Finished.");
 }
