@@ -80,7 +80,8 @@ impl LinkedList {
                     if node_cur.kv.0 == kv.0 {
                         let mut change = node_cur.kv.1.lock().unwrap();
                         *change = kv.1;
-                        node_cur.active.compare_and_swap(true, false, Ordering::SeqCst);
+                        // TODO should I reuse a node or not?????
+                        node_cur.active.store(true, Ordering::SeqCst);
                         return false;
                     }
                 }
@@ -131,7 +132,7 @@ impl LinkedList {
             while !ptr_raw.is_null() {
                 node_cur = unsafe { &*ptr_raw };
                 if node_cur.kv.0 == key {
-                    if node_cur.active.compare_and_swap(true, false, Ordering::SeqCst) {
+                    if node_cur.active.store(false, Ordering::SeqCst) {
                         return true;
                     }
                     return false;
