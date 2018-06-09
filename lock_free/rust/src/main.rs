@@ -160,7 +160,9 @@ impl fmt::Display for LinkedList {
                 // let active = true;
                 if active {
                     let key = node_cur.kv.0;
+                    println!("Taking lock for value");
                     let value = node_cur.kv.1.lock().unwrap();
+                    println!("Took lock for value");
 
                     ret.push_str("(");
                     ret.push_str(&key.to_string());
@@ -168,9 +170,10 @@ impl fmt::Display for LinkedList {
                     ret.push_str(&value.to_string());
                     ret.push_str("), ");
 
-                    ptr_cur = &node_cur.next;
-                    ptr_raw = ptr_cur.load(Ordering::SeqCst);
+                    println!("Releasing lock for value");
                 }
+                ptr_cur = &node_cur.next;
+                ptr_raw = ptr_cur.load(Ordering::SeqCst);
             }
         }
 
