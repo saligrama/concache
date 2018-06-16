@@ -130,9 +130,13 @@ impl LinkedList {
         let first = self.first.load(Ordering::Relaxed, &guard);
         let k = first.unwrap().as_raw();
         let k_raw = unsafe { &*k };
-        let next = k_raw.next.load(Ordering::Relaxed, &guard).unwrap();
-        let next_raw = unsafe { &*next.as_raw() };
-        next_raw.prev.store_shared(first, Ordering::Relaxed);
+        match k_raw.next.load(Ordering::Relaxed, &guard) {
+            Some(next) => {
+                let next_raw = unsafe { &*next.as_raw() };
+                next_raw.prev.store_shared(first, Ordering::Relaxed);
+            },
+            None => {}
+        }
 
         return true;
     }
