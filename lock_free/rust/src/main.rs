@@ -8,12 +8,11 @@ extern crate rand;
 extern crate crossbeam;
 
 use std::sync::{Mutex, RwLock, atomic::*, Arc};
-use std::ptr;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
 use std::thread;
 use std::fmt;
-use rand::thread_rng;
+use rand::{thread_rng, Rng};
 
 use crossbeam::epoch::{self, Atomic, Owned};
 
@@ -573,8 +572,7 @@ mod tests {
 
             threads.push(thread::spawn(move || {
                 for _ in 1..1000 {
-                    let mut rng = thread_rng();
-                    let val = rng.gen_range(0, 256);
+                    let val = thread_rng().gen_range(0, 256);
                     if val % 2 == 0 {
                         new_HashMap.insert(val, val);
                     } else {
