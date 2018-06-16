@@ -5,3 +5,4 @@ authors = ["Aditya Saligrama <saligrama427@gmail.com>"]
 
 [dependencies]
 rand = "0.5.0"
+crossbeam = "0.3.2"
