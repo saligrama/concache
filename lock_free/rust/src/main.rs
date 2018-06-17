@@ -63,37 +63,6 @@ impl LinkedList {
     fn insert (&self, kv : (usize, usize)) -> bool {
         let guard = epoch::pin();
 
-        // if self.first.load(Ordering::SeqCst, &guard).is_null() {
-        //     // nonexistent first node
-        //     self.first.compare_and_swap(ptr::null_mut(), Box::into_raw(ins), Ordering::SeqCst);
-        // } else {
-        //     let mut not_mutated = true;
-        //     let p = Box::into_raw(ins);
-        //
-        //     while not_mutated {
-        //         let mut node_cur : &Node;
-        //         let mut ptr_cur = &self.first;
-        //         let mut ptr_raw = ptr_cur.load(Ordering::SeqCst);
-        //
-        //         while !ptr_raw.is_null() {
-        //             node_cur = unsafe { &*ptr_raw };
-        //             ptr_cur = &node_cur.next;
-        //             ptr_raw = ptr_cur.load(Ordering::SeqCst);
-        //
-        //             // found same key
-        //             if node_cur.kv.0 == kv.0 && node_cur.active.load(Ordering::SeqCst) == true {
-        //                 let mut change = node_cur.kv.1.lock().unwrap();
-        //                 *change = kv.1;
-        //                 return false;
-        //             }
-        //         }
-        //
-        //         let ret = ptr_cur.compare_and_swap(ptr::null_mut(), p, Ordering::SeqCst);
-        //         if ret == ptr::null_mut() {
-        //             not_mutated = false;
-        //         }
-        //     }
-
         let mut node = &self.first;
         loop {
             match node.load(Ordering::Relaxed, &guard) {
@@ -141,30 +110,8 @@ impl LinkedList {
     }
 
     fn get (&self, key : usize) -> Option<usize> {
-        // if !self.first.load(Ordering::SeqCst).is_null() {
-        //
-        //     let mut node_cur : &Node;
-        //     let mut ptr_cur = &self.first;
-        //     let mut ptr_raw = ptr_cur.load(Ordering::SeqCst);
-        //
-        //     while !ptr_raw.is_null() {
-        //         node_cur = unsafe { &*ptr_raw };
-        //         if node_cur.kv.0 == key {
-        //             let active = node_cur.active.load(Ordering::SeqCst);
-        //             if !active {
-        //                 return None;
-        //             }
-        //             let value = node_cur.kv.1.lock().unwrap();
-        //             return Some(*value);
-        //         }
-        //
-        //         ptr_cur = &node_cur.next;
-        //         ptr_raw = ptr_cur.load(Ordering::SeqCst);
-        //     }
-        // }
-        // None
-
         let guard = epoch::pin();
+
         let mut node = &self.first;
         loop {
             match node.load(Ordering::Relaxed, &guard) {
@@ -186,27 +133,8 @@ impl LinkedList {
     }
 
     fn remove (&self, key : usize) -> bool {
-        // if !self.first.load(Ordering::SeqCst).is_null() {
-        //
-        //     let mut node_cur : &Node;
-        //     let mut ptr_cur = &self.first;
-        //     let mut ptr_raw = ptr_cur.load(Ordering::SeqCst);
-        //
-        //     while !ptr_raw.is_null() {
-        //         node_cur = unsafe { &*ptr_raw };
-        //         if node_cur.kv.0 == key {
-        //             if node_cur.active.store(false, Ordering::SeqCst) {
-        //                 return true;
-        //             }
-        //             return false;
-        //         }
-        //
-        //         ptr_cur = &node_cur.next;
-        //         ptr_raw = ptr_cur.load(Ordering::SeqCst);
-        //     }
-        // }
-        // false
         let guard = epoch::pin();
+
         let mut node = &self.first;
         loop {
             match node.load(Ordering::Relaxed, &guard) {
@@ -242,39 +170,8 @@ impl LinkedList {
 
 impl fmt::Display for LinkedList {
     fn fmt (&self, f : &mut fmt::Formatter) -> fmt::Result {
-        // let mut ret = String::new();
-        // if !self.first.load(Ordering::Relaxed, &guard).is_null() {
-        //
-        //     let mut node_cur : &Node;
-        //     let mut ptr_cur = &self.first;
-        //     let mut ptr_raw = ptr_cur.load(Ordering::SeqCst);
-        //
-        //     while !ptr_raw.is_null() {
-        //         node_cur = unsafe { &*ptr_raw };
-        //         let active = node_cur.active.load(Ordering::SeqCst);
-        //         // let active = true;
-        //         if active {
-        //             let key = node_cur.kv.0;
-        //             println!("Taking lock for value");
-        //             let value = node_cur.kv.1.lock().unwrap();
-        //             println!("Took lock for value");
-        //
-        //             ret.push_str("(");
-        //             ret.push_str(&key.to_string());
-        //             ret.push_str(", ");
-        //             ret.push_str(&value.to_string());
-        //             ret.push_str("), ");
-        //
-        //             println!("Releasing lock for value");
-        //         }
-        //         ptr_cur = &node_cur.next;
-        //         ptr_raw = ptr_cur.load(Ordering::SeqCst);
-        //     }
-        // }
-        //
-        // write!(f, "{}", ret)
-
         let guard = epoch::pin();
+
         let mut ret = String::new();
         let mut node = &self.first;
         loop {
@@ -325,27 +222,6 @@ impl Table {
     }
 
     fn resize (&mut self, nbuckets : usize) {
-        // let guard = epoch::pin;
-        // let new = Table::new(nbuckets);
-        // for i in 0..self.bsize {
-        //     let ll = &self.mp[i];
-        //
-        //     let mut ptr_cur = &ll.first;
-        //     let mut ptr_raw = ptr_cur.load(Ordering::Relaxed, &guard);
-        //
-        //     while !ptr_raw.is_null() {
-        //         let mut node_cur = unsafe { &*ptr_raw };
-        //
-        //         new.insert(node_cur.kv.0, *node_cur.kv.1.lock().unwrap());
-        //
-        //         ptr_cur = &node_cur.next;
-        //         ptr_raw = ptr_cur.load(Ordering::SeqCst);
-        //     }
-        // }
-        //
-        // self.mp = new.mp;
-        // self.bsize = nbuckets;
-
         let guard = epoch::pin();
 
         let new = Table::new(nbuckets);
