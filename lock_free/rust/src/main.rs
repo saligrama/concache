@@ -1,6 +1,4 @@
 // TODO look into adding a logger (envlogger)
-// TODO delete concurrent memory reclamation
-// TODO try crossbeam
 
 #![feature(integer_atomics)]
 
@@ -12,6 +10,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
 use std::thread;
 use std::fmt;
+use std::mem;
 use rand::{thread_rng, Rng};
 
 use crossbeam::epoch::{self, Atomic, Owned};
@@ -26,7 +25,6 @@ struct Node {
 }
 
 struct LinkedList {
-    size: AtomicUsize,
     first: Atomic<Node>,
 }
 
@@ -36,7 +34,7 @@ struct Table {
 }
 
 struct HashMap {
-    bsize: usize,
+    bsize: AtomicUsize,
     size: AtomicUsize,
     table: RwLock<Table>
 }
@@ -55,8 +53,7 @@ impl Node {
 impl LinkedList {
     fn new () -> Self {
         LinkedList {
-            size: AtomicUsize::new(0),
-            first: Atomic::null(),
+            first: Atomic::null()
         }
     }
 
@@ -245,6 +242,8 @@ impl Table {
                 };
             }
         }
+
+        mem::replace(&mut self.mp, new.mp);
     }
 
     fn insert (&self, key : usize, value : usize) -> bool {
@@ -253,7 +252,7 @@ impl Table {
         let h = hsh.finish() as usize;
 
         let ndx = h % self.bsize;
-
+        println!("{} {} {}", ndx, self.mp.capacity(), self.bsize);
         self.mp[ndx].insert((key, value))
     }
 
@@ -292,21 +291,22 @@ impl fmt::Display for Table {
 impl HashMap {
     fn new () -> Self {
         HashMap {
-            bsize: 1,
+            bsize: AtomicUsize::new(1),
             size: AtomicUsize::new(0),
             table: RwLock::new(Table::new(1))
         }
     }
 
     fn insert (&self, key : usize, val : usize) {
-        let size = self.size.load(Ordering::SeqCst);
-        if size / self.bsize > AVG_PER_BIN_THRESH {
+        let size = self.size.load(Ordering::Relaxed);
+        let bsize = self.bsize.load(Ordering::Relaxed);
+        if size / bsize >= AVG_PER_BIN_THRESH {
             self.resize();
         }
 
-        let t = self.table.read().unwrap();
+        let t = self.table.write().unwrap();
         if t.insert(key, val) {
-            self.size.fetch_add(1, Ordering::SeqCst);
+            self.size.fetch_add(1, Ordering::Relaxed);
         }
     }
 
@@ -324,22 +324,25 @@ impl HashMap {
         let t = (&self).table.read().unwrap();
         println!("Took read lock for remove");
         if t.remove(key) {
-            self.size.fetch_sub(1, Ordering::SeqCst);
+            self.size.fetch_sub(1, Ordering::Relaxed);
         }
         println!("Releasing read lock for remove");
     }
 
     fn resize (&self) {
         // TODO make sure we don't over-resize
+        let bsize = self.bsize.load(Ordering::Relaxed);
         println!("Taking write lock");
         let mut t = (&self).table.write().unwrap();
         println!("Took write lock");
-        t.resize(self.bsize * 2);
+        t.resize(bsize * 2);
+        t.bsize = bsize * 2;
         println!("Releasing write lock");
+        self.bsize.store(bsize * 2, Ordering::Relaxed);
     }
 
     fn size (&self) -> usize {
-        self.size.load(Ordering::SeqCst)
+        self.size.load(Ordering::Relaxed)
     }
 }
 
@@ -409,7 +412,7 @@ mod tests {
         new_HashMap.insert(13, 7);
         new_HashMap.insert(0, 0);
 
-        assert_eq!(new_HashMap.size(), 4); //should be 4 after you attempt the 5th insert
+        assert_eq!(new_HashMap.size(), 5); //should be 5 after you attempt the 5th insert
 
         new_HashMap.insert(20, 3);
         new_HashMap.insert(3, 2);
@@ -418,7 +421,7 @@ mod tests {
 
         new_HashMap.insert(20, 5); //repeated
         new_HashMap.insert(3, 8); //repeated
-        assert_eq!(new_HashMap.size(), 8); //should be 8 after you attempt the 9th insert
+        assert_eq!(new_HashMap.size(), 9); //should be 9 after you attempt the 11th insert
 
         assert_eq!(new_HashMap.get(20).unwrap(), 5);
         assert_eq!(new_HashMap.get(12).unwrap(), 5);
@@ -426,9 +429,7 @@ mod tests {
         assert_eq!(new_HashMap.get(0).unwrap(), 0);
         assert!(new_HashMap.get(3).unwrap() != 2); // test that it changed
 
-        new_HashMap.resize();
-
-        assert_eq!(new_HashMap.table.read().unwrap().mp.capacity(), 64); //make sure it is correct length
+        assert_eq!(new_HashMap.table.read().unwrap().mp.capacity(), 4); //make sure it is correct length
 
         // try the same assert_eqs
         assert_eq!(new_HashMap.get(20).unwrap(), 5);
@@ -442,20 +443,22 @@ mod tests {
     fn HashMap_concurr() {
         let mut new_HashMap = Arc::new(HashMap::new()); //init with 16 buckets                                                   // new_HashMap.mp[0].push((1,2));
         let mut threads = vec![];
-        let nthreads = 10;
+        let nthreads = 8;
         for _ in 0..nthreads {
             let new_HashMap = new_HashMap.clone();
 
             threads.push(thread::spawn(move || {
                 for _ in 1..1000 {
                     let val = thread_rng().gen_range(0, 256);
-                    if val % 2 == 0 {
+                    if val % 3 == 0 {
                         new_HashMap.insert(val, val);
-                    } else {
+                    } else if val % 3 == 1 {
                         let v = new_HashMap.get(val);
-                        if (v != None) {
+                        if v != None {
                             assert_eq!(v.unwrap(), val);
                         }
+                    } else {
+                        new_HashMap.remove(val);
                     }
                     println!("here");
                 }
