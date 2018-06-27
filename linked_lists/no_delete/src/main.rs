@@ -56,36 +56,22 @@ impl LinkedList {
 			next: AtomicPtr::new(ptr::null_mut()),
 		});
 
-        if self.head.load(Ordering::SeqCst).is_null() {
-            //this case is for when the bucket is linked list is empty
-        	self.head.compare_and_swap(ptr::null_mut(), Box::into_raw(new_node), Ordering::SeqCst);
-        } else {
-        	let mut node_ptr = Box::into_raw(new_node);
-
-            //loop until CAS works
-            loop {
-                for node in self.iter() {
-                    if node.data.0 == key {
-                        let mut change_val = node.data.1.lock().unwrap();
-                        let ret = change_val.clone();
-                        *change_val = value;
-                        return Some(ret);
-                    }
-                    let next_ptr = node.next.load(Ordering::SeqCst);
-                    if next_ptr.is_null() {
-                        //if null it is the last pointer
-                        node.next.compare_and_swap(ptr::null_mut(), node_ptr, Ordering::SeqCst);
-                        return None;
-                    }
-                }
-                //it is not currently in the vector so we add it to the end
-                // let last_ptr = &self.iter().last().unwrap().next;
-                // if ptr::null_mut() == last_ptr.compare_and_swap(ptr::null_mut(), node_ptr, Ordering::SeqCst) {
-                //     return None;
-                // }
+        let mut curr_ptr = &self.head;
+        let mut next_raw = curr_ptr.load(Ordering::SeqCst);
+        while !next_raw.is_null() {
+            let next_node = unsafe { &*next_raw };
+            if key == next_node.data.0 {
+                let mut change_val = next_node.data.1.lock().unwrap();
+                let ret = change_val.clone();
+                *change_val = value;
+                return Some(ret);
             }
+            curr_ptr = &next_node.next;
+            next_raw = curr_ptr.load(Ordering::SeqCst);
         }
-        return None;
+        //add to the end
+        curr_ptr.compare_and_swap(ptr::null_mut(), Box::into_raw(new_node), Ordering::SeqCst);
+        None
 	}
 
 	fn print(&self) {
@@ -112,41 +98,59 @@ impl LinkedList {
     }
 
     fn delete(&self, key: usize) -> Option<*mut Node> {
-        //return value is either None is no value is deleted or the value of what key was deleted
-        //special case, if it is the first node
-        let first_ptr = self.head.load(Ordering::SeqCst);
-        if !first_ptr.is_null() {
-            let mut first_node = unsafe{ &*first_ptr };
-            if (first_node.data.0 == key) {
-                // self.head = AtomicPtr::new(ptr::null_mut());
-                self.head.compare_and_swap(first_ptr, ptr::null_mut(), Ordering::SeqCst);
-                // let mut first_node = Box::new(first_node);
-                return Some(first_ptr);
-            }
+        let mut curr_ptr = &self.head;
+        let mut next_raw = curr_ptr.load(Ordering::SeqCst);
 
-        }
-        //after this first special case, we want to look at next node and break when the next_ptr is null
-
-        //find node
-        if (self.iter().count() > 1) {
-            for curr_node in self.iter() {
-                //for each node, check the next node.
-                let next_ptr = curr_node.next.load(Ordering::SeqCst);
-                if next_ptr.is_null() {
-                    break;
-                }
-                let mut next_node = unsafe { &*next_ptr };
-                if next_node.data.0 == key {
-                    //key matches! CAS!
-                    // let ptr_to_swap = 
-                    curr_node.next.compare_and_swap(curr_node.next.load(Ordering::SeqCst), next_node.next.load(Ordering::SeqCst), Ordering::SeqCst);
-                    return Some(next_ptr);
-                }
+        while !next_raw.is_null() {
+            // println!("herea");
+            let next_node = unsafe { &*next_raw };
+            if key == next_node.data.0 {
+                // println!("hereb");
+                curr_ptr.compare_and_swap(next_raw, next_node.next.load(Ordering::SeqCst), Ordering::SeqCst);
+                return Some(next_raw);
             }
+            curr_ptr = &next_node.next;
+            next_raw = curr_ptr.load(Ordering::SeqCst);
         }
 
-        //node to delete could not be found
+        // curr_ptr.compare_and_swap(next_raw, ptr::null_mut(), Ordering::SeqCst);
         None
+        
+        // // //return value is either None is no value is deleted or the value of what key was deleted
+        // // //special case, if it is the first node
+        // let first_ptr = self.head.load(Ordering::SeqCst);
+        // if !first_ptr.is_null() {
+        //     let mut first_node = unsafe{ &*first_ptr };
+        //     if (first_node.data.0 == key) {
+        //         // self.head = AtomicPtr::new(ptr::null_mut());
+        //         self.head.compare_and_swap(first_ptr, ptr::null_mut(), Ordering::SeqCst);
+        //         // let mut first_node = Box::new(first_node);
+        //         return Some(first_ptr);
+        //     }
+
+        // }
+        // //after this first special case, we want to look at next node and break when the next_ptr is null
+
+        // //find node
+        // if (self.iter().count() > 1) {
+        //     for curr_node in self.iter() {
+        //         //for each node, check the next node.
+        //         let next_ptr = curr_node.next.load(Ordering::SeqCst);
+        //         if next_ptr.is_null() {
+        //             break;
+        //         }
+        //         let mut next_node = unsafe { &*next_ptr };
+        //         if next_node.data.0 == key {
+        //             //key matches! CAS!
+        //             // let ptr_to_swap = 
+        //             curr_node.next.compare_and_swap(curr_node.next.load(Ordering::SeqCst), next_node.next.load(Ordering::SeqCst), Ordering::SeqCst);
+        //             return Some(next_ptr);
+        //         }
+        //     }
+        // }
+
+        // // //node to delete could not be found
+        // None
     }
 }
 
@@ -345,7 +349,29 @@ impl Hashmap {
 
 fn main() {
     println!("Started");
-
+    let mut handle = Hashmap::new();
+    handle.insert(1,3);
+    handle.insert(2,5);
+    handle.insert(3,8);
+    handle.insert(4,3);
+    handle.insert(5,4);
+    handle.insert(6,5);
+    handle.insert(7,3);
+    handle.insert(8,3);
+    handle.insert(9,3);
+    handle.insert(10,3);
+    handle.insert(11,3);
+    handle.insert(12,3);
+    handle.insert(13,3);
+    handle.insert(14,3);
+    handle.insert(15,3);
+    handle.insert(16,3);
+    assert_eq!(handle.get(1).unwrap(), 3);
+    assert_eq!(handle.delete(1).unwrap(), 3);
+    assert_eq!(handle.get(1), None);
+    assert_eq!(handle.delete(2).unwrap(), 5);
+    assert_eq!(handle.delete(16).unwrap(), 3);
+    assert_eq!(handle.get(16), None);
 	println!("Finished.");
 }
 
@@ -384,8 +410,8 @@ mod tests {
                         new_handle.delete(val);
                     }
                 }
-                // assert_eq!(new_handle.started.load(Ordering::SeqCst), num_iterations);
-                // assert_eq!(new_handle.finished.load(Ordering::SeqCst), num_iterations);
+                assert_eq!(new_handle.started.load(Ordering::SeqCst), num_iterations);
+                assert_eq!(new_handle.finished.load(Ordering::SeqCst), num_iterations);
             }));
         }
         for t in threads {
