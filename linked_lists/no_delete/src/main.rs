@@ -101,56 +101,17 @@ impl LinkedList {
         let mut curr_ptr = &self.head;
         let mut next_raw = curr_ptr.load(Ordering::SeqCst);
 
+        //iterate through until we find the node to delete and then CAS it out
         while !next_raw.is_null() {
-            // println!("herea");
             let next_node = unsafe { &*next_raw };
             if key == next_node.data.0 {
-                // println!("hereb");
                 curr_ptr.compare_and_swap(next_raw, next_node.next.load(Ordering::SeqCst), Ordering::SeqCst);
                 return Some(next_raw);
             }
             curr_ptr = &next_node.next;
             next_raw = curr_ptr.load(Ordering::SeqCst);
         }
-
-        // curr_ptr.compare_and_swap(next_raw, ptr::null_mut(), Ordering::SeqCst);
         None
-        
-        // // //return value is either None is no value is deleted or the value of what key was deleted
-        // // //special case, if it is the first node
-        // let first_ptr = self.head.load(Ordering::SeqCst);
-        // if !first_ptr.is_null() {
-        //     let mut first_node = unsafe{ &*first_ptr };
-        //     if (first_node.data.0 == key) {
-        //         // self.head = AtomicPtr::new(ptr::null_mut());
-        //         self.head.compare_and_swap(first_ptr, ptr::null_mut(), Ordering::SeqCst);
-        //         // let mut first_node = Box::new(first_node);
-        //         return Some(first_ptr);
-        //     }
-
-        // }
-        // //after this first special case, we want to look at next node and break when the next_ptr is null
-
-        // //find node
-        // if (self.iter().count() > 1) {
-        //     for curr_node in self.iter() {
-        //         //for each node, check the next node.
-        //         let next_ptr = curr_node.next.load(Ordering::SeqCst);
-        //         if next_ptr.is_null() {
-        //             break;
-        //         }
-        //         let mut next_node = unsafe { &*next_ptr };
-        //         if next_node.data.0 == key {
-        //             //key matches! CAS!
-        //             // let ptr_to_swap = 
-        //             curr_node.next.compare_and_swap(curr_node.next.load(Ordering::SeqCst), next_node.next.load(Ordering::SeqCst), Ordering::SeqCst);
-        //             return Some(next_ptr);
-        //         }
-        //     }
-        // }
-
-        // // //node to delete could not be found
-        // None
     }
 }
 
@@ -269,10 +230,34 @@ impl MapHandle {
         let ret = Arc::clone(&self.map).delete(key);
         self.finished.fetch_add(1, Ordering::SeqCst);
 
+        if ret == None {
+            return None;
+        }
+
+        //epoch set up
+        let mut started = Vec::new();
+        for h in self.map.handles.read().unwrap().iter() {
+            started.push(h.0.load(Ordering::SeqCst));
+        }
+
+        for (i,h) in self.map.handles.read().unwrap().iter().enumerate() {
+            while h.1.load(Ordering::SeqCst) < started[i] {
+                // println!("waiting");
+                //do nothing
+            }
+            //now finished is greater than or equal to started
+        }
+        // println!("ready");
+
+        //physical deletion
         if ret != None {
-            let ret = unsafe { &*ret.unwrap() };
-            let ret = *ret.data.1.lock().unwrap();
-            return Some(ret);
+            let to_drop = ret.unwrap();
+            let node = unsafe { &*to_drop };
+
+            let ret_val = (*node.data.1.lock().unwrap()).clone(); //clone the value inside because we are about to drop
+            unsafe { drop(Box::from_raw(to_drop)) };
+            println!("ret_val: {:?}", ret_val);
+            return Some(ret_val);
         }
         None
     }
@@ -349,29 +334,38 @@ impl Hashmap {
 
 fn main() {
     println!("Started");
-    let mut handle = Hashmap::new();
-    handle.insert(1,3);
-    handle.insert(2,5);
-    handle.insert(3,8);
-    handle.insert(4,3);
-    handle.insert(5,4);
-    handle.insert(6,5);
-    handle.insert(7,3);
-    handle.insert(8,3);
-    handle.insert(9,3);
-    handle.insert(10,3);
-    handle.insert(11,3);
-    handle.insert(12,3);
-    handle.insert(13,3);
-    handle.insert(14,3);
-    handle.insert(15,3);
-    handle.insert(16,3);
-    assert_eq!(handle.get(1).unwrap(), 3);
-    assert_eq!(handle.delete(1).unwrap(), 3);
-    assert_eq!(handle.get(1), None);
-    assert_eq!(handle.delete(2).unwrap(), 5);
-    assert_eq!(handle.delete(16).unwrap(), 3);
-    assert_eq!(handle.get(16), None);
+    let mut handle = Hashmap::new(); //changed this,
+    let mut threads = vec![];
+    let nthreads = 5;
+    // let handle = MapHandle::new(Arc::clone(&new_hashmap).table.read().unwrap());
+    for _ in 0..nthreads {
+        let new_handle = handle.clone();
+
+        threads.push(thread::spawn(move || {
+            let num_iterations = 100000;
+            for _ in 0..num_iterations {
+                let mut rng = thread_rng();
+                let val = rng.gen_range(0, 128);
+                let two = rng.gen_range(0, 3);
+
+                if two % 3 == 0 {
+                    new_handle.insert(val, val);
+                } else if two % 3 == 1 {
+                    let v = new_handle.get(val);
+                    if (v != None) {
+                        assert_eq!(v.unwrap(), val);
+                    }
+                } else {
+                    new_handle.delete(val);
+                }
+            }
+            assert_eq!(new_handle.started.load(Ordering::SeqCst), num_iterations);
+            assert_eq!(new_handle.finished.load(Ordering::SeqCst), num_iterations);
+        }));
+    }
+    for t in threads {
+        t.join().unwrap();
+    }
 	println!("Finished.");
 }
 
