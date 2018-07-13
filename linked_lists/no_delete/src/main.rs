@@ -11,7 +11,7 @@ use std::sync::{Arc, RwLock, Mutex};
 use std::thread;
 use std::ptr;
 use std::marker::PhantomData;
-
+use std::mem;
 
 #[derive(Debug)]
 struct Node {
@@ -50,28 +50,32 @@ impl LinkedList {
 	}
 
 	fn insert(&self, key: usize, value: usize) -> Option<usize> {
-		//Make new Node
-		let mut new_node = Box::new (Node {
-			data: (key, Mutex::new(value)), 
-			next: AtomicPtr::new(ptr::null_mut()),
-		});
-
-        let mut curr_ptr = &self.head;
-        let mut next_raw = curr_ptr.load(Ordering::SeqCst);
-        while !next_raw.is_null() {
-            let next_node = unsafe { &*next_raw };
-            if key == next_node.data.0 {
-                let mut change_val = next_node.data.1.lock().unwrap();
-                let ret = change_val.clone();
-                *change_val = value;
-                return Some(ret);
+        loop {
+            //Make new Node
+    		let mut new_node = Box::new (Node {
+    			data: (key, Mutex::new(value)), 
+    			next: AtomicPtr::new(ptr::null_mut()),
+    		});
+            let mut curr_ptr = &self.head;
+            let mut next_raw = curr_ptr.load(Ordering::SeqCst);
+            while !next_raw.is_null() {
+                let next_node = unsafe { &*next_raw };
+                if key == next_node.data.0 {
+                    //case where the key already exists
+                    let mut change_val = next_node.data.1.lock().unwrap();
+                    let old_val = mem::replace(&mut *change_val, value); //exchange the values
+                    return Some(old_val);
+                }
+                curr_ptr = &next_node.next;
+                next_raw = curr_ptr.load(Ordering::SeqCst);
             }
-            curr_ptr = &next_node.next;
-            next_raw = curr_ptr.load(Ordering::SeqCst);
+            //case where the key doesn't already exist so we add it to the end
+            //if CAS fails we want to loop again, keep going til it works
+            let cas_ret = curr_ptr.compare_and_swap(ptr::null_mut(), Box::into_raw(new_node), Ordering::SeqCst);
+            if cas_ret == ptr::null_mut() {
+                return None;
+            }
         }
-        //add to the end
-        curr_ptr.compare_and_swap(ptr::null_mut(), Box::into_raw(new_node), Ordering::SeqCst);
-        None
 	}
 
 	fn print(&self) {
@@ -98,18 +102,28 @@ impl LinkedList {
     }
 
     fn delete(&self, key: usize) -> Option<*mut Node> {
-        let mut curr_ptr = &self.head;
-        let mut next_raw = curr_ptr.load(Ordering::SeqCst);
-
         //iterate through until we find the node to delete and then CAS it out
-        while !next_raw.is_null() {
-            let next_node = unsafe { &*next_raw };
-            if key == next_node.data.0 {
-                curr_ptr.compare_and_swap(next_raw, next_node.next.load(Ordering::SeqCst), Ordering::SeqCst);
-                return Some(next_raw);
+        let mut finished = false;
+
+
+        while !finished {
+            let mut curr_ptr = &self.head;
+            let mut next_raw = curr_ptr.load(Ordering::SeqCst);            
+
+            finished = true; //this is our last iteration through unless we encounter the key and fail the CAS, if this happens we try again
+            while !next_raw.is_null() {
+                let next_node = unsafe { &*next_raw };
+                if key == next_node.data.0 {
+                    let cas_ret = curr_ptr.compare_and_swap(next_raw, next_node.next.load(Ordering::SeqCst), Ordering::SeqCst);
+                    if cas_ret == next_raw {
+                        return Some(next_raw);
+                    } else {
+                        finished = false;
+                    }
+                }
+                curr_ptr = &next_node.next;
+                next_raw = curr_ptr.load(Ordering::SeqCst);
             }
-            curr_ptr = &next_node.next;
-            next_raw = curr_ptr.load(Ordering::SeqCst);
         }
         None
     }
@@ -137,13 +151,18 @@ impl Table {
     }
 
     fn insert(&self, key: usize, value: usize) -> Option<usize> {
+        let check = self.nitems.load(Ordering::SeqCst);
+        
+        if check > 10 {
+            panic!("too big!");  
+        }
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
         let index = hash % self.nbuckets;
 
         let ret = self.map[index].insert(key, value);
-        //issue with insert, have it return number 0 or 1?
+        
         if ret == None {
             self.nitems.fetch_add(1, Ordering::SeqCst);    
         }
@@ -161,25 +180,24 @@ impl Table {
     }
 
     fn resize(&mut self, newsize: usize) {
-        // println!("resize: {}", newsize);
-        let mut new = Table::new(newsize);
+        let mut new_table = Table::new(newsize);
 
         for bucket in &self.map {
             for node in bucket.iter() {
-            	unsafe {
-            		let k = (*node).data.0;
-	            	let v = (*node).data.1.lock().unwrap();
-	            	let v = *v;
-	                new.insert(k, v);	
+                unsafe {
+                    let k = node.data.0;
+                    // assert_eq!(new_table.get(k), None);
+                    let v = node.data.1.lock().unwrap();
+                    // let v = *v;
+
+                    new_table.insert(k, *v);
             	}
-            	
             }
         }
 
-        self.map = new.map;
-        self.nitems = new.nitems;
-        self.nbuckets = new.nbuckets;
-        // println!("finished resize");
+        self.map = new_table.map;
+        self.nitems = new_table.nitems;
+        self.nbuckets = new_table.nbuckets;
     }
 
     fn delete(&self, key: usize) -> Option<*mut Node> {
@@ -187,8 +205,10 @@ impl Table {
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
         let index = hash % self.nbuckets;
+
         let ret = self.map[index].delete(key);
         //if not None then subtract 1 from nitems
+
         if ret != None {
             self.nitems.fetch_sub(1, Ordering::SeqCst);
         }
@@ -199,67 +219,68 @@ impl Table {
 
 struct MapHandle {
     map: Arc<Hashmap>,
-    started: Arc<AtomicUsize>,
-    finished: Arc<AtomicUsize>,
+    epoch_counter: Arc<AtomicUsize>,
 }
 
 impl MapHandle {
     fn insert(&self, key: usize, value: usize) -> Option<usize> {
         //increment started before the operations begins
-        self.started.fetch_add(1, Ordering::SeqCst);
-        let ret = Arc::clone(&self.map).insert(key, value);
+        self.epoch_counter.fetch_add(1, Ordering::SeqCst);
+        let ret = self.map.insert(key, value);
         //increment finished after the operation ends
-        self.finished.fetch_add(1, Ordering::SeqCst);
+        self.epoch_counter.fetch_add(1, Ordering::SeqCst);
 
         ret
     }
 
     fn get(&self, key: usize) -> Option<usize> {
         //increment started before the operations begins
-        self.started.fetch_add(1, Ordering::SeqCst);
-        let ret = Arc::clone(&self.map).get(key);
+        self.epoch_counter.fetch_add(1, Ordering::SeqCst);
+        let ret = self.map.get(key);
         //increment finished after the operation ends
-        self.finished.fetch_add(1, Ordering::SeqCst);
+        self.epoch_counter.fetch_add(1, Ordering::SeqCst);
 
         ret
     }
 
     fn delete(&self, key: usize) -> Option<usize> {
-        self.started.fetch_add(1, Ordering::SeqCst);
+        self.epoch_counter.fetch_add(1, Ordering::SeqCst);
         //logical deletion aka cas
-        let ret = Arc::clone(&self.map).delete(key);
-        self.finished.fetch_add(1, Ordering::SeqCst);
+        let ret = self.map.delete(key);
+        self.epoch_counter.fetch_add(1, Ordering::SeqCst);
 
         if ret == None {
             return None;
         }
 
-        //epoch set up
+        //epoch set up, load all of the values
         let mut started = Vec::new();
-        for h in self.map.handles.read().unwrap().iter() {
-            started.push(h.0.load(Ordering::SeqCst));
+        let handles_map = self.map.handles.read().unwrap();
+        for h in handles_map.iter() {
+            started.push(h.load(Ordering::SeqCst));
         }
-
-        for (i,h) in self.map.handles.read().unwrap().iter().enumerate() {
-            while h.1.load(Ordering::SeqCst) < started[i] {
-                // println!("waiting");
+        for (i,h) in handles_map.iter().enumerate() {
+            let mut check = h.load(Ordering::SeqCst);
+            while (check <= started[i]) && (check%2 == 1) {
+                println!("epoch is spinning");
+                check = h.load(Ordering::SeqCst);
                 //do nothing
             }
             //now finished is greater than or equal to started
         }
-        // println!("ready");
 
-        //physical deletion
-        if ret != None {
-            let to_drop = ret.unwrap();
-            let node = unsafe { &*to_drop };
+        // let ret = unsafe { &*ret.unwrap() };
+        // let ret_val = ret.data.1.lock().unwrap().clone();
 
-            let ret_val = (*node.data.1.lock().unwrap()).clone(); //clone the value inside because we are about to drop
-            unsafe { drop(Box::from_raw(to_drop)) };
-            println!("ret_val: {:?}", ret_val);
-            return Some(ret_val);
-        }
-        None
+        //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
+        let to_drop = ret.unwrap();
+        // epoch rolled over, so we know we have exclusive access to the node
+        let node = unsafe { Box::from_raw(to_drop) };
+        let ret_val = node.data.1.into_inner().unwrap();
+        
+
+        unsafe { drop(Box::from_raw(to_drop)) };
+        return Some(ret_val);
     }
 }
 
@@ -267,13 +288,12 @@ impl Clone for MapHandle {
     fn clone(&self) -> Self {
         let ret = Self {
             map: Arc::clone(&self.map),
-            started: Arc::new(AtomicUsize::new(0)),
-            finished: Arc::new(AtomicUsize::new(0)),    
+            epoch_counter: Arc::new(AtomicUsize::new(0)),
         };
 
-        let mut hashmap = Arc::clone(&self.map);
+        let mut hashmap = &self.map;
         let mut handles_vec = hashmap.handles.write().unwrap();  //handles vector
-        handles_vec.push((Arc::clone(&ret.started), Arc::clone(&ret.finished)));
+        handles_vec.push(Arc::clone(&ret.epoch_counter));
 
         ret
     }
@@ -281,7 +301,7 @@ impl Clone for MapHandle {
 
 struct Hashmap {
     table: RwLock<Table>,
-    handles: RwLock<Vec<(Arc<AtomicUsize>, Arc<AtomicUsize>)>>, //(started, finished)
+    handles: RwLock<Vec<Arc<AtomicUsize>>>, //(started, finished)
 }
 
 impl Hashmap {
@@ -290,25 +310,31 @@ impl Hashmap {
             table: RwLock::new(Table::new(8)),
             handles: RwLock::new(Vec::new()),
         };
-        MapHandle {
+        let mut ret = MapHandle {
             map: Arc::new(new_hashmap),
-            started: Arc::new(AtomicUsize::new(0)),
-            finished: Arc::new(AtomicUsize::new(0)),
-        }
+            epoch_counter: Arc::new(AtomicUsize::new(0)),
+        };
+
+        //push the first maphandle into the epoch system
+        let mut hashmap = Arc::clone(&ret.map);
+        let mut handles_vec = hashmap.handles.write().unwrap();
+        handles_vec.push(Arc::clone(&ret.epoch_counter));
+        ret
     }
 
     fn insert(&self, key: usize, value: usize) -> Option<usize> {
-        let inner_table = self.table.read().unwrap(); //need read access
+        let inner_table = self.table.read().unwrap();
         // // check for resize
-        let num_item: usize = inner_table.nitems.load(Ordering::SeqCst);
-        if (num_item / inner_table.nbuckets >= 3) { //threshold is 2
+        let num_items = inner_table.nitems.load(Ordering::SeqCst);
+        if (num_items / inner_table.nbuckets >= 3) { //threshold is 2
         	let resize_value: usize = inner_table.nbuckets * 2;
         	drop(inner_table); //let the resize function take the lock
         	self.resize(resize_value); //double the size
         } else {
             drop(inner_table); //force drop in case resize doesnt happen?    
         }
-        let inner_table = self.table.read().unwrap(); //need read access
+
+        let inner_table = self.table.read().unwrap();
 
         inner_table.insert(key, value)
     }
@@ -327,7 +353,6 @@ impl Hashmap {
 
     fn delete(&self, key: usize) -> Option<*mut Node> {
         let inner_table = self.table.read().unwrap();
-
         inner_table.delete(key)
     }
 }
@@ -336,31 +361,35 @@ fn main() {
     println!("Started");
     let mut handle = Hashmap::new(); //changed this,
     let mut threads = vec![];
-    let nthreads = 5;
-    // let handle = MapHandle::new(Arc::clone(&new_hashmap).table.read().unwrap());
-    for _ in 0..nthreads {
+    let nthreads = 2;
+    for id in 0..nthreads {
         let new_handle = handle.clone();
 
         threads.push(thread::spawn(move || {
-            let num_iterations = 100000;
-            for _ in 0..num_iterations {
-                let mut rng = thread_rng();
-                let val = rng.gen_range(0, 128);
+            let num_iterations = 10000;
+            let mut rng = thread_rng();
+            for curr in 0..num_iterations {
+                let val = rng.gen_range(0, 10);
                 let two = rng.gen_range(0, 3);
 
-                if two % 3 == 0 {
-                    new_handle.insert(val, val);
-                } else if two % 3 == 1 {
+                if two == 0 {
+                    let v = new_handle.insert(val, val);
+                    if (v != None) {
+                        assert_eq!(v.unwrap(), val);
+                    }
+                } else if two == 1 {
                     let v = new_handle.get(val);
                     if (v != None) {
                         assert_eq!(v.unwrap(), val);
                     }
                 } else {
-                    new_handle.delete(val);
+                    let v = new_handle.delete(val);
+                    if (v != None) {
+                        assert_eq!(v.unwrap(), val);;
+                    }
                 }
             }
-            assert_eq!(new_handle.started.load(Ordering::SeqCst), num_iterations);
-            assert_eq!(new_handle.finished.load(Ordering::SeqCst), num_iterations);
+            // assert_eq!(new_handle.epoch_counter.load(Ordering::SeqCst), 2*num_iterations);
         }));
     }
     for t in threads {
@@ -404,8 +433,7 @@ mod tests {
                         new_handle.delete(val);
                     }
                 }
-                assert_eq!(new_handle.started.load(Ordering::SeqCst), num_iterations);
-                assert_eq!(new_handle.finished.load(Ordering::SeqCst), num_iterations);
+                // assert_eq!(new_handle.epoch_counter.load(Ordering::SeqCst), num_iterations*2);
             }));
         }
         for t in threads {
@@ -416,8 +444,7 @@ mod tests {
     #[test]
     fn hashmap_handle_cloning() {
         let mut handle = Arc::new(Hashmap::new()); //init with 16 bucket
-        println!("{:?}", handle.started);
-        println!("{:?}", handle.finished);
+        println!("{:?}", handle.epoch_counter);
         handle.insert(1,3);
         assert_eq!(handle.get(1).unwrap(), 3);
 
