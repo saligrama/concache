@@ -6,7 +6,7 @@ extern crate rand;
 use rand::{thread_rng, Rng};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::sync::atomic::{AtomicUsize, Ordering, AtomicPtr};
+use std::sync::atomic::{AtomicUsize, Ordering, AtomicPtr, AtomicBool};
 use std::sync::{Arc, RwLock, Mutex};
 use std::thread;
 use std::ptr;
@@ -17,6 +17,7 @@ use std::mem;
 struct Node {
 	data: (usize, Mutex<usize>),
 	next: AtomicPtr<Node>,
+    active: AtomicBool,
 	// next: *const Node, //not sure if const is right
 }
 
@@ -50,12 +51,14 @@ impl LinkedList {
 	}
 
 	fn insert(&self, key: usize, value: usize) -> Option<usize> {
+        //Make new Node
+        let mut new_node = Box::new (Node {
+            data: (key, Mutex::new(value)), 
+            next: AtomicPtr::new(ptr::null_mut()),
+            active: AtomicBool::new(true),
+        });
+        
         loop {
-            //Make new Node
-    		let mut new_node = Box::new (Node {
-    			data: (key, Mutex::new(value)), 
-    			next: AtomicPtr::new(ptr::null_mut()),
-    		});
             let mut curr_ptr = &self.head;
             let mut next_raw = curr_ptr.load(Ordering::SeqCst);
             while !next_raw.is_null() {
@@ -63,6 +66,7 @@ impl LinkedList {
                 if key == next_node.data.0 {
                     //case where the key already exists
                     let mut change_val = next_node.data.1.lock().unwrap();
+                    let node = Box::into_raw(new_node); //drop the node we created earlier to free the memory
                     let old_val = mem::replace(&mut *change_val, value); //exchange the values
                     return Some(old_val);
                 }
@@ -71,9 +75,12 @@ impl LinkedList {
             }
             //case where the key doesn't already exist so we add it to the end
             //if CAS fails we want to loop again, keep going til it works
-            let cas_ret = curr_ptr.compare_and_swap(ptr::null_mut(), Box::into_raw(new_node), Ordering::SeqCst);
+            let node = Box::into_raw(new_node);
+            let cas_ret = curr_ptr.compare_and_swap(ptr::null_mut(), node, Ordering::SeqCst);
             if cas_ret == ptr::null_mut() {
                 return None;
+            } else {
+                new_node = unsafe{ Box::from_raw(node) };
             }
         }
 	}
@@ -114,11 +121,20 @@ impl LinkedList {
             while !next_raw.is_null() {
                 let next_node = unsafe { &*next_raw };
                 if key == next_node.data.0 {
-                    let cas_ret = curr_ptr.compare_and_swap(next_raw, next_node.next.load(Ordering::SeqCst), Ordering::SeqCst);
-                    if cas_ret == next_raw {
-                        return Some(next_raw);
-                    } else {
+                    //we check if the key is active or not, if it is active then we want to cas the active bool and make it inactive
+                    if next_node.active.load(Ordering::SeqCst) {
+                        //if the node is active we want to make it inactive
+                        next_node.active.compare_and_swap(true, false, Ordering::SeqCst); //what if the cas fails
                         finished = false;
+                        break; //we need to interate through the list again to "phsycailly" delete the element
+                    } else {
+                        //if the node is inactive we want to remove it
+                        let cas_ret = curr_ptr.compare_and_swap(next_raw, next_node.next.load(Ordering::SeqCst), Ordering::SeqCst);
+                        if cas_ret == next_raw {
+                            return Some(next_raw);
+                        } else {
+                            return None;
+                        }
                     }
                 }
                 curr_ptr = &next_node.next;
@@ -191,6 +207,7 @@ impl Table {
                     // let v = *v;
 
                     new_table.insert(k, *v);
+                    self.delete(k);
             	}
             }
         }
@@ -278,8 +295,6 @@ impl MapHandle {
         let node = unsafe { Box::from_raw(to_drop) };
         let ret_val = node.data.1.into_inner().unwrap();
         
-
-        unsafe { drop(Box::from_raw(to_drop)) };
         return Some(ret_val);
     }
 }
