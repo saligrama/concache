@@ -13,12 +13,25 @@ use std::ptr;
 use std::marker::PhantomData;
 use std::mem;
 
+const OSC: Ordering = Ordering::SeqCst;
+
 #[derive(Debug)]
 struct Node {
-	data: (usize, Mutex<usize>),
+	key: Option<usize>,
+    val: Option<Mutex<usize>>,
 	next: AtomicPtr<Node>,
-    active: AtomicBool,
-	// next: *const Node, //not sure if const is right
+    marked: AtomicBool,
+}
+
+impl Node {
+    fn new(key: Option<usize>, val: Option<Mutex<usize>>) -> Node {
+        Node {
+            key: key,
+            val: val,
+            next: AtomicPtr::new(ptr::null_mut()),
+            marked: AtomicBool::new(false),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -26,122 +39,170 @@ struct LinkedList {
 	head: AtomicPtr<Node>,
 }
 
-struct LinkedListIterator<'a> {
-    current: *mut Node,
-    marker: PhantomData<&'a ()>,
-}
-
-impl<'a> Iterator for LinkedListIterator<'a> {
-    type Item = &'a Node;
-    fn next(&mut self) -> Option<&'a Node> {
-		if self.current.is_null() {
-			return None
-		}
-		let node = unsafe{&*self.current};
-		self.current = node.next.load(Ordering::SeqCst);
-        Some(node)
-    }
-}
-
 impl LinkedList {
 	fn new() -> Self {
-		LinkedList {
-			head: AtomicPtr::new(ptr::null_mut()),
-		}
+        let head_node = Box::new(Node::new(None, None));
+        let tail_node = Box::new(Node::new(None, None));
+
+        println!("Linked List Created.");
+		let mut ret = LinkedList {
+            head: AtomicPtr::new(Box::into_raw(head_node)),
+		};
+        let hnode = unsafe{ &*ret.head.load(OSC) };
+        hnode.next.compare_and_swap(ptr::null_mut(), Box::into_raw(tail_node), OSC);
+        ret
 	}
 
-	fn insert(&self, key: usize, value: usize) -> Option<usize> {
-        //Make new Node
-        let mut new_node = Box::new (Node {
-            data: (key, Mutex::new(value)), 
-            next: AtomicPtr::new(ptr::null_mut()),
-            active: AtomicBool::new(true),
-        });
-        
+	fn insert(&self, key: usize, val: usize) -> Option<bool> {
+        println!("here!");
+        let mut new_node = Node::new(Some(key), Some(Mutex::new(val)));
+        let mut left_node = Node::new(None, None);
+        let mut right_node = Node::new(None, None);
+
+        let left_node_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
+        let right_node_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
+        println!("left_node_ptr: {:?}", left_node_ptr);
+
         loop {
-            let mut curr_ptr = &self.head;
-            let mut next_raw = curr_ptr.load(Ordering::SeqCst);
-            while !next_raw.is_null() {
-                let next_node = unsafe { &*next_raw };
-                if key == next_node.data.0 {
-                    //case where the key already exists
-                    let mut change_val = next_node.data.1.lock().unwrap();
-                    let node = Box::into_raw(new_node); //drop the node we created earlier to free the memory
-                    let old_val = mem::replace(&mut *change_val, value); //exchange the values
-                    return Some(old_val);
-                }
-                curr_ptr = &next_node.next;
-                next_raw = curr_ptr.load(Ordering::SeqCst);
-            }
-            //case where the key doesn't already exist so we add it to the end
-            //if CAS fails we want to loop again, keep going til it works
-            let node = Box::into_raw(new_node);
-            let cas_ret = curr_ptr.compare_and_swap(ptr::null_mut(), node, Ordering::SeqCst);
-            if cas_ret == ptr::null_mut() {
-                return None;
-            } else {
-                new_node = unsafe{ Box::from_raw(node) };
-            }
+            println!("Searching.");
+            self.search(key, &left_node_ptr, &right_node_ptr);
+            
+            println!("left_node_ptr loaded val: {:?}", left_node_ptr.load(OSC));
+            println!("right_node_ptr loaded val: {:?}", right_node_ptr.load(OSC));
+
+            // if (right_node.next.load(OSC) != ptr::null_mut()) && right_node.key == Some(key) {
+            //     return Some(false);
+            // }
+
+            // let right_ptr = &mut right_node as *mut Node;
+            // let left_ptr = &mut left_node as *mut Node;
+            // let node_ptr = &mut new_node as *mut Node;
+            // new_node.next = AtomicPtr::new(right_ptr);
+
+
+            // let cas_ret = left_node.next.compare_and_swap(right_ptr, node_ptr, OSC);
+            // if  cas_ret == right_ptr {
+            //     return Some(true);
+            // }
+            return None;
         }
+
+        None
 	}
 
 	fn print(&self) {
-		for node in self.iter() {
-			println!("{:?}", node);
-		}
+		// for node in self.iter() {
+		// 	println!("{:?}", node);
+		// }
 	}
 
-	fn get(&self, key: usize) -> Option<usize> {
-		for node in self.iter() {
-			if node.data.0 == key {
-				let value = node.data.1.lock().unwrap();
-				return Some(*value);
-			}
-		}
-		None
-	}
+	fn get(&self, search_key: usize) -> Option<bool> {
+        // let mut left_node = Node::new(None, None);
+        // let mut right_node = Node::new(None, None);
+        let left_node_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
+        let right_node_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
 
-    fn iter(&self) -> LinkedListIterator { 
-    	LinkedListIterator {
-    		current: self.head.load(Ordering::SeqCst), 
-    		marker: PhantomData,
-    	}
-    }
+        self.search(search_key, &left_node_ptr, &right_node_ptr);
+
+        // println!("Left Node: {:?}", left_node);
+        // println!("Right Node: {:?}", right_node);
+
+        // if right_node.next.load(OSC) == ptr::null_mut() || (right_node.key != Some(search_key)) {
+        //     return Some(false);
+        // } else {
+        //     return Some(true);
+        // }
+        None
+	}
 
     fn delete(&self, key: usize) -> Option<*mut Node> {
         //iterate through until we find the node to delete and then CAS it out
-        let mut finished = false;
+        // let mut finished = false;
 
 
-        while !finished {
-            let mut curr_ptr = &self.head;
-            let mut next_raw = curr_ptr.load(Ordering::SeqCst);            
+        // while !finished {
+        //     let mut curr_ptr = &self.head;
+        //     let mut next_raw = curr_ptr.load(OSC);            
 
-            finished = true; //this is our last iteration through unless we encounter the key and fail the CAS, if this happens we try again
-            while !next_raw.is_null() {
-                let next_node = unsafe { &*next_raw };
-                if key == next_node.data.0 {
-                    //we check if the key is active or not, if it is active then we want to cas the active bool and make it inactive
-                    if next_node.active.load(Ordering::SeqCst) {
-                        //if the node is active we want to make it inactive
-                        next_node.active.compare_and_swap(true, false, Ordering::SeqCst); //what if the cas fails
-                        finished = false;
-                        break; //we need to interate through the list again to "phsycailly" delete the element
-                    } else {
-                        //if the node is inactive we want to remove it
-                        let cas_ret = curr_ptr.compare_and_swap(next_raw, next_node.next.load(Ordering::SeqCst), Ordering::SeqCst);
-                        if cas_ret == next_raw {
-                            return Some(next_raw);
-                        } else {
-                            return None;
-                        }
-                    }
+        //     finished = true; //this is our last iteration through unless we encounter the key and fail the CAS, if this happens we try again
+        //     while !next_raw.is_null() {
+        //         let next_node = unsafe { &*next_raw };
+        //         if key == next_node.data.0 {
+        //             //we check if the key is active or not, if it is active then we want to cas the active bool and make it inactive
+        //             if next_node.active.load(OSC) {
+        //                 //if the node is active we want to make it inactive
+        //                 next_node.active.compare_and_swap(true, false, OSC); //what if the cas fails
+        //                 finished = false;
+        //                 break; //we need to interate through the list again to "phsycailly" delete the element
+        //             } else {
+        //                 //if the node is inactive we want to remove it
+        //                 let cas_ret = curr_ptr.compare_and_swap(next_raw, next_node.next.load(OSC), OSC);
+        //                 if cas_ret == next_raw {
+        //                     return Some(next_raw);
+        //                 } else {
+        //                     return None;
+        //                 }
+        //             }
+        //         }
+        //         curr_ptr = &next_node.next;
+        //         next_raw = curr_ptr.load(OSC);
+        //     }
+        // }
+        None
+    }
+
+    //lifetimes are screwing me over!
+    fn search(&self, search_key: usize, left_node_ptr: &AtomicPtr<Node>, right_node_ptr: &AtomicPtr<Node>) {
+
+        let left_node_next_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
+
+        //search
+        loop {
+            let mut t = &self.head; //get ptr to the head
+            let mut t_next = unsafe { &(&*t.load(OSC)).next }; //get the ptr to the next
+
+            // Find the left node and right node
+            loop {
+                if unsafe { !(&*t.load(OSC)).marked.load(OSC) } {
+                    left_node_ptr.store(t.load(OSC), OSC); //set the left node 
+                    left_node_next_ptr.store(t_next.load(OSC), OSC); //set the left next node
                 }
-                curr_ptr = &next_node.next;
-                next_raw = curr_ptr.load(Ordering::SeqCst);
+                t = unsafe{ &(&*t.load(OSC)).next };
+                if unsafe { (&*t.load(OSC)).next.load(OSC) == ptr::null_mut() } { //test if t == self.tail, not sure if this is okay, but we cmp t.next with null ptr because tail is always null ptr
+                    break;
+                }
+                t_next = unsafe { &(&*t.load(OSC)).next }; //we know its not the tail so we can go to it
+
+                if unsafe { (&*t_next.load(OSC)).marked.load(OSC) || (&*t.load(OSC)).key == None || (&*t.load(OSC)).key.unwrap() < search_key } {
+                    break;
+                }
+            }
+            right_node_ptr.store(t.load(OSC), OSC);
+
+            let mut cont = true;
+            //Ckeck nodes are adjacent
+            if unsafe { (&*left_node_next_ptr.load(OSC)).next.load(OSC) == (&*right_node_ptr.load(OSC)).next.load(OSC) } {
+                let right_node_next_ptr = unsafe { &(&*right_node_ptr.load(OSC)).next };
+                if unsafe { (&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut() && (&*right_node_next_ptr.load(OSC)).marked.load(OSC) } {
+                    cont = false;
+                } else {
+                    // println!("left_node b: {:?}", left_node);
+                    // return Some((left_node, right_node));
+                    return;
+                }
+            }
+
+            //MISSING A CAS HERE, TODO ADD CAS
+            if (cont) {
+                //if we continue, then remove one or more marked nodes
+                if unsafe { (&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut() } {
+                    //then search again
+                } else {
+                    // return Some((left_node, right_node));
+                    return;
+                }
             }
         }
-        None
     }
 }
 
@@ -166,12 +227,10 @@ impl Table {
         t
     }
 
-    fn insert(&self, key: usize, value: usize) -> Option<usize> {
-        let check = self.nitems.load(Ordering::SeqCst);
+    fn insert(&self, key: usize, value: usize) -> Option<bool> {
+        println!("hereb");
+        let check = self.nitems.load(OSC);
         
-        if check > 10 {
-            panic!("too big!");  
-        }
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
@@ -180,13 +239,14 @@ impl Table {
         let ret = self.map[index].insert(key, value);
         
         if ret == None {
-            self.nitems.fetch_add(1, Ordering::SeqCst);    
+            self.nitems.fetch_add(1, OSC);    
         }
 
         ret
     }
 
-    fn get(&self, key: usize) -> Option<usize> {
+    fn get(&self, key: usize) -> Option<bool> {
+        println!("herec");
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
@@ -195,27 +255,27 @@ impl Table {
         self.map[index].get(key)
     }
 
-    fn resize(&mut self, newsize: usize) {
-        let mut new_table = Table::new(newsize);
+    // fn resize(&mut self, newsize: usize) {
+    //     let mut new_table = Table::new(newsize);
 
-        for bucket in &self.map {
-            for node in bucket.iter() {
-                unsafe {
-                    let k = node.data.0;
-                    // assert_eq!(new_table.get(k), None);
-                    let v = node.data.1.lock().unwrap();
-                    // let v = *v;
+    //     for bucket in &self.map {
+    //         for node in bucket.iter() {
+    //             unsafe {
+    //                 let k = node.data.0;
+    //                 // assert_eq!(new_table.get(k), None);
+    //                 let v = node.data.1.lock().unwrap();
+    //                 // let v = *v;
 
-                    new_table.insert(k, *v);
-                    self.delete(k);
-            	}
-            }
-        }
+    //                 new_table.insert(k, *v);
+    //                 self.delete(k);
+    //         	}
+    //         }
+    //     }
 
-        self.map = new_table.map;
-        self.nitems = new_table.nitems;
-        self.nbuckets = new_table.nbuckets;
-    }
+    //     self.map = new_table.map;
+    //     self.nitems = new_table.nitems;
+    //     self.nbuckets = new_table.nbuckets;
+    // }
 
     fn delete(&self, key: usize) -> Option<*mut Node> {
         let mut hasher = DefaultHasher::new();
@@ -227,7 +287,7 @@ impl Table {
         //if not None then subtract 1 from nitems
 
         if ret != None {
-            self.nitems.fetch_sub(1, Ordering::SeqCst);
+            self.nitems.fetch_sub(1, OSC);
         }
 
         ret
@@ -240,70 +300,71 @@ struct MapHandle {
 }
 
 impl MapHandle {
-    fn insert(&self, key: usize, value: usize) -> Option<usize> {
+    fn insert(&self, key: usize, value: usize) -> Option<bool> {
         //increment started before the operations begins
-        self.epoch_counter.fetch_add(1, Ordering::SeqCst);
+        self.epoch_counter.fetch_add(1, OSC);
         let ret = self.map.insert(key, value);
         //increment finished after the operation ends
-        self.epoch_counter.fetch_add(1, Ordering::SeqCst);
+        self.epoch_counter.fetch_add(1, OSC);
 
         ret
     }
 
-    fn get(&self, key: usize) -> Option<usize> {
+    fn get(&self, key: usize) -> Option<bool> {
         //increment started before the operations begins
-        self.epoch_counter.fetch_add(1, Ordering::SeqCst);
+        self.epoch_counter.fetch_add(1, OSC);
         let ret = self.map.get(key);
         //increment finished after the operation ends
-        self.epoch_counter.fetch_add(1, Ordering::SeqCst);
+        self.epoch_counter.fetch_add(1, OSC);
 
         ret
     }
 
     fn delete(&self, key: usize) -> Option<usize> {
-        self.epoch_counter.fetch_add(1, Ordering::SeqCst);
-        //logical deletion aka cas
-        let ret = self.map.delete(key);
-        self.epoch_counter.fetch_add(1, Ordering::SeqCst);
+        // self.epoch_counter.fetch_add(1, OSC);
+        // //logical deletion aka cas
+        // let ret = self.map.delete(key);
+        // self.epoch_counter.fetch_add(1, OSC);
 
-        if ret == None {
-            return None;
-        }
+        // if ret == None {
+        //     return None;
+        // }
 
-        //epoch set up, load all of the values
-        let mut started = Vec::new();
-        let handles_map = self.map.handles.read().unwrap();
-        for h in handles_map.iter() {
-            started.push(h.load(Ordering::SeqCst));
-        }
-        for (i,h) in handles_map.iter().enumerate() {
-            let mut check = h.load(Ordering::SeqCst);
-            while (check <= started[i]) && (check%2 == 1) {
-                println!("epoch is spinning");
-                check = h.load(Ordering::SeqCst);
-                //do nothing
-            }
-            //now finished is greater than or equal to started
-        }
+        // //epoch set up, load all of the values
+        // let mut started = Vec::new();
+        // let handles_map = self.map.handles.read().unwrap();
+        // for h in handles_map.iter() {
+        //     started.push(h.load(OSC));
+        // }
+        // for (i,h) in handles_map.iter().enumerate() {
+        //     let mut check = h.load(OSC);
+        //     while (check <= started[i]) && (check%2 == 1) {
+        //         // println!("epoch is spinning");
+        //         check = h.load(OSC);
+        //         //do nothing
+        //     }
+        //     //now finished is greater than or equal to started
+        // }
 
-        // let ret = unsafe { &*ret.unwrap() };
-        // let ret_val = ret.data.1.lock().unwrap().clone();
+        // // let ret = unsafe { &*ret.unwrap() };
+        // // let ret_val = ret.data.1.lock().unwrap().clone();
 
-        //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
-        let to_drop = ret.unwrap();
-        // epoch rolled over, so we know we have exclusive access to the node
-        let node = unsafe { Box::from_raw(to_drop) };
-        let ret_val = node.data.1.into_inner().unwrap();
+        // //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
+        // let to_drop = ret.unwrap();
+        // // epoch rolled over, so we know we have exclusive access to the node
+        // let node = unsafe { Box::from_raw(to_drop) };
+        // let ret_val = node.data.1.into_inner().unwrap();
         
-        return Some(ret_val);
+        // return Some(ret_val);
+        None
     }
 }
 
 impl Clone for MapHandle {
     fn clone(&self) -> Self {
-        let ret = Self {
-            map: Arc::clone(&self.map),
-            epoch_counter: Arc::new(AtomicUsize::new(0)),
+            let ret = Self {
+                map: Arc::clone(&self.map),
+                epoch_counter: Arc::new(AtomicUsize::new(0)),
         };
 
         let mut hashmap = &self.map;
@@ -337,34 +398,34 @@ impl Hashmap {
         ret
     }
 
-    fn insert(&self, key: usize, value: usize) -> Option<usize> {
+    fn insert(&self, key: usize, value: usize) -> Option<bool> {
         let inner_table = self.table.read().unwrap();
-        // // check for resize
-        let num_items = inner_table.nitems.load(Ordering::SeqCst);
-        if (num_items / inner_table.nbuckets >= 3) { //threshold is 2
-        	let resize_value: usize = inner_table.nbuckets * 2;
-        	drop(inner_table); //let the resize function take the lock
-        	self.resize(resize_value); //double the size
-        } else {
-            drop(inner_table); //force drop in case resize doesnt happen?    
-        }
+        // // // check for resize
+        // let num_items = inner_table.nitems.load(OSC);
+        // if (num_items / inner_table.nbuckets >= 3) { //threshold is 2
+        // 	let resize_value: usize = inner_table.nbuckets * 2;
+        // 	drop(inner_table); //let the resize function take the lock
+        // 	self.resize(resize_value); //double the size
+        // } else {
+        //     drop(inner_table); //force drop in case resize doesnt happen?    
+        // }
 
         let inner_table = self.table.read().unwrap();
 
         inner_table.insert(key, value)
     }
 
-    fn get(&self, key: usize) -> Option<usize> {
+    fn get(&self, key: usize) -> Option<bool> {
         let inner_table = self.table.read().unwrap(); //need read access
         inner_table.get(key)
     }
 
-    fn resize(&self, newsize: usize) {
-        let mut inner_table = self.table.write().unwrap();
-        if inner_table.map.capacity() != newsize {
-        	inner_table.resize(newsize);
-        }
-    }
+    // fn resize(&self, newsize: usize) {
+    //     let mut inner_table = self.table.write().unwrap();
+    //     if inner_table.map.capacity() != newsize {
+    //     	inner_table.resize(newsize);
+    //     }
+    // }
 
     fn delete(&self, key: usize) -> Option<*mut Node> {
         let inner_table = self.table.read().unwrap();
@@ -373,43 +434,17 @@ impl Hashmap {
 }
 
 fn main() {
-    println!("Started");
-    let mut handle = Hashmap::new(); //changed this,
-    let mut threads = vec![];
-    let nthreads = 2;
-    for id in 0..nthreads {
-        let new_handle = handle.clone();
+    println!("Started.");
 
-        threads.push(thread::spawn(move || {
-            let num_iterations = 10000;
-            let mut rng = thread_rng();
-            for curr in 0..num_iterations {
-                let val = rng.gen_range(0, 10);
-                let two = rng.gen_range(0, 3);
+    let mut new_linked_list = LinkedList::new();
 
-                if two == 0 {
-                    let v = new_handle.insert(val, val);
-                    if (v != None) {
-                        assert_eq!(v.unwrap(), val);
-                    }
-                } else if two == 1 {
-                    let v = new_handle.get(val);
-                    if (v != None) {
-                        assert_eq!(v.unwrap(), val);
-                    }
-                } else {
-                    let v = new_handle.delete(val);
-                    if (v != None) {
-                        assert_eq!(v.unwrap(), val);;
-                    }
-                }
-            }
-            // assert_eq!(new_handle.epoch_counter.load(Ordering::SeqCst), 2*num_iterations);
-        }));
-    }
-    for t in threads {
-        t.join().unwrap();
-    }
+    println!("{:?}", new_linked_list.head.load(OSC));
+    let next_node = unsafe { &*new_linked_list.head.load(OSC) };
+    println!("{:?}", next_node.next.load(OSC));
+    let next_node = unsafe { &*next_node.next.load(OSC) };
+    println!("{:?}", next_node.next.load(OSC));
+    
+
 	println!("Finished.");
 }
 
@@ -448,7 +483,7 @@ mod tests {
                         new_handle.delete(val);
                     }
                 }
-                // assert_eq!(new_handle.epoch_counter.load(Ordering::SeqCst), num_iterations*2);
+                // assert_eq!(new_handle.epoch_counter.load(OSC), num_iterations*2);
             }));
         }
         for t in threads {
@@ -537,7 +572,7 @@ mod tests {
         assert_eq!(new_hashmap.insert(5, 5), None); //repeated
 
         let cln = Arc::clone(&new_hashmap.map);
-        assert_eq!(cln.table.read().unwrap().nitems.load(Ordering::SeqCst), 9);
+        assert_eq!(cln.table.read().unwrap().nitems.load(OSC), 9);
             
 
         new_hashmap.insert(3, 8); //repeated
