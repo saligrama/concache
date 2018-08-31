@@ -54,14 +54,11 @@ impl LinkedList {
 	}
 
 	fn insert(&self, key: usize, val: usize) -> Option<bool> {
-        println!("here!");
+        println!("Inserting: {:?}!", key);
         let mut new_node = Node::new(Some(key), Some(Mutex::new(val)));
-        let mut left_node = Node::new(None, None);
-        let mut right_node = Node::new(None, None);
-
         let left_node_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
         let right_node_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
-        println!("left_node_ptr: {:?}", left_node_ptr);
+        // println!("left_node_ptr: {:?}", left_node_ptr);
 
         loop {
             println!("Searching.");
@@ -70,20 +67,17 @@ impl LinkedList {
             println!("left_node_ptr loaded val: {:?}", left_node_ptr.load(OSC));
             println!("right_node_ptr loaded val: {:?}", right_node_ptr.load(OSC));
 
-            // if (right_node.next.load(OSC) != ptr::null_mut()) && right_node.key == Some(key) {
-            //     return Some(false);
-            // }
+            if unsafe { ((&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut()) && (&*right_node_ptr.load(OSC)).key == Some(key) } {
+                return Some(false);
+            }
 
-            // let right_ptr = &mut right_node as *mut Node;
-            // let left_ptr = &mut left_node as *mut Node;
-            // let node_ptr = &mut new_node as *mut Node;
-            // new_node.next = AtomicPtr::new(right_ptr);
+            new_node.next.store(right_node_ptr.load(OSC), OSC);
 
+            let boxed_new_node = Box::new(new_node);
 
-            // let cas_ret = left_node.next.compare_and_swap(right_ptr, node_ptr, OSC);
-            // if  cas_ret == right_ptr {
-            //     return Some(true);
-            // }
+            if unsafe { (&*left_node_ptr.load(OSC)).next.compare_and_swap(right_node_ptr.load(OSC), Box::into_raw(boxed_new_node), OSC) == right_node_ptr.load(OSC) } {
+                return Some(true);
+            }
             return None;
         }
 
@@ -153,13 +147,14 @@ impl LinkedList {
 
     //lifetimes are screwing me over!
     fn search(&self, search_key: usize, left_node_ptr: &AtomicPtr<Node>, right_node_ptr: &AtomicPtr<Node>) {
-
         let left_node_next_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
+        let t: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
+        let t_next: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
 
         //search
         loop {
-            let mut t = &self.head; //get ptr to the head
-            let mut t_next = unsafe { &(&*t.load(OSC)).next }; //get the ptr to the next
+            t.store( self.head.load(OSC), OSC ); //get ptr to the head
+            unsafe { t_next.store( (&*t.load(OSC)).next.load(OSC), OSC ) }; //get ptr to next
 
             // Find the left node and right node
             loop {
@@ -167,13 +162,15 @@ impl LinkedList {
                     left_node_ptr.store(t.load(OSC), OSC); //set the left node 
                     left_node_next_ptr.store(t_next.load(OSC), OSC); //set the left next node
                 }
-                t = unsafe{ &(&*t.load(OSC)).next };
-                if unsafe { (&*t.load(OSC)).next.load(OSC) == ptr::null_mut() } { //test if t == self.tail, not sure if this is okay, but we cmp t.next with null ptr because tail is always null ptr
+                unsafe { t.store( (&*t.load(OSC)).next.load(OSC), OSC ) }; //get the pointer to t.next
+                if unsafe { (&*t.load(OSC)).next.load(OSC) == ptr::null_mut() } { //test if t == self.tail, we cmp t.next with null ptr because tail is always null ptr
                     break;
                 }
-                t_next = unsafe { &(&*t.load(OSC)).next }; //we know its not the tail so we can go to it
+                unsafe { t_next.store( (&*t.load(OSC)).next.load(OSC), OSC ) }; //we know its not the tail so we can go to it
 
-                if unsafe { (&*t_next.load(OSC)).marked.load(OSC) || (&*t.load(OSC)).key == None || (&*t.load(OSC)).key.unwrap() < search_key } {
+                if unsafe { (&*t.load(OSC)).marked.load(OSC) || (&*t.load(OSC)).key == None || (&*t.load(OSC)).key.unwrap() < search_key } {
+                    //continue
+                } else {
                     break;
                 }
             }
@@ -182,25 +179,25 @@ impl LinkedList {
             let mut cont = true;
             //Ckeck nodes are adjacent
             if unsafe { (&*left_node_next_ptr.load(OSC)).next.load(OSC) == (&*right_node_ptr.load(OSC)).next.load(OSC) } {
-                let right_node_next_ptr = unsafe { &(&*right_node_ptr.load(OSC)).next };
-                if unsafe { (&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut() && (&*right_node_next_ptr.load(OSC)).marked.load(OSC) } {
+                let right_node = unsafe { &*right_node_ptr.load(OSC) };
+                if unsafe { (&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut() && (right_node.marked.load(OSC)) } {
                     cont = false;
                 } else {
-                    // println!("left_node b: {:?}", left_node);
-                    // return Some((left_node, right_node));
                     return;
                 }
             }
 
             //MISSING A CAS HERE, TODO ADD CAS
             if (cont) {
-                //if we continue, then remove one or more marked nodes
-                if unsafe { (&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut() } {
-                    //then search again
-                } else {
-                    // return Some((left_node, right_node));
-                    return;
-                }
+                //if we continue, then remove one or more marked nodes with a single CAS
+                if unsafe { (&*left_node_ptr.load(OSC)).next.compare_and_swap(left_node_next_ptr.load(OSC), right_node_ptr.load(OSC), OSC) == left_node_next_ptr.load(OSC) } {
+                    let right_node = unsafe { &*right_node_ptr.load(OSC) };
+                    if unsafe { (&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut() && (right_node.marked.load(OSC)) } {
+                        //then search again
+                    } else {
+                        return;
+                    }
+                }                
             }
         }
     }
@@ -438,11 +435,25 @@ fn main() {
 
     let mut new_linked_list = LinkedList::new();
 
-    println!("{:?}", new_linked_list.head.load(OSC));
-    let next_node = unsafe { &*new_linked_list.head.load(OSC) };
-    println!("{:?}", next_node.next.load(OSC));
-    let next_node = unsafe { &*next_node.next.load(OSC) };
-    println!("{:?}", next_node.next.load(OSC));
+    println!("{:?}", new_linked_list.insert(5, 5));
+    println!("{:?}", new_linked_list.insert(5, 8));
+
+    // println!("{:?}", new_linked_list.head.load(OSC));
+    
+
+    println!("");
+    println!("Printing List.");
+
+    let mut next_node = unsafe { &*new_linked_list.head.load(OSC) };
+    println!("{:?}", next_node);
+
+    loop {
+        next_node = unsafe { &*next_node.next.load(OSC) };
+        println!("{:?}", next_node);
+        if next_node.next.load(OSC) == ptr::null_mut() {
+            break;
+        }
+    }
     
 
 	println!("Finished.");
