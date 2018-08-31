@@ -20,7 +20,6 @@ struct Node {
     key: Option<usize>,
     val: Option<Mutex<usize>>,
     next: AtomicPtr<Node>,
-    marked: AtomicBool,
 }
 
 impl Node {
@@ -29,7 +28,6 @@ impl Node {
             key: key,
             val: val,
             next: AtomicPtr::new(ptr::null_mut()),
-            marked: AtomicBool::new(false),
         }
     }
 }
@@ -37,62 +35,55 @@ impl Node {
 #[derive(Debug)]
 struct LinkedList {
     head: AtomicPtr<Node>,
+    tail: AtomicPtr<Node>,
 }
 
 impl LinkedList {
     fn new() -> Self {
-        let head_node = Box::new(Node::new(None, None));
-        let tail_node = Box::new(Node::new(None, None));
+        let head = Box::new(Node::new(None, None));
+        let tail = Box::into_raw(Box::new(Node::new(None, None)));
+        head.next.store(tail, OSC);
 
         println!("Linked List Created.");
-        let mut ret = LinkedList {
-            head: AtomicPtr::new(Box::into_raw(head_node)),
-        };
-        let hnode = unsafe { &*ret.head.load(OSC) };
-        hnode
-            .next
-            .compare_and_swap(ptr::null_mut(), Box::into_raw(tail_node), OSC);
-        ret
+        LinkedList {
+            head: AtomicPtr::new(Box::into_raw(head)),
+            tail: AtomicPtr::new(tail),
+        }
     }
 
-    fn insert(&self, key: usize, val: usize) -> Option<bool> {
+    fn insert(&self, key: usize, val: usize) -> Option<usize> {
         println!("Inserting: {:?}!", key);
-        let mut new_node = Node::new(Some(key), Some(Mutex::new(val)));
-        let left_node_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
-        let right_node_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
-        // println!("left_node_ptr: {:?}", left_node_ptr);
+        let mut new_node = Box::new(Node::new(Some(key), Some(Mutex::new(val))));
+        let mut left_node: *mut Node = ptr::null_mut();
+        let mut right_node: *mut Node = ptr::null_mut();
 
         loop {
             println!("Searching.");
-            self.search(key, &left_node_ptr, &right_node_ptr);
+            right_node = self.search(key, &mut left_node);
 
-            println!("left_node_ptr loaded val: {:?}", left_node_ptr.load(OSC));
-            println!("right_node_ptr loaded val: {:?}", right_node_ptr.load(OSC));
+            println!("left_node loaded val: {:x?}", left_node);
+            println!("right_node loaded val: {:x?}", right_node);
 
-            if unsafe {
-                ((&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut())
-                    && (&*right_node_ptr.load(OSC)).key == Some(key)
-            } {
-                return Some(false);
+            if ((right_node != self.tail.load(OSC)) && (unsafe { &*right_node }.key == Some(key))) {
+                let rn = unsafe { &*right_node };
+                let mut mx = rn.val.as_ref().unwrap().lock().unwrap();
+                let old = *mx;
+                *mx = val;
+                return Some(old);
             }
 
-            new_node.next.store(right_node_ptr.load(OSC), OSC);
+            new_node.next.store(right_node, OSC);
 
-            let boxed_new_node = Box::new(new_node);
-
-            if unsafe {
-                (&*left_node_ptr.load(OSC)).next.compare_and_swap(
-                    right_node_ptr.load(OSC),
-                    Box::into_raw(boxed_new_node),
-                    OSC,
-                ) == right_node_ptr.load(OSC)
-            } {
-                return Some(true);
+            let new_node_ptr = Box::into_raw(new_node);
+            if unsafe { &*left_node }
+                .next
+                .compare_and_swap(right_node, new_node_ptr, OSC)
+                == right_node
+            {
+                return None;
             }
-            return None;
+            new_node = unsafe { Box::from_raw(new_node_ptr) };
         }
-
-        None
     }
 
     fn print(&self) {
@@ -101,23 +92,17 @@ impl LinkedList {
         // }
     }
 
-    fn get(&self, search_key: usize) -> Option<bool> {
-        // let mut left_node = Node::new(None, None);
-        // let mut right_node = Node::new(None, None);
-        let left_node_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
-        let right_node_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
-
-        self.search(search_key, &left_node_ptr, &right_node_ptr);
-
-        // println!("Left Node: {:?}", left_node);
-        // println!("Right Node: {:?}", right_node);
-
-        // if right_node.next.load(OSC) == ptr::null_mut() || (right_node.key != Some(search_key)) {
-        //     return Some(false);
-        // } else {
-        //     return Some(true);
-        // }
-        None
+    fn get(&self, search_key: usize) -> Option<usize> {
+        let mut left_node: *mut Node = ptr::null_mut();
+        let right_node = self.search(search_key, &mut left_node);
+        if right_node == self.tail.load(OSC) || unsafe { &*right_node }.key != Some(search_key) {
+            None
+        } else {
+            unsafe { &*right_node }
+                .val
+                .as_ref()
+                .map(|v| *v.lock().unwrap())
+        }
     }
 
     fn delete(&self, key: usize) -> Option<*mut Node> {
@@ -155,83 +140,66 @@ impl LinkedList {
         None
     }
 
+    fn is_marked_reference(ptr: *mut Node) -> bool {
+        (ptr as usize & 0x1) == 1
+    }
+    fn get_marked_reference(ptr: *mut Node) -> *mut Node {
+        (ptr as usize | 0x1) as *mut Node
+    }
+    fn get_unmarked_reference(ptr: *mut Node) -> *mut Node {
+        (ptr as usize & !0x1) as *mut Node
+    }
+
     //lifetimes are screwing me over!
-    fn search(
-        &self,
-        search_key: usize,
-        left_node_ptr: &AtomicPtr<Node>,
-        right_node_ptr: &AtomicPtr<Node>,
-    ) {
-        let left_node_next_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
-        let t: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
-        let t_next: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
+    fn search(&self, search_key: usize, left_node: &mut *mut Node) -> *mut Node {
+        let mut left_node_next: *mut Node = ptr::null_mut();
+        let mut right_node: *mut Node = ptr::null_mut();
 
         //search
-        loop {
-            t.store(self.head.load(OSC), OSC); //get ptr to the head
-            unsafe { t_next.store((&*t.load(OSC)).next.load(OSC), OSC) }; //get ptr to next
+        'search_again: loop {
+            let mut t = self.head.load(OSC);
+            let mut t_next = unsafe { &*t }.next.load(OSC);
 
-            // Find the left node and right node
+            /* 1: Find left_node and right_node */
             loop {
-                if unsafe { !(&*t.load(OSC)).marked.load(OSC) } {
-                    left_node_ptr.store(t.load(OSC), OSC); //set the left node
-                    left_node_next_ptr.store(t_next.load(OSC), OSC); //set the left next node
+                if !Self::is_marked_reference(t_next) {
+                    *left_node = t;
+                    left_node_next = t_next;
                 }
-                unsafe { t.store((&*t.load(OSC)).next.load(OSC), OSC) }; //get the pointer to t.next
-                if unsafe { (&*t.load(OSC)).next.load(OSC) == ptr::null_mut() } {
-                    //test if t == self.tail, we cmp t.next with null ptr because tail is always null ptr
+                t = Self::get_unmarked_reference(t_next);
+                if t == self.tail.load(OSC) {
                     break;
                 }
-                unsafe { t_next.store((&*t.load(OSC)).next.load(OSC), OSC) }; //we know its not the tail so we can go to it
-
-                if unsafe {
-                    (&*t.load(OSC)).marked.load(OSC)
-                        || (&*t.load(OSC)).key == None
-                        || (&*t.load(OSC)).key.unwrap() < search_key
-                } {
-                    //continue
-                } else {
+                t_next = unsafe { &*t }.next.load(OSC);
+                if !Self::is_marked_reference(t_next) && unsafe { &*t }.key >= Some(search_key) {
                     break;
                 }
             }
-            right_node_ptr.store(t.load(OSC), OSC);
+            right_node = t;
 
-            let mut cont = true;
-            //Ckeck nodes are adjacent
-            if unsafe {
-                (&*left_node_next_ptr.load(OSC)).next.load(OSC)
-                    == (&*right_node_ptr.load(OSC)).next.load(OSC)
-            } {
-                let right_node = unsafe { &*right_node_ptr.load(OSC) };
-                if unsafe {
-                    (&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut()
-                        && (right_node.marked.load(OSC))
-                } {
-                    cont = false;
+            /* 2: Check nodes are adjacent */
+            if left_node_next == right_node {
+                if right_node != self.tail.load(OSC)
+                    && Self::is_marked_reference(unsafe { &*right_node }.next.load(OSC))
+                {
+                    continue 'search_again;
                 } else {
-                    return;
+                    return right_node;
                 }
             }
 
-            //MISSING A CAS HERE, TODO ADD CAS
-            if (cont) {
-                //if we continue, then remove one or more marked nodes with a single CAS
-                if unsafe {
-                    (&*left_node_ptr.load(OSC)).next.compare_and_swap(
-                        left_node_next_ptr.load(OSC),
-                        right_node_ptr.load(OSC),
-                        OSC,
-                    ) == left_node_next_ptr.load(OSC)
-                } {
-                    let right_node = unsafe { &*right_node_ptr.load(OSC) };
-                    if unsafe {
-                        (&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut()
-                            && (right_node.marked.load(OSC))
-                    } {
-                        //then search again
-                    } else {
-                        return;
-                    }
+            /* 3: Remove one or more marked nodes */
+            if unsafe { &**left_node }
+                .next
+                .compare_and_swap(left_node_next, right_node, OSC)
+                == left_node_next
+            {
+                if right_node != self.tail.load(OSC)
+                    && Self::is_marked_reference(unsafe { &*right_node }.next.load(OSC))
+                {
+                    continue 'search_again;
+                } else {
+                    return right_node;
                 }
             }
         }
@@ -259,7 +227,7 @@ impl Table {
         t
     }
 
-    fn insert(&self, key: usize, value: usize) -> Option<bool> {
+    fn insert(&self, key: usize, value: usize) -> Option<usize> {
         println!("hereb");
         let check = self.nitems.load(OSC);
 
@@ -270,14 +238,14 @@ impl Table {
 
         let ret = self.map[index].insert(key, value);
 
-        if ret == None {
+        if ret.is_none() {
             self.nitems.fetch_add(1, OSC);
         }
 
         ret
     }
 
-    fn get(&self, key: usize) -> Option<bool> {
+    fn get(&self, key: usize) -> Option<usize> {
         println!("herec");
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
@@ -332,7 +300,7 @@ struct MapHandle {
 }
 
 impl MapHandle {
-    fn insert(&self, key: usize, value: usize) -> Option<bool> {
+    fn insert(&self, key: usize, value: usize) -> Option<usize> {
         //increment started before the operations begins
         self.epoch_counter.fetch_add(1, OSC);
         let ret = self.map.insert(key, value);
@@ -342,7 +310,7 @@ impl MapHandle {
         ret
     }
 
-    fn get(&self, key: usize) -> Option<bool> {
+    fn get(&self, key: usize) -> Option<usize> {
         //increment started before the operations begins
         self.epoch_counter.fetch_add(1, OSC);
         let ret = self.map.get(key);
@@ -430,7 +398,7 @@ impl Hashmap {
         ret
     }
 
-    fn insert(&self, key: usize, value: usize) -> Option<bool> {
+    fn insert(&self, key: usize, value: usize) -> Option<usize> {
         let inner_table = self.table.read().unwrap();
         // // // check for resize
         // let num_items = inner_table.nitems.load(OSC);
@@ -447,7 +415,7 @@ impl Hashmap {
         inner_table.insert(key, value)
     }
 
-    fn get(&self, key: usize) -> Option<bool> {
+    fn get(&self, key: usize) -> Option<usize> {
         let inner_table = self.table.read().unwrap(); //need read access
         inner_table.get(key)
     }
