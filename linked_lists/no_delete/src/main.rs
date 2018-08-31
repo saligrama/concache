@@ -6,20 +6,20 @@ extern crate rand;
 use rand::{thread_rng, Rng};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::sync::atomic::{AtomicUsize, Ordering, AtomicPtr, AtomicBool};
-use std::sync::{Arc, RwLock, Mutex};
-use std::thread;
-use std::ptr;
 use std::marker::PhantomData;
 use std::mem;
+use std::ptr;
+use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex, RwLock};
+use std::thread;
 
 const OSC: Ordering = Ordering::SeqCst;
 
 #[derive(Debug)]
 struct Node {
-	key: Option<usize>,
+    key: Option<usize>,
     val: Option<Mutex<usize>>,
-	next: AtomicPtr<Node>,
+    next: AtomicPtr<Node>,
     marked: AtomicBool,
 }
 
@@ -36,24 +36,26 @@ impl Node {
 
 #[derive(Debug)]
 struct LinkedList {
-	head: AtomicPtr<Node>,
+    head: AtomicPtr<Node>,
 }
 
 impl LinkedList {
-	fn new() -> Self {
+    fn new() -> Self {
         let head_node = Box::new(Node::new(None, None));
         let tail_node = Box::new(Node::new(None, None));
 
         println!("Linked List Created.");
-		let mut ret = LinkedList {
+        let mut ret = LinkedList {
             head: AtomicPtr::new(Box::into_raw(head_node)),
-		};
-        let hnode = unsafe{ &*ret.head.load(OSC) };
-        hnode.next.compare_and_swap(ptr::null_mut(), Box::into_raw(tail_node), OSC);
+        };
+        let hnode = unsafe { &*ret.head.load(OSC) };
+        hnode
+            .next
+            .compare_and_swap(ptr::null_mut(), Box::into_raw(tail_node), OSC);
         ret
-	}
+    }
 
-	fn insert(&self, key: usize, val: usize) -> Option<bool> {
+    fn insert(&self, key: usize, val: usize) -> Option<bool> {
         println!("Inserting: {:?}!", key);
         let mut new_node = Node::new(Some(key), Some(Mutex::new(val)));
         let left_node_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
@@ -63,11 +65,14 @@ impl LinkedList {
         loop {
             println!("Searching.");
             self.search(key, &left_node_ptr, &right_node_ptr);
-            
+
             println!("left_node_ptr loaded val: {:?}", left_node_ptr.load(OSC));
             println!("right_node_ptr loaded val: {:?}", right_node_ptr.load(OSC));
 
-            if unsafe { ((&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut()) && (&*right_node_ptr.load(OSC)).key == Some(key) } {
+            if unsafe {
+                ((&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut())
+                    && (&*right_node_ptr.load(OSC)).key == Some(key)
+            } {
                 return Some(false);
             }
 
@@ -75,22 +80,28 @@ impl LinkedList {
 
             let boxed_new_node = Box::new(new_node);
 
-            if unsafe { (&*left_node_ptr.load(OSC)).next.compare_and_swap(right_node_ptr.load(OSC), Box::into_raw(boxed_new_node), OSC) == right_node_ptr.load(OSC) } {
+            if unsafe {
+                (&*left_node_ptr.load(OSC)).next.compare_and_swap(
+                    right_node_ptr.load(OSC),
+                    Box::into_raw(boxed_new_node),
+                    OSC,
+                ) == right_node_ptr.load(OSC)
+            } {
                 return Some(true);
             }
             return None;
         }
 
         None
-	}
+    }
 
-	fn print(&self) {
-		// for node in self.iter() {
-		// 	println!("{:?}", node);
-		// }
-	}
+    fn print(&self) {
+        // for node in self.iter() {
+        // 	println!("{:?}", node);
+        // }
+    }
 
-	fn get(&self, search_key: usize) -> Option<bool> {
+    fn get(&self, search_key: usize) -> Option<bool> {
         // let mut left_node = Node::new(None, None);
         // let mut right_node = Node::new(None, None);
         let left_node_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
@@ -107,16 +118,15 @@ impl LinkedList {
         //     return Some(true);
         // }
         None
-	}
+    }
 
     fn delete(&self, key: usize) -> Option<*mut Node> {
         //iterate through until we find the node to delete and then CAS it out
         // let mut finished = false;
 
-
         // while !finished {
         //     let mut curr_ptr = &self.head;
-        //     let mut next_raw = curr_ptr.load(OSC);            
+        //     let mut next_raw = curr_ptr.load(OSC);
 
         //     finished = true; //this is our last iteration through unless we encounter the key and fail the CAS, if this happens we try again
         //     while !next_raw.is_null() {
@@ -146,29 +156,39 @@ impl LinkedList {
     }
 
     //lifetimes are screwing me over!
-    fn search(&self, search_key: usize, left_node_ptr: &AtomicPtr<Node>, right_node_ptr: &AtomicPtr<Node>) {
+    fn search(
+        &self,
+        search_key: usize,
+        left_node_ptr: &AtomicPtr<Node>,
+        right_node_ptr: &AtomicPtr<Node>,
+    ) {
         let left_node_next_ptr: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
         let t: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
         let t_next: AtomicPtr<Node> = AtomicPtr::new(ptr::null_mut());
 
         //search
         loop {
-            t.store( self.head.load(OSC), OSC ); //get ptr to the head
-            unsafe { t_next.store( (&*t.load(OSC)).next.load(OSC), OSC ) }; //get ptr to next
+            t.store(self.head.load(OSC), OSC); //get ptr to the head
+            unsafe { t_next.store((&*t.load(OSC)).next.load(OSC), OSC) }; //get ptr to next
 
             // Find the left node and right node
             loop {
                 if unsafe { !(&*t.load(OSC)).marked.load(OSC) } {
-                    left_node_ptr.store(t.load(OSC), OSC); //set the left node 
+                    left_node_ptr.store(t.load(OSC), OSC); //set the left node
                     left_node_next_ptr.store(t_next.load(OSC), OSC); //set the left next node
                 }
-                unsafe { t.store( (&*t.load(OSC)).next.load(OSC), OSC ) }; //get the pointer to t.next
-                if unsafe { (&*t.load(OSC)).next.load(OSC) == ptr::null_mut() } { //test if t == self.tail, we cmp t.next with null ptr because tail is always null ptr
+                unsafe { t.store((&*t.load(OSC)).next.load(OSC), OSC) }; //get the pointer to t.next
+                if unsafe { (&*t.load(OSC)).next.load(OSC) == ptr::null_mut() } {
+                    //test if t == self.tail, we cmp t.next with null ptr because tail is always null ptr
                     break;
                 }
-                unsafe { t_next.store( (&*t.load(OSC)).next.load(OSC), OSC ) }; //we know its not the tail so we can go to it
+                unsafe { t_next.store((&*t.load(OSC)).next.load(OSC), OSC) }; //we know its not the tail so we can go to it
 
-                if unsafe { (&*t.load(OSC)).marked.load(OSC) || (&*t.load(OSC)).key == None || (&*t.load(OSC)).key.unwrap() < search_key } {
+                if unsafe {
+                    (&*t.load(OSC)).marked.load(OSC)
+                        || (&*t.load(OSC)).key == None
+                        || (&*t.load(OSC)).key.unwrap() < search_key
+                } {
                     //continue
                 } else {
                     break;
@@ -178,9 +198,15 @@ impl LinkedList {
 
             let mut cont = true;
             //Ckeck nodes are adjacent
-            if unsafe { (&*left_node_next_ptr.load(OSC)).next.load(OSC) == (&*right_node_ptr.load(OSC)).next.load(OSC) } {
+            if unsafe {
+                (&*left_node_next_ptr.load(OSC)).next.load(OSC)
+                    == (&*right_node_ptr.load(OSC)).next.load(OSC)
+            } {
                 let right_node = unsafe { &*right_node_ptr.load(OSC) };
-                if unsafe { (&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut() && (right_node.marked.load(OSC)) } {
+                if unsafe {
+                    (&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut()
+                        && (right_node.marked.load(OSC))
+                } {
                     cont = false;
                 } else {
                     return;
@@ -190,14 +216,23 @@ impl LinkedList {
             //MISSING A CAS HERE, TODO ADD CAS
             if (cont) {
                 //if we continue, then remove one or more marked nodes with a single CAS
-                if unsafe { (&*left_node_ptr.load(OSC)).next.compare_and_swap(left_node_next_ptr.load(OSC), right_node_ptr.load(OSC), OSC) == left_node_next_ptr.load(OSC) } {
+                if unsafe {
+                    (&*left_node_ptr.load(OSC)).next.compare_and_swap(
+                        left_node_next_ptr.load(OSC),
+                        right_node_ptr.load(OSC),
+                        OSC,
+                    ) == left_node_next_ptr.load(OSC)
+                } {
                     let right_node = unsafe { &*right_node_ptr.load(OSC) };
-                    if unsafe { (&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut() && (right_node.marked.load(OSC)) } {
+                    if unsafe {
+                        (&*right_node_ptr.load(OSC)).next.load(OSC) != ptr::null_mut()
+                            && (right_node.marked.load(OSC))
+                    } {
                         //then search again
                     } else {
                         return;
                     }
-                }                
+                }
             }
         }
     }
@@ -227,16 +262,16 @@ impl Table {
     fn insert(&self, key: usize, value: usize) -> Option<bool> {
         println!("hereb");
         let check = self.nitems.load(OSC);
-        
+
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
         let index = hash % self.nbuckets;
 
         let ret = self.map[index].insert(key, value);
-        
+
         if ret == None {
-            self.nitems.fetch_add(1, OSC);    
+            self.nitems.fetch_add(1, OSC);
         }
 
         ret
@@ -351,7 +386,7 @@ impl MapHandle {
         // // epoch rolled over, so we know we have exclusive access to the node
         // let node = unsafe { Box::from_raw(to_drop) };
         // let ret_val = node.data.1.into_inner().unwrap();
-        
+
         // return Some(ret_val);
         None
     }
@@ -359,13 +394,13 @@ impl MapHandle {
 
 impl Clone for MapHandle {
     fn clone(&self) -> Self {
-            let ret = Self {
-                map: Arc::clone(&self.map),
-                epoch_counter: Arc::new(AtomicUsize::new(0)),
+        let ret = Self {
+            map: Arc::clone(&self.map),
+            epoch_counter: Arc::new(AtomicUsize::new(0)),
         };
 
         let mut hashmap = &self.map;
-        let mut handles_vec = hashmap.handles.write().unwrap();  //handles vector
+        let mut handles_vec = hashmap.handles.write().unwrap(); //handles vector
         handles_vec.push(Arc::clone(&ret.epoch_counter));
 
         ret
@@ -404,7 +439,7 @@ impl Hashmap {
         // 	drop(inner_table); //let the resize function take the lock
         // 	self.resize(resize_value); //double the size
         // } else {
-        //     drop(inner_table); //force drop in case resize doesnt happen?    
+        //     drop(inner_table); //force drop in case resize doesnt happen?
         // }
 
         let inner_table = self.table.read().unwrap();
@@ -439,7 +474,6 @@ fn main() {
     println!("{:?}", new_linked_list.insert(5, 8));
 
     // println!("{:?}", new_linked_list.head.load(OSC));
-    
 
     println!("");
     println!("Printing List.");
@@ -454,9 +488,8 @@ fn main() {
             break;
         }
     }
-    
 
-	println!("Finished.");
+    println!("Finished.");
 }
 
 #[cfg(test)]
@@ -486,10 +519,10 @@ mod tests {
                     if two % 3 == 0 {
                         new_handle.insert(val, val);
                     } else if two % 3 == 1 {
-	                    let v = new_handle.get(val);
-	                    if (v != None) {
-	                        assert_eq!(v.unwrap(), val);
-	                    }
+                        let v = new_handle.get(val);
+                        if (v != None) {
+                            assert_eq!(v.unwrap(), val);
+                        }
                     } else {
                         new_handle.delete(val);
                     }
@@ -506,13 +539,13 @@ mod tests {
     fn hashmap_handle_cloning() {
         let mut handle = Arc::new(Hashmap::new()); //init with 16 bucket
         println!("{:?}", handle.epoch_counter);
-        handle.insert(1,3);
+        handle.insert(1, 3);
         assert_eq!(handle.get(1).unwrap(), 3);
 
         //create a new handle
         let new_handle = Arc::clone(&handle);
         assert_eq!(new_handle.get(1).unwrap(), 3);
-        new_handle.insert(2,5);
+        new_handle.insert(2, 5);
 
         assert_eq!(handle.get(2).unwrap(), 5);
     }
@@ -520,22 +553,22 @@ mod tests {
     #[test]
     fn hashmap_delete() {
         let mut handle = Hashmap::new();
-        handle.insert(1,3);
-        handle.insert(2,5);
-        handle.insert(3,8);
-        handle.insert(4,3);
-        handle.insert(5,4);
-        handle.insert(6,5);
-        handle.insert(7,3);
-        handle.insert(8,3);
-        handle.insert(9,3);
-        handle.insert(10,3);
-        handle.insert(11,3);
-        handle.insert(12,3);
-        handle.insert(13,3);
-        handle.insert(14,3);
-        handle.insert(15,3);
-        handle.insert(16,3);
+        handle.insert(1, 3);
+        handle.insert(2, 5);
+        handle.insert(3, 8);
+        handle.insert(4, 3);
+        handle.insert(5, 4);
+        handle.insert(6, 5);
+        handle.insert(7, 3);
+        handle.insert(8, 3);
+        handle.insert(9, 3);
+        handle.insert(10, 3);
+        handle.insert(11, 3);
+        handle.insert(12, 3);
+        handle.insert(13, 3);
+        handle.insert(14, 3);
+        handle.insert(15, 3);
+        handle.insert(16, 3);
         assert_eq!(handle.get(1).unwrap(), 3);
         assert_eq!(handle.delete(1).unwrap(), 3);
         assert_eq!(handle.get(1), None);
@@ -547,7 +580,7 @@ mod tests {
     #[test]
     fn linkedlist_basics() {
         let mut new_linked_list = LinkedList::new();
-        
+
         println!("{:?}", new_linked_list);
         new_linked_list.insert(3, 2);
         new_linked_list.insert(3, 4);
@@ -565,7 +598,7 @@ mod tests {
     #[test]
     fn hashmap_basics() {
         let mut new_hashmap = Hashmap::new(); //init with 2 buckets
-        //input values
+                                              //input values
         new_hashmap.insert(1, 1);
         new_hashmap.insert(2, 5);
         new_hashmap.insert(12, 5);
@@ -584,10 +617,9 @@ mod tests {
 
         let cln = Arc::clone(&new_hashmap.map);
         assert_eq!(cln.table.read().unwrap().nitems.load(OSC), 9);
-            
 
         new_hashmap.insert(3, 8); //repeated
-        // assert_eq!(new_hashmap.table.read().unwrap().map.capacity(), 8); //should be 8 after you attempt the 9th insert
+                                  // assert_eq!(new_hashmap.table.read().unwrap().map.capacity(), 8); //should be 8 after you attempt the 9th insert
 
         assert_eq!(new_hashmap.get(20).unwrap(), 5);
         assert_eq!(new_hashmap.get(12).unwrap(), 5);
