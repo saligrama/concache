@@ -52,17 +52,12 @@ impl LinkedList {
     }
 
     fn insert(&self, key: usize, val: usize) -> Option<usize> {
-        println!("Inserting: {:?}!", key);
         let mut new_node = Box::new(Node::new(Some(key), Some(Mutex::new(val))));
         let mut left_node: *mut Node = ptr::null_mut();
         let mut right_node: *mut Node = ptr::null_mut();
 
         loop {
-            println!("Searching.");
             right_node = self.search(key, &mut left_node);
-
-            println!("left_node loaded val: {:x?}", left_node);
-            println!("right_node loaded val: {:x?}", right_node);
 
             if ((right_node != self.tail.load(OSC)) && (unsafe { &*right_node }.key == Some(key))) {
                 let rn = unsafe { &*right_node };
@@ -87,9 +82,18 @@ impl LinkedList {
     }
 
     fn print(&self) {
-        // for node in self.iter() {
-        // 	println!("{:?}", node);
-        // }
+        println!("");
+        println!("Printing List");
+        let mut next_node = unsafe { &*self.head.load(OSC) };
+        println!("{:?}", next_node);
+
+        loop {
+            next_node = unsafe { &*next_node.next.load(OSC) };
+            println!("{:?}", next_node);
+            if next_node.next.load(OSC) == self.tail.load(OSC) {
+                break;
+            }
+        }
     }
 
     fn get(&self, search_key: usize) -> Option<usize> {
@@ -105,39 +109,41 @@ impl LinkedList {
         }
     }
 
-    fn delete(&self, key: usize) -> Option<*mut Node> {
-        //iterate through until we find the node to delete and then CAS it out
-        // let mut finished = false;
+    fn delete(&self, search_key: usize) -> Option<usize> {
+        let mut left_node: *mut Node = ptr::null_mut();
+        let mut right_node: *mut Node = ptr::null_mut();
+        let mut right_node_next: *mut Node = ptr::null_mut();
 
-        // while !finished {
-        //     let mut curr_ptr = &self.head;
-        //     let mut next_raw = curr_ptr.load(OSC);
+        loop {
+            right_node = self.search(search_key, &mut left_node);
+            if (right_node == self.tail.load(OSC)) || unsafe { &*right_node }.key != Some(search_key) {
+                return None; //failed delete
+            }
+            right_node_next = unsafe { &*right_node }.next.load(OSC);
+            if !Self::is_marked_reference(right_node_next) {
+                if unsafe { &*right_node }
+                    .next
+                    .compare_and_swap(right_node_next, Self::get_marked_reference(right_node_next), OSC)
+                    == right_node_next
+                {
+                    break;
+                }
+            }
+        }
 
-        //     finished = true; //this is our last iteration through unless we encounter the key and fail the CAS, if this happens we try again
-        //     while !next_raw.is_null() {
-        //         let next_node = unsafe { &*next_raw };
-        //         if key == next_node.data.0 {
-        //             //we check if the key is active or not, if it is active then we want to cas the active bool and make it inactive
-        //             if next_node.active.load(OSC) {
-        //                 //if the node is active we want to make it inactive
-        //                 next_node.active.compare_and_swap(true, false, OSC); //what if the cas fails
-        //                 finished = false;
-        //                 break; //we need to interate through the list again to "phsycailly" delete the element
-        //             } else {
-        //                 //if the node is inactive we want to remove it
-        //                 let cas_ret = curr_ptr.compare_and_swap(next_raw, next_node.next.load(OSC), OSC);
-        //                 if cas_ret == next_raw {
-        //                     return Some(next_raw);
-        //                 } else {
-        //                     return None;
-        //                 }
-        //             }
-        //         }
-        //         curr_ptr = &next_node.next;
-        //         next_raw = curr_ptr.load(OSC);
-        //     }
-        // }
-        None
+        //get value to return
+        let rn = unsafe { &*right_node };
+        let mx = rn.val.as_ref().unwrap().lock().unwrap();
+
+        if unsafe { &*left_node }
+            .next
+            .compare_and_swap(right_node, right_node_next, OSC)
+            != right_node
+        {
+            right_node = self.search(unsafe { &*right_node }.key.unwrap(), &mut left_node);
+        }
+    
+        Some(*mx) //successful delete
     }
 
     fn is_marked_reference(ptr: *mut Node) -> bool {
@@ -228,7 +234,6 @@ impl Table {
     }
 
     fn insert(&self, key: usize, value: usize) -> Option<usize> {
-        println!("hereb");
         let check = self.nitems.load(OSC);
 
         let mut hasher = DefaultHasher::new();
@@ -246,7 +251,6 @@ impl Table {
     }
 
     fn get(&self, key: usize) -> Option<usize> {
-        println!("herec");
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
@@ -277,7 +281,7 @@ impl Table {
     //     self.nbuckets = new_table.nbuckets;
     // }
 
-    fn delete(&self, key: usize) -> Option<*mut Node> {
+    fn delete(&self, key: usize) -> Option<usize> {
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
@@ -286,7 +290,7 @@ impl Table {
         let ret = self.map[index].delete(key);
         //if not None then subtract 1 from nitems
 
-        if ret != None {
+        if ret.is_some() {
             self.nitems.fetch_sub(1, OSC);
         }
 
@@ -321,14 +325,12 @@ impl MapHandle {
     }
 
     fn delete(&self, key: usize) -> Option<usize> {
-        // self.epoch_counter.fetch_add(1, OSC);
+        self.epoch_counter.fetch_add(1, OSC);
         // //logical deletion aka cas
-        // let ret = self.map.delete(key);
-        // self.epoch_counter.fetch_add(1, OSC);
+        let ret = self.map.delete(key);
+        self.epoch_counter.fetch_add(1, OSC);
 
-        // if ret == None {
-        //     return None;
-        // }
+        ret 
 
         // //epoch set up, load all of the values
         // let mut started = Vec::new();
@@ -356,7 +358,6 @@ impl MapHandle {
         // let ret_val = node.data.1.into_inner().unwrap();
 
         // return Some(ret_val);
-        None
     }
 }
 
@@ -427,37 +428,44 @@ impl Hashmap {
     //     }
     // }
 
-    fn delete(&self, key: usize) -> Option<*mut Node> {
+    fn delete(&self, key: usize) -> Option<usize> {
         let inner_table = self.table.read().unwrap();
         inner_table.delete(key)
     }
 }
 
 fn main() {
-    println!("Started.");
+    let mut handle = Hashmap::new(); //changed this,
+    let mut threads = vec![];
+    let nthreads = 5;
+    // let handle = MapHandle::new(Arc::clone(&new_hashmap).table.read().unwrap());
+    for _ in 0..nthreads {
+        let new_handle = handle.clone();
 
-    let mut new_linked_list = LinkedList::new();
+        threads.push(thread::spawn(move || {
+            let num_iterations = 10000;
+            for _ in 0..num_iterations {
+                let mut rng = thread_rng();
+                let val = rng.gen_range(0, 128);
+                let two = rng.gen_range(0, 3);
 
-    println!("{:?}", new_linked_list.insert(5, 5));
-    println!("{:?}", new_linked_list.insert(5, 8));
-
-    // println!("{:?}", new_linked_list.head.load(OSC));
-
-    println!("");
-    println!("Printing List.");
-
-    let mut next_node = unsafe { &*new_linked_list.head.load(OSC) };
-    println!("{:?}", next_node);
-
-    loop {
-        next_node = unsafe { &*next_node.next.load(OSC) };
-        println!("{:?}", next_node);
-        if next_node.next.load(OSC) == ptr::null_mut() {
-            break;
-        }
+                if two % 3 == 0 {
+                    new_handle.insert(val, val);
+                } else if two % 3 == 1 {
+                    let v = new_handle.get(val);
+                    if (v.is_some()) {
+                        assert_eq!(v.unwrap(), val);
+                    }
+                } else {
+                    new_handle.delete(val);
+                }
+            }
+            assert_eq!(new_handle.epoch_counter.load(OSC), num_iterations*2);
+        }));
     }
-
-    println!("Finished.");
+    for t in threads {
+        t.join().unwrap();
+    }
 }
 
 #[cfg(test)]
@@ -478,7 +486,7 @@ mod tests {
             let new_handle = handle.clone();
 
             threads.push(thread::spawn(move || {
-                let num_iterations = 100000;
+                let num_iterations = 1000000;
                 for _ in 0..num_iterations {
                     let mut rng = thread_rng();
                     let val = rng.gen_range(0, 128);
@@ -488,14 +496,14 @@ mod tests {
                         new_handle.insert(val, val);
                     } else if two % 3 == 1 {
                         let v = new_handle.get(val);
-                        if (v != None) {
+                        if (v.is_some()) {
                             assert_eq!(v.unwrap(), val);
                         }
                     } else {
                         new_handle.delete(val);
                     }
                 }
-                // assert_eq!(new_handle.epoch_counter.load(OSC), num_iterations*2);
+                assert_eq!(new_handle.epoch_counter.load(OSC), num_iterations*2);
             }));
         }
         for t in threads {
@@ -587,7 +595,7 @@ mod tests {
         assert_eq!(cln.table.read().unwrap().nitems.load(OSC), 9);
 
         new_hashmap.insert(3, 8); //repeated
-                                  // assert_eq!(new_hashmap.table.read().unwrap().map.capacity(), 8); //should be 8 after you attempt the 9th insert
+        // assert_eq!(new_hashmap.table.read().unwrap().map.capacity(), 8); //should be 8 after you attempt the 9th insert
 
         assert_eq!(new_hashmap.get(20).unwrap(), 5);
         assert_eq!(new_hashmap.get(12).unwrap(), 5);
@@ -605,5 +613,23 @@ mod tests {
         assert_eq!(new_hashmap.get(1).unwrap(), 1);
         assert_eq!(new_hashmap.get(0).unwrap(), 0);
         assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
+    }
+
+    #[test]
+    fn more_linked_list_tests() {
+    let mut new_linked_list = LinkedList::new();
+        println!("Insert: {:?}", new_linked_list.insert(5, 3));
+        println!("Insert: {:?}", new_linked_list.insert(5, 8));
+        println!("Insert: {:?}", new_linked_list.insert(2, 3));
+
+
+        println!("Get: {:?}", new_linked_list.get(5));
+
+        // println!("{:?}", new_linked_list.head.load(OSC));
+        new_linked_list.print();
+
+        new_linked_list.delete(5);
+
+        new_linked_list.print();
     }
 }
