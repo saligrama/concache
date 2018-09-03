@@ -44,20 +44,19 @@ impl LinkedList {
         let tail = Box::into_raw(Box::new(Node::new(None, None)));
         head.next.store(tail, OSC);
 
-        println!("Linked List Created.");
         LinkedList {
             head: AtomicPtr::new(Box::into_raw(head)),
             tail: AtomicPtr::new(tail),
         }
     }
 
-    fn insert(&self, key: usize, val: usize) -> Option<usize> {
+    fn insert(&self, key: usize, val: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
         let mut new_node = Box::new(Node::new(Some(key), Some(Mutex::new(val))));
         let mut left_node: *mut Node = ptr::null_mut();
         let mut right_node: *mut Node = ptr::null_mut();
 
         loop {
-            right_node = self.search(key, &mut left_node);
+            right_node = self.search(key, &mut left_node, remove_nodes);
 
             if ((right_node != self.tail.load(OSC)) && (unsafe { &*right_node }.key == Some(key))) {
                 let rn = unsafe { &*right_node };
@@ -96,9 +95,9 @@ impl LinkedList {
         }
     }
 
-    fn get(&self, search_key: usize) -> Option<usize> {
+    fn get(&self, search_key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
         let mut left_node: *mut Node = ptr::null_mut();
-        let right_node = self.search(search_key, &mut left_node);
+        let right_node = self.search(search_key, &mut left_node, remove_nodes);
         if right_node == self.tail.load(OSC) || unsafe { &*right_node }.key != Some(search_key) {
             None
         } else {
@@ -109,13 +108,13 @@ impl LinkedList {
         }
     }
 
-    fn delete(&self, search_key: usize) -> Option<usize> {
+    fn delete(&self, search_key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
         let mut left_node: *mut Node = ptr::null_mut();
         let mut right_node: *mut Node = ptr::null_mut();
         let mut right_node_next: *mut Node = ptr::null_mut();
 
         loop {
-            right_node = self.search(search_key, &mut left_node);
+            right_node = self.search(search_key, &mut left_node, remove_nodes);
             if (right_node == self.tail.load(OSC)) || unsafe { &*right_node }.key != Some(search_key) {
                 return None; //failed delete
             }
@@ -140,7 +139,7 @@ impl LinkedList {
             .compare_and_swap(right_node, right_node_next, OSC)
             != right_node
         {
-            right_node = self.search(unsafe { &*right_node }.key.unwrap(), &mut left_node);
+            right_node = self.search(unsafe { &*right_node }.key.unwrap(), &mut left_node, remove_nodes);
         }
     
         Some(*mx) //successful delete
@@ -156,8 +155,7 @@ impl LinkedList {
         (ptr as usize & !0x1) as *mut Node
     }
 
-    //lifetimes are screwing me over!
-    fn search(&self, search_key: usize, left_node: &mut *mut Node) -> *mut Node {
+    fn search(&self, search_key: usize, left_node: &mut *mut Node, remove_nodes: &mut Vec<*mut Node>) -> *mut Node {
         let mut left_node_next: *mut Node = ptr::null_mut();
         let mut right_node: *mut Node = ptr::null_mut();
 
@@ -200,6 +198,27 @@ impl LinkedList {
                 .compare_and_swap(left_node_next, right_node, OSC)
                 == left_node_next
             {
+                //drop all of the Nodes that we crossed over, 
+                //we know nothing inside can be modified so we can just drop all of them with 
+                //loop until we are at the right_node pointer
+
+                //add to remove_nodes, to be removed
+                let mut curr_node = left_node_next; //left_node_next is to be deleted, the ones after it are
+                // println!("start curr_node: {:?}", curr_node);
+
+                loop {
+                    //start with left_node_next, then go to on until the right_node, but do use that one
+                    assert_eq!(Self::is_marked_reference(curr_node), false);
+                    remove_nodes.push(curr_node);
+                    curr_node = unsafe { &*curr_node }.next.load(OSC);
+                    assert_eq!(Self::is_marked_reference(curr_node), true);
+                    curr_node = Self::get_unmarked_reference(curr_node); //we need unmarked to deref and comp to right_node
+                    // println!("curr_node: {:?}", curr_node);
+                    if curr_node == right_node {
+                        break;
+                    }
+                }
+
                 if right_node != self.tail.load(OSC)
                     && Self::is_marked_reference(unsafe { &*right_node }.next.load(OSC))
                 {
@@ -233,7 +252,7 @@ impl Table {
         t
     }
 
-    fn insert(&self, key: usize, value: usize) -> Option<usize> {
+    fn insert(&self, key: usize, value: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
         let check = self.nitems.load(OSC);
 
         let mut hasher = DefaultHasher::new();
@@ -241,7 +260,7 @@ impl Table {
         let hash: usize = hasher.finish() as usize;
         let index = hash % self.nbuckets;
 
-        let ret = self.map[index].insert(key, value);
+        let ret = self.map[index].insert(key, value, remove_nodes);
 
         if ret.is_none() {
             self.nitems.fetch_add(1, OSC);
@@ -250,44 +269,25 @@ impl Table {
         ret
     }
 
-    fn get(&self, key: usize) -> Option<usize> {
+    fn get(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
         let index = hash % self.nbuckets;
 
-        self.map[index].get(key)
+        self.map[index].get(key, remove_nodes)
     }
 
     // fn resize(&mut self, newsize: usize) {
-    //     let mut new_table = Table::new(newsize);
-
-    //     for bucket in &self.map {
-    //         for node in bucket.iter() {
-    //             unsafe {
-    //                 let k = node.data.0;
-    //                 // assert_eq!(new_table.get(k), None);
-    //                 let v = node.data.1.lock().unwrap();
-    //                 // let v = *v;
-
-    //                 new_table.insert(k, *v);
-    //                 self.delete(k);
-    //         	}
-    //         }
-    //     }
-
-    //     self.map = new_table.map;
-    //     self.nitems = new_table.nitems;
-    //     self.nbuckets = new_table.nbuckets;
     // }
 
-    fn delete(&self, key: usize) -> Option<usize> {
+    fn delete(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
         let index = hash % self.nbuckets;
 
-        let ret = self.map[index].delete(key);
+        let ret = self.map[index].delete(key, remove_nodes);
         //if not None then subtract 1 from nitems
 
         if ret.is_some() {
@@ -305,59 +305,77 @@ struct MapHandle {
 
 impl MapHandle {
     fn insert(&self, key: usize, value: usize) -> Option<usize> {
-        //increment started before the operations begins
+        let mut remove_nodes: Vec<*mut Node> = Vec::new();
+
         self.epoch_counter.fetch_add(1, OSC);
-        let ret = self.map.insert(key, value);
-        //increment finished after the operation ends
+        let ret = self.map.insert(key, value, &mut remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
+        if remove_nodes.len() != 0 {
+            self.free_nodes(&remove_nodes);
+        }
+        
 
         ret
     }
 
     fn get(&self, key: usize) -> Option<usize> {
-        //increment started before the operations begins
+        let mut remove_nodes: Vec<*mut Node> = Vec::new();
+
         self.epoch_counter.fetch_add(1, OSC);
-        let ret = self.map.get(key);
-        //increment finished after the operation ends
+        let ret = self.map.get(key, &mut remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
+        if remove_nodes.len() != 0 {
+            self.free_nodes(&remove_nodes);
+        }
+        
 
         ret
     }
 
     fn delete(&self, key: usize) -> Option<usize> {
+        let mut remove_nodes: Vec<*mut Node> = Vec::new();
+
         self.epoch_counter.fetch_add(1, OSC);
-        // //logical deletion aka cas
-        let ret = self.map.delete(key);
+        let ret = self.map.delete(key, &mut remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
+        if remove_nodes.len() != 0 {
+            self.free_nodes(&remove_nodes);
+        }
 
-        ret 
+        ret
+    }
 
-        // //epoch set up, load all of the values
-        // let mut started = Vec::new();
-        // let handles_map = self.map.handles.read().unwrap();
-        // for h in handles_map.iter() {
-        //     started.push(h.load(OSC));
-        // }
-        // for (i,h) in handles_map.iter().enumerate() {
-        //     let mut check = h.load(OSC);
-        //     while (check <= started[i]) && (check%2 == 1) {
-        //         // println!("epoch is spinning");
-        //         check = h.load(OSC);
-        //         //do nothing
-        //     }
-        //     //now finished is greater than or equal to started
-        // }
+    fn free_nodes(&self, remove_nodes: &Vec<*mut Node>) {
+        /*
+        we just finished up out adding to vector, so now we are ready to spin the epoch,
+        and free those nodes up from the vector, TODO change fn parameter to accept a
+        vector instead.
+        */
 
-        // // let ret = unsafe { &*ret.unwrap() };
-        // // let ret_val = ret.data.1.lock().unwrap().clone();
+        //epoch set up, load all of the values
+        let mut started = Vec::new();
+        let handles_map = self.map.handles.read().unwrap();
+        for h in handles_map.iter() {
+            started.push(h.load(OSC));
+        }
+        for (i,h) in handles_map.iter().enumerate() {
+            let mut check = h.load(OSC);
+            while (check <= started[i]) && (check%2 == 1) {
+                // println!("epoch is spinning");
+                check = h.load(OSC);
+                //do nothing
+            }
+            //now finished is greater than or equal to started
+        }
 
-        // //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
-        // let to_drop = ret.unwrap();
-        // // epoch rolled over, so we know we have exclusive access to the node
-        // let node = unsafe { Box::from_raw(to_drop) };
-        // let ret_val = node.data.1.into_inner().unwrap();
-
-        // return Some(ret_val);
+        //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
+        // epoch rolled over, so we know we have exclusive access to the node
+        
+        for to_drop in remove_nodes {
+            // println!("dropping: {:?}", to_drop);
+            let n = unsafe { Box::from_raw(*to_drop) };
+            // let n = unsafe { Box::from_raw(*to_drop) }; //use this to test double drop --> crash
+        }
     }
 }
 
@@ -399,73 +417,59 @@ impl Hashmap {
         ret
     }
 
-    fn insert(&self, key: usize, value: usize) -> Option<usize> {
+    fn insert(&self, key: usize, value: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
         let inner_table = self.table.read().unwrap();
-        // // // check for resize
-        // let num_items = inner_table.nitems.load(OSC);
-        // if (num_items / inner_table.nbuckets >= 3) { //threshold is 2
-        // 	let resize_value: usize = inner_table.nbuckets * 2;
-        // 	drop(inner_table); //let the resize function take the lock
-        // 	self.resize(resize_value); //double the size
-        // } else {
-        //     drop(inner_table); //force drop in case resize doesnt happen?
-        // }
-
-        let inner_table = self.table.read().unwrap();
-
-        inner_table.insert(key, value)
+        inner_table.insert(key, value, remove_nodes)
     }
 
-    fn get(&self, key: usize) -> Option<usize> {
+    fn get(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
         let inner_table = self.table.read().unwrap(); //need read access
-        inner_table.get(key)
+        inner_table.get(key, remove_nodes)
     }
 
     // fn resize(&self, newsize: usize) {
-    //     let mut inner_table = self.table.write().unwrap();
-    //     if inner_table.map.capacity() != newsize {
-    //     	inner_table.resize(newsize);
-    //     }
     // }
 
-    fn delete(&self, key: usize) -> Option<usize> {
+    fn delete(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
         let inner_table = self.table.read().unwrap();
-        inner_table.delete(key)
+        inner_table.delete(key, remove_nodes)
     }
 }
 
 fn main() {
+    println!("Started.");
     let mut handle = Hashmap::new(); //changed this,
-    let mut threads = vec![];
-    let nthreads = 5;
-    // let handle = MapHandle::new(Arc::clone(&new_hashmap).table.read().unwrap());
-    for _ in 0..nthreads {
-        let new_handle = handle.clone();
+        let mut threads = vec![];
+        let nthreads = 5;
+        // let handle = MapHandle::new(Arc::clone(&new_hashmap).table.read().unwrap());
+        for _ in 0..nthreads {
+            let new_handle = handle.clone();
 
-        threads.push(thread::spawn(move || {
-            let num_iterations = 10000;
-            for _ in 0..num_iterations {
-                let mut rng = thread_rng();
-                let val = rng.gen_range(0, 128);
-                let two = rng.gen_range(0, 3);
+            threads.push(thread::spawn(move || {
+                let num_iterations = 1000000;
+                for _ in 0..num_iterations {
+                    let mut rng = thread_rng();
+                    let val = rng.gen_range(0, 128);
+                    let two = rng.gen_range(0, 3);
 
-                if two % 3 == 0 {
-                    new_handle.insert(val, val);
-                } else if two % 3 == 1 {
-                    let v = new_handle.get(val);
-                    if (v.is_some()) {
-                        assert_eq!(v.unwrap(), val);
+                    if two % 3 == 0 {
+                        new_handle.insert(val, val);
+                    } else if two % 3 == 1 {
+                        let v = new_handle.get(val);
+                        if (v.is_some()) {
+                            assert_eq!(v.unwrap(), val);
+                        }
+                    } else {
+                        new_handle.delete(val);
                     }
-                } else {
-                    new_handle.delete(val);
                 }
-            }
-            assert_eq!(new_handle.epoch_counter.load(OSC), num_iterations*2);
-        }));
-    }
-    for t in threads {
-        t.join().unwrap();
-    }
+                assert_eq!(new_handle.epoch_counter.load(OSC), num_iterations*2);
+            }));
+        }
+        for t in threads {
+            t.join().unwrap();
+        }
+    println!("Finished.");
 }
 
 #[cfg(test)]
@@ -486,7 +490,7 @@ mod tests {
             let new_handle = handle.clone();
 
             threads.push(thread::spawn(move || {
-                let num_iterations = 1000000;
+                let num_iterations = 100000;
                 for _ in 0..num_iterations {
                     let mut rng = thread_rng();
                     let val = rng.gen_range(0, 128);
@@ -555,20 +559,22 @@ mod tests {
 
     #[test]
     fn linkedlist_basics() {
+        let mut remove_nodes: Vec<*mut Node> = Vec::new();
+
         let mut new_linked_list = LinkedList::new();
 
         println!("{:?}", new_linked_list);
-        new_linked_list.insert(3, 2);
-        new_linked_list.insert(3, 4);
-        new_linked_list.insert(5, 8);
-        new_linked_list.insert(4, 6);
-        new_linked_list.insert(1, 8);
-        new_linked_list.insert(6, 6);
+        new_linked_list.insert(3, 2, &mut remove_nodes);
+        new_linked_list.insert(3, 4, &mut remove_nodes);
+        new_linked_list.insert(5, 8, &mut remove_nodes);
+        new_linked_list.insert(4, 6, &mut remove_nodes);
+        new_linked_list.insert(1, 8, &mut remove_nodes);
+        new_linked_list.insert(6, 6, &mut remove_nodes);
         new_linked_list.print();
 
-        assert_eq!(new_linked_list.get(3).unwrap(), 4);
-        assert_eq!(new_linked_list.get(5).unwrap(), 8);
-        assert_eq!(new_linked_list.get(2), None);
+        assert_eq!(new_linked_list.get(3, &mut remove_nodes).unwrap(), 4);
+        assert_eq!(new_linked_list.get(5, &mut remove_nodes).unwrap(), 8);
+        assert_eq!(new_linked_list.get(2, &mut remove_nodes), None);
     }
 
     #[test]
@@ -617,18 +623,20 @@ mod tests {
 
     #[test]
     fn more_linked_list_tests() {
-    let mut new_linked_list = LinkedList::new();
-        println!("Insert: {:?}", new_linked_list.insert(5, 3));
-        println!("Insert: {:?}", new_linked_list.insert(5, 8));
-        println!("Insert: {:?}", new_linked_list.insert(2, 3));
+        let mut remove_nodes: Vec<*mut Node> = Vec::new();
+        
+        let mut new_linked_list = LinkedList::new();
+        println!("Insert: {:?}", new_linked_list.insert(5, 3, &mut remove_nodes));
+        println!("Insert: {:?}", new_linked_list.insert(5, 8, &mut remove_nodes));
+        println!("Insert: {:?}", new_linked_list.insert(2, 3, &mut remove_nodes));
 
 
-        println!("Get: {:?}", new_linked_list.get(5));
+        println!("Get: {:?}", new_linked_list.get(5, &mut remove_nodes));
 
         // println!("{:?}", new_linked_list.head.load(OSC));
         new_linked_list.print();
 
-        new_linked_list.delete(5);
+        new_linked_list.delete(5, &mut remove_nodes);
 
         new_linked_list.print();
     }

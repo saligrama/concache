@@ -331,33 +331,6 @@ impl MapHandle {
         self.epoch_counter.fetch_add(1, OSC);
 
         ret 
-
-        // //epoch set up, load all of the values
-        // let mut started = Vec::new();
-        // let handles_map = self.map.handles.read().unwrap();
-        // for h in handles_map.iter() {
-        //     started.push(h.load(OSC));
-        // }
-        // for (i,h) in handles_map.iter().enumerate() {
-        //     let mut check = h.load(OSC);
-        //     while (check <= started[i]) && (check%2 == 1) {
-        //         // println!("epoch is spinning");
-        //         check = h.load(OSC);
-        //         //do nothing
-        //     }
-        //     //now finished is greater than or equal to started
-        // }
-
-        // // let ret = unsafe { &*ret.unwrap() };
-        // // let ret_val = ret.data.1.lock().unwrap().clone();
-
-        // //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
-        // let to_drop = ret.unwrap();
-        // // epoch rolled over, so we know we have exclusive access to the node
-        // let node = unsafe { Box::from_raw(to_drop) };
-        // let ret_val = node.data.1.into_inner().unwrap();
-
-        // return Some(ret_val);
     }
 }
 
@@ -401,18 +374,6 @@ impl Hashmap {
 
     fn insert(&self, key: usize, value: usize) -> Option<usize> {
         let inner_table = self.table.read().unwrap();
-        // // // check for resize
-        // let num_items = inner_table.nitems.load(OSC);
-        // if (num_items / inner_table.nbuckets >= 3) { //threshold is 2
-        // 	let resize_value: usize = inner_table.nbuckets * 2;
-        // 	drop(inner_table); //let the resize function take the lock
-        // 	self.resize(resize_value); //double the size
-        // } else {
-        //     drop(inner_table); //force drop in case resize doesnt happen?
-        // }
-
-        let inner_table = self.table.read().unwrap();
-
         inner_table.insert(key, value)
     }
 
@@ -422,10 +383,6 @@ impl Hashmap {
     }
 
     // fn resize(&self, newsize: usize) {
-    //     let mut inner_table = self.table.write().unwrap();
-    //     if inner_table.map.capacity() != newsize {
-    //     	inner_table.resize(newsize);
-    //     }
     // }
 
     fn delete(&self, key: usize) -> Option<usize> {
