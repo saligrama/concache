@@ -1,5 +1,5 @@
 [package]
-name = "rust"
+name = "concache_crossbeam"
 version = "0.1.0"
 authors = ["Aditya Saligrama <saligrama427@gmail.com>"]
 
