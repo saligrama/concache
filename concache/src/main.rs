@@ -1,7 +1,8 @@
 #![allow(unused)]
-// #[derive(Debug)]
+#![feature(test)]
 
 extern crate rand;
+extern crate test;
 
 use rand::{thread_rng, Rng};
 use std::collections::hash_map::DefaultHasher;
@@ -12,6 +13,7 @@ use std::ptr;
 use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
+use test::Bencher;
 
 const OSC: Ordering = Ordering::SeqCst;
 
@@ -400,9 +402,9 @@ struct Hashmap {
 }
 
 impl Hashmap {
-    fn new() -> MapHandle {
+    fn new(num_items: usize) -> MapHandle {
         let new_hashmap = Hashmap {
-            table: RwLock::new(Table::new(8)),
+            table: RwLock::new(Table::new(num_items)),
             handles: RwLock::new(Vec::new()),
         };
         let mut ret = MapHandle {
@@ -438,37 +440,16 @@ impl Hashmap {
 
 fn main() {
     println!("Started.");
-    let mut handle = Hashmap::new(); //changed this,
-        let mut threads = vec![];
-        let nthreads = 5;
-        // let handle = MapHandle::new(Arc::clone(&new_hashmap).table.read().unwrap());
-        for _ in 0..nthreads {
-            let new_handle = handle.clone();
-
-            threads.push(thread::spawn(move || {
-                let num_iterations = 1000000;
-                for _ in 0..num_iterations {
-                    let mut rng = thread_rng();
-                    let val = rng.gen_range(0, 128);
-                    let two = rng.gen_range(0, 3);
-
-                    if two % 3 == 0 {
-                        new_handle.insert(val, val);
-                    } else if two % 3 == 1 {
-                        let v = new_handle.get(val);
-                        if (v.is_some()) {
-                            assert_eq!(v.unwrap(), val);
-                        }
-                    } else {
-                        new_handle.delete(val);
-                    }
-                }
-                assert_eq!(new_handle.epoch_counter.load(OSC), num_iterations*2);
-            }));
-        }
-        for t in threads {
-            t.join().unwrap();
-        }
+    let mut handle = Hashmap::new(8);
+    
+    for i in 0..16 {
+        let mut rng = thread_rng();
+        let val = rng.gen_range(0, 128);
+        let key = rng.gen_range(0, 128);
+        println!("{:?}", val);
+        println!("{:?}", key);
+        handle.insert(key, val);
+    }
     println!("Finished.");
 }
 
@@ -482,7 +463,7 @@ mod tests {
     */
     #[test]
     fn hashmap_concurr() {
-        let mut handle = Hashmap::new(); //changed this,
+        let mut handle = Hashmap::new(8); //changed this,
         let mut threads = vec![];
         let nthreads = 5;
         // let handle = MapHandle::new(Arc::clone(&new_hashmap).table.read().unwrap());
@@ -517,7 +498,7 @@ mod tests {
 
     #[test]
     fn hashmap_handle_cloning() {
-        let mut handle = Arc::new(Hashmap::new()); //init with 16 bucket
+        let mut handle = Arc::new(Hashmap::new(8)); //init with 16 bucket
         println!("{:?}", handle.epoch_counter);
         handle.insert(1, 3);
         assert_eq!(handle.get(1).unwrap(), 3);
@@ -532,7 +513,7 @@ mod tests {
 
     #[test]
     fn hashmap_delete() {
-        let mut handle = Hashmap::new();
+        let mut handle = Hashmap::new(8);
         handle.insert(1, 3);
         handle.insert(2, 5);
         handle.insert(3, 8);
@@ -579,7 +560,7 @@ mod tests {
 
     #[test]
     fn hashmap_basics() {
-        let mut new_hashmap = Hashmap::new(); //init with 2 buckets
+        let mut new_hashmap = Hashmap::new(8); //init with 2 buckets
                                               //input values
         new_hashmap.insert(1, 1);
         new_hashmap.insert(2, 5);
@@ -640,4 +621,166 @@ mod tests {
 
         new_linked_list.print();
     }
+}
+
+//BENCHMARKS
+#[inline]
+fn getn(b: &mut Bencher, n: usize) {
+    let mut handle = Hashmap::new(1024);
+    for key in 0..n {
+        handle.insert(key, 0);
+    }
+    let mut rng = thread_rng();
+
+    b.iter(|| {
+        let key = rng.gen_range(0, n);
+        handle.get(key);
+    });
+}
+
+//get
+#[bench]
+fn get0128(b: &mut Bencher) {
+    getn(b, 128);
+}
+
+#[bench]
+fn get0256(b: &mut Bencher) {
+    getn(b, 256);
+}
+
+#[bench]
+fn get0512(b: &mut Bencher) {
+    getn(b, 512);
+}
+
+#[bench]
+fn get1024(b: &mut Bencher) {
+    getn(b, 1024);
+}
+
+#[bench]
+fn get2048(b: &mut Bencher) {
+    getn(b, 2048);
+}
+
+#[bench]
+fn get4096(b: &mut Bencher) {
+    getn(b, 4096);
+}
+
+#[bench]
+fn get8192(b: &mut Bencher) {
+    getn(b, 8192);
+}
+
+#[inline]
+fn updaten(b: &mut Bencher, n: usize) {
+    let mut handle = Hashmap::new(1024);
+    for key in 0..n {
+        handle.insert(key, 0);
+    }
+    let mut rng = thread_rng();
+
+    b.iter(|| {
+        let key = rng.gen_range(0, n);
+        handle.insert(key, 1);
+    });
+}
+
+//update
+#[bench]
+fn update0128(b: &mut Bencher) {
+    updaten(b, 128);
+}
+
+#[bench]
+fn update0256(b: &mut Bencher) {
+    updaten(b, 256);
+}
+
+#[bench]
+fn update0512(b: &mut Bencher) {
+    updaten(b, 512);
+}
+
+#[bench]
+fn update1024(b: &mut Bencher) {
+    updaten(b, 1024);
+}
+
+#[bench]
+fn update2048(b: &mut Bencher) {
+    updaten(b, 2048);
+}
+
+#[bench]
+fn update4096(b: &mut Bencher) {
+    updaten(b, 4096);
+}
+
+#[bench]
+fn update8192(b: &mut Bencher) {
+    updaten(b, 8192);
+}
+
+fn deleten(b: &mut Bencher, n: usize) {
+    let mut handle = Hashmap::new(1024);
+    for key in 0..n {
+        handle.insert(key, 0);
+    }
+    let mut rng = thread_rng();
+
+    b.iter(|| {
+        let key = rng.gen_range(0, n);
+        handle.delete(key);
+        handle.insert(key, 0);
+    });
+}
+
+//delete
+#[bench]
+fn delete0128(b: &mut Bencher) {
+    deleten(b, 128);
+}
+
+#[bench]
+fn delete0256(b: &mut Bencher) {
+    deleten(b, 256);
+}
+
+#[bench]
+fn delete0512(b: &mut Bencher) {
+    deleten(b, 512);
+}
+
+#[bench]
+fn delete1024(b: &mut Bencher) {
+    deleten(b, 1024);
+}
+
+#[bench]
+fn delete2048(b: &mut Bencher) {
+    deleten(b, 2048);
+}
+
+#[bench]
+fn delete4096(b: &mut Bencher) {
+    deleten(b, 4096);
+}
+
+#[bench]
+fn delete8192(b: &mut Bencher) {
+    deleten(b, 8192);
+}
+
+#[bench]
+fn insert(b: &mut Bencher) {
+    let mut handle = Hashmap::new(1024);
+    let mut rng = thread_rng();
+
+    b.iter(|| {
+        handle.insert(1, 0);
+        handle.delete(1);
+    })
 }
