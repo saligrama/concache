@@ -280,9 +280,6 @@ impl Table {
         self.map[index].get(key, remove_nodes)
     }
 
-    // fn resize(&mut self, newsize: usize) {
-    // }
-
     fn delete(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
@@ -290,7 +287,6 @@ impl Table {
         let index = hash % self.nbuckets;
 
         let ret = self.map[index].delete(key, remove_nodes);
-        //if not None then subtract 1 from nitems
 
         if ret.is_some() {
             self.nitems.fetch_sub(1, OSC);
@@ -315,7 +311,6 @@ impl MapHandle {
         if remove_nodes.len() != 0 {
             self.free_nodes(&remove_nodes);
         }
-        
 
         ret
     }
@@ -348,12 +343,6 @@ impl MapHandle {
     }
 
     fn free_nodes(&self, remove_nodes: &Vec<*mut Node>) {
-        /*
-        we just finished up out adding to vector, so now we are ready to spin the epoch,
-        and free those nodes up from the vector, TODO change fn parameter to accept a
-        vector instead.
-        */
-
         //epoch set up, load all of the values
         let mut started = Vec::new();
         let handles_map = self.map.handles.read().unwrap();
@@ -363,9 +352,8 @@ impl MapHandle {
         for (i,h) in handles_map.iter().enumerate() {
             let mut check = h.load(OSC);
             while (check <= started[i]) && (check%2 == 1) {
-                // println!("epoch is spinning");
                 check = h.load(OSC);
-                //do nothing
+                //do nothing, epoch spinning
             }
             //now finished is greater than or equal to started
         }
@@ -374,9 +362,7 @@ impl MapHandle {
         // epoch rolled over, so we know we have exclusive access to the node
         
         for to_drop in remove_nodes {
-            // println!("dropping: {:?}", to_drop);
             let n = unsafe { Box::from_raw(*to_drop) };
-            // let n = unsafe { Box::from_raw(*to_drop) }; //use this to test double drop --> crash
         }
     }
 }
@@ -397,14 +383,14 @@ impl Clone for MapHandle {
 }
 
 struct Hashmap {
-    table: RwLock<Table>,
+    table: Table,
     handles: RwLock<Vec<Arc<AtomicUsize>>>, //(started, finished)
 }
 
 impl Hashmap {
     fn new(num_items: usize) -> MapHandle {
         let new_hashmap = Hashmap {
-            table: RwLock::new(Table::new(num_items)),
+            table: Table::new(num_items),
             handles: RwLock::new(Vec::new()),
         };
         let mut ret = MapHandle {
@@ -420,21 +406,15 @@ impl Hashmap {
     }
 
     fn insert(&self, key: usize, value: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        let inner_table = self.table.read().unwrap();
-        inner_table.insert(key, value, remove_nodes)
+        self.table.insert(key, value, remove_nodes)
     }
 
     fn get(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        let inner_table = self.table.read().unwrap(); //need read access
-        inner_table.get(key, remove_nodes)
+        self.table.get(key, remove_nodes)
     }
 
-    // fn resize(&self, newsize: usize) {
-    // }
-
     fn delete(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        let inner_table = self.table.read().unwrap();
-        inner_table.delete(key, remove_nodes)
+        self.table.delete(key, remove_nodes)
     }
 }
 
@@ -568,8 +548,6 @@ mod tests {
         new_hashmap.insert(13, 7);
         new_hashmap.insert(0, 0);
 
-        // assert_eq!(new_hashmap.table.read().unwrap().map.capacity(), 4); //should be 4 after you attempt the 5th insert
-
         new_hashmap.insert(20, 3);
         new_hashmap.insert(3, 2);
         new_hashmap.insert(4, 1);
@@ -579,20 +557,15 @@ mod tests {
         assert_eq!(new_hashmap.insert(5, 5), None); //repeated
 
         let cln = Arc::clone(&new_hashmap.map);
-        assert_eq!(cln.table.read().unwrap().nitems.load(OSC), 9);
+        assert_eq!(cln.table.nitems.load(OSC), 9);
 
         new_hashmap.insert(3, 8); //repeated
-        // assert_eq!(new_hashmap.table.read().unwrap().map.capacity(), 8); //should be 8 after you attempt the 9th insert
 
         assert_eq!(new_hashmap.get(20).unwrap(), 5);
         assert_eq!(new_hashmap.get(12).unwrap(), 5);
         assert_eq!(new_hashmap.get(1).unwrap(), 1);
         assert_eq!(new_hashmap.get(0).unwrap(), 0);
         assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
-
-        // new_hashmap.resize(64);
-
-        // assert_eq!(new_hashmap.table.read().unwrap().map.capacity(), 64); //make sure it is correct length
 
         // try the same assert_eqs
         assert_eq!(new_hashmap.get(20).unwrap(), 5);
