@@ -626,7 +626,7 @@ mod tests {
 //BENCHMARKS
 #[inline]
 fn getn(b: &mut Bencher, n: usize) {
-    let mut handle = Hashmap::new(1024);
+    let handle = Hashmap::new(1024);
     for key in 0..n {
         handle.insert(key, 0);
     }
@@ -676,7 +676,7 @@ fn get8192(b: &mut Bencher) {
 
 #[inline]
 fn updaten(b: &mut Bencher, n: usize) {
-    let mut handle = Hashmap::new(1024);
+    let handle = Hashmap::new(1024);
     for key in 0..n {
         handle.insert(key, 0);
     }
@@ -725,7 +725,7 @@ fn update8192(b: &mut Bencher) {
 }
 
 fn deleten(b: &mut Bencher, n: usize) {
-    let mut handle = Hashmap::new(1024);
+    let handle = Hashmap::new(1024);
     for key in 0..n {
         handle.insert(key, 0);
     }
@@ -777,7 +777,6 @@ fn delete8192(b: &mut Bencher) {
 #[bench]
 fn insert(b: &mut Bencher) {
     let mut handle = Hashmap::new(1024);
-    let mut rng = thread_rng();
 
     b.iter(|| {
         handle.insert(1, 0);
