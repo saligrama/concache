@@ -20,15 +20,16 @@ const OSC: Ordering = Ordering::SeqCst;
 #[derive(Debug)]
 struct Node {
     key: Option<usize>,
-    val: Option<Mutex<usize>>,
+    val: AtomicPtr<usize>,
     next: AtomicPtr<Node>,
 }
 
 impl Node {
-    fn new(key: Option<usize>, val: Option<Mutex<usize>>) -> Node {
+    fn new(key: Option<usize>, val: usize) -> Node {
+        let v = Box::new(val);
         Node {
             key: key,
-            val: val,
+            val: AtomicPtr::new(Box::into_raw(v)),
             next: AtomicPtr::new(ptr::null_mut()),
         }
     }
@@ -42,8 +43,8 @@ struct LinkedList {
 
 impl LinkedList {
     fn new() -> Self {
-        let head = Box::new(Node::new(None, None));
-        let tail = Box::into_raw(Box::new(Node::new(None, None)));
+        let head = Box::new(Node::new(None, 0));
+        let tail = Box::into_raw(Box::new(Node::new(None, 0)));
         head.next.store(tail, OSC);
 
         LinkedList {
@@ -52,8 +53,8 @@ impl LinkedList {
         }
     }
 
-    fn insert(&self, key: usize, val: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        let mut new_node = Box::new(Node::new(Some(key), Some(Mutex::new(val))));
+    fn insert(&self, key: usize, val: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<*mut usize> {
+        let mut new_node = Box::new(Node::new(Some(key), val));
         let mut left_node: *mut Node = ptr::null_mut();
         let mut right_node: *mut Node = ptr::null_mut();
 
@@ -62,9 +63,8 @@ impl LinkedList {
 
             if ((right_node != self.tail.load(OSC)) && (unsafe { &*right_node }.key == Some(key))) {
                 let rn = unsafe { &*right_node };
-                let mut mx = rn.val.as_ref().unwrap().lock().unwrap();
-                let old = *mx;
-                *mx = val;
+                let v = Box::new(val);
+                let old = rn.val.swap(Box::into_raw(v), OSC);
                 return Some(old);
             }
 
@@ -82,31 +82,14 @@ impl LinkedList {
         }
     }
 
-    fn print(&self) {
-        println!("");
-        println!("Printing List");
-        let mut next_node = unsafe { &*self.head.load(OSC) };
-        println!("{:?}", next_node);
-
-        loop {
-            next_node = unsafe { &*next_node.next.load(OSC) };
-            println!("{:?}", next_node);
-            if next_node.next.load(OSC) == self.tail.load(OSC) {
-                break;
-            }
-        }
-    }
-
     fn get(&self, search_key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
         let mut left_node: *mut Node = ptr::null_mut();
         let right_node = self.search(search_key, &mut left_node, remove_nodes);
         if right_node == self.tail.load(OSC) || unsafe { &*right_node }.key != Some(search_key) {
             None
         } else {
-            unsafe { &*right_node }
-                .val
-                .as_ref()
-                .map(|v| *v.lock().unwrap())
+            unsafe { Some( *(&*right_node).val.load(OSC)) }
+
         }
     }
 
@@ -134,7 +117,7 @@ impl LinkedList {
 
         //get value to return
         let rn = unsafe { &*right_node };
-        let mx = rn.val.as_ref().unwrap().lock().unwrap();
+        let old = unsafe { *rn.val.load(OSC) };
 
         if unsafe { &*left_node }
             .next
@@ -144,7 +127,7 @@ impl LinkedList {
             right_node = self.search(unsafe { &*right_node }.key.unwrap(), &mut left_node, remove_nodes);
         }
     
-        Some(*mx) //successful delete
+        Some(old) //successful delete
     }
 
     fn is_marked_reference(ptr: *mut Node) -> bool {
@@ -254,7 +237,7 @@ impl Table {
         t
     }
 
-    fn insert(&self, key: usize, value: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
+    fn insert(&self, key: usize, value: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<*mut usize> {
         let check = self.nitems.load(OSC);
 
         let mut hasher = DefaultHasher::new();
@@ -306,8 +289,17 @@ impl MapHandle {
         let mut remove_nodes: Vec<*mut Node> = Vec::new();
 
         self.epoch_counter.fetch_add(1, OSC);
-        let ret = self.map.insert(key, value, &mut remove_nodes);
+        let val = self.map.insert(key, value, &mut remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
+
+        let mut ret = None;
+
+        if val.is_some() {
+            let v = val.unwrap();
+            ret = Some(unsafe { *v });
+            self.free_val(v);
+        }
+        
         if remove_nodes.len() != 0 {
             self.free_nodes(&remove_nodes);
         }
@@ -340,6 +332,28 @@ impl MapHandle {
         }
 
         ret
+    }
+
+    fn free_val(&self, remove_val: *mut usize) {
+        //epoch set up, load all of the values
+        let mut started = Vec::new();
+        let handles_map = self.map.handles.read().unwrap();
+        for h in handles_map.iter() {
+            started.push(h.load(OSC));
+        }
+        for (i,h) in handles_map.iter().enumerate() {
+            let mut check = h.load(OSC);
+            while (check <= started[i]) && (check%2 == 1) {
+                check = h.load(OSC);
+                //do nothing, epoch spinning
+            }
+            //now finished is greater than or equal to started
+        }
+
+        //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
+        // epoch rolled over, so we know we have exclusive access to the node
+        
+        let n = unsafe { Box::from_raw(remove_val) };
     }
 
     fn free_nodes(&self, remove_nodes: &Vec<*mut Node>) {
@@ -405,7 +419,7 @@ impl Hashmap {
         ret
     }
 
-    fn insert(&self, key: usize, value: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
+    fn insert(&self, key: usize, value: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<*mut usize> {
         self.table.insert(key, value, remove_nodes)
     }
 
@@ -531,7 +545,7 @@ mod tests {
         new_linked_list.insert(4, 6, &mut remove_nodes);
         new_linked_list.insert(1, 8, &mut remove_nodes);
         new_linked_list.insert(6, 6, &mut remove_nodes);
-        new_linked_list.print();
+        // new_linked_list.print();
 
         assert_eq!(new_linked_list.get(3, &mut remove_nodes).unwrap(), 4);
         assert_eq!(new_linked_list.get(5, &mut remove_nodes).unwrap(), 8);
@@ -552,6 +566,7 @@ mod tests {
         new_hashmap.insert(3, 2);
         new_hashmap.insert(4, 1);
 
+        // assert_eq!(new_hashmap.insert(20, 5), Some(5));
         assert_eq!(new_hashmap.insert(20, 5).unwrap(), 3); //repeated
         assert_eq!(new_hashmap.insert(3, 8).unwrap(), 2); //repeated
         assert_eq!(new_hashmap.insert(5, 5), None); //repeated
@@ -588,11 +603,11 @@ mod tests {
         println!("Get: {:?}", new_linked_list.get(5, &mut remove_nodes));
 
         // println!("{:?}", new_linked_list.head.load(OSC));
-        new_linked_list.print();
+        // new_linked_list.print();
 
         new_linked_list.delete(5, &mut remove_nodes);
 
-        new_linked_list.print();
+        // new_linked_list.print();
     }
 }
 
