@@ -11,8 +11,6 @@ use std::thread;
 use test::Bencher;
 use concache_crossbeam::concache_crossbeam::ConcacheCrossbeam;
 
-
-
 const OSC: Ordering = Ordering::SeqCst;
 
 fn main() {
@@ -135,7 +133,7 @@ fn main() {
 //BENCHMARKS
 #[inline]
 fn getn(b: &mut Bencher, n: usize) {
-    let handle = ConcacheCrossbeam::with_capacity(1);
+    let handle = ConcacheCrossbeam::with_capacity(1024);
     for key in 0..n {
         handle.insert(key, 0);
     }
@@ -185,7 +183,7 @@ fn get8192(b: &mut Bencher) {
 
 #[inline]
 fn updaten(b: &mut Bencher, n: usize) {
-    let handle = ConcacheCrossbeam::with_capacity(1);
+    let handle = ConcacheCrossbeam::with_capacity(1024);
     for key in 0..n {
         handle.insert(key, 0);
     }
@@ -234,7 +232,7 @@ fn update8192(b: &mut Bencher) {
 }
 
 fn removen(b: &mut Bencher, n: usize) {
-    let handle = ConcacheCrossbeam::with_capacity(1);
+    let handle = ConcacheCrossbeam::with_capacity(1024);
     for key in 0..n {
         handle.insert(key, 0);
     }
@@ -285,7 +283,7 @@ fn remove8192(b: &mut Bencher) {
 
 #[bench]
 fn insert(b: &mut Bencher) {
-    let handle = ConcacheCrossbeam::with_capacity(1);
+    let handle = ConcacheCrossbeam::with_capacity(1024);
 
     b.iter(|| {
         handle.insert(1, 0);
