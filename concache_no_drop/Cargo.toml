@@ -1,7 +1,0 @@
-[package]
-name = "concache_no_drop"
-version = "0.1.0"
-authors = ["Andrew Shen <shenandrew95@gmail.com>"]
-
-[dependencies]
-rand = "0.4.2"
