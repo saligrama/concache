@@ -139,27 +139,20 @@ impl fmt::Debug for LinkedList {
 
         let mut ret = String::new();
         let mut node = &self.first;
-        loop {
-            match node.load(Ordering::SeqCst, &guard) {
-                Some(k) => {
-                    let mut raw = k.as_raw();
-                    let mut cur = unsafe { &*raw };
-                    if cur.active.load(Ordering::SeqCst) {
-                        let key = cur.kv.0;
-                        let value = cur.kv.1.lock().unwrap();
+        while let Some(k) = node.load(Ordering::SeqCst, &guard) {
+            let mut raw = k.as_raw();
+            let mut cur = unsafe { &*raw };
+            if cur.active.load(Ordering::SeqCst) {
+                let key = cur.kv.0;
+                let value = cur.kv.1.lock().unwrap();
 
-                        ret.push_str("(");
-                        ret.push_str(&key.to_string());
-                        ret.push_str(", ");
-                        ret.push_str(&value.to_string());
-                        ret.push_str("), ");
-                    }
-                    node = &k.next;
-                }
-                None => {
-                    break;
-                }
-            };
+                ret.push_str("(");
+                ret.push_str(&key.to_string());
+                ret.push_str(", ");
+                ret.push_str(&value.to_string());
+                ret.push_str("), ");
+            }
+            node = &k.next;
         }
 
         write!(f, "{}", ret)

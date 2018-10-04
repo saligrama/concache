@@ -57,7 +57,7 @@ fn main() {
     let writers = value_t!(matches, "writers", usize).unwrap_or_else(|e| e.exit());
     let dist = matches.value_of("distribution").unwrap_or("uniform");
     let dur = time::Duration::from_secs(5);
-    let dur_in_ns = dur.as_secs() * 1_000_000_000_u64 + dur.subsec_nanos() as u64;
+    let dur_in_ns = dur.as_secs() * 1_000_000_000_u64 + u64::from(dur.subsec_nanos());
     let dur_in_s = dur_in_ns as f64 / 1_000_000_000_f64;
     let span = 10000;
 
@@ -83,15 +83,15 @@ fn main() {
         let map = sync::Arc::new(sync::RwLock::new(map));
         let start = time::Instant::now();
         let end = start + dur;
-        join.extend((0..readers).into_iter().map(|_| {
+        join.extend((0..readers).map(|_| {
             let map = map.clone();
             let dist = dist.to_owned();
-            thread::spawn(move || drive(map, end, dist, false, span))
+            thread::spawn(move || drive(map, end, &dist, false, span))
         }));
-        join.extend((0..writers).into_iter().map(|_| {
+        join.extend((0..writers).map(|_| {
             let map = map.clone();
             let dist = dist.to_owned();
-            thread::spawn(move || drive(map, end, dist, true, span))
+            thread::spawn(move || drive(map, end, &dist, true, span))
         }));
         let (wres, rres): (Vec<_>, _) = join
             .drain(..)
@@ -107,15 +107,15 @@ fn main() {
         let map = sync::Arc::new(map);
         let start = time::Instant::now();
         let end = start + dur;
-        join.extend((0..readers).into_iter().map(|_| {
+        join.extend((0..readers).map(|_| {
             let map = map.clone();
             let dist = dist.to_owned();
-            thread::spawn(move || drive(map, end, dist, false, span))
+            thread::spawn(move || drive(map, end, &dist, false, span))
         }));
-        join.extend((0..writers).into_iter().map(|_| {
+        join.extend((0..writers).map(|_| {
             let map = map.clone();
             let dist = dist.to_owned();
-            thread::spawn(move || drive(map, end, dist, true, span))
+            thread::spawn(move || drive(map, end, &dist, true, span))
         }));
         let (wres, rres): (Vec<_>, _) = join
             .drain(..)
@@ -130,15 +130,15 @@ fn main() {
         let map = concache::crossbeam::Map::with_capacity(5_000_000);
         let start = time::Instant::now();
         let end = start + dur;
-        join.extend((0..readers).into_iter().map(|_| {
+        join.extend((0..readers).map(|_| {
             let map = map.clone();
             let dist = dist.to_owned();
-            thread::spawn(move || drive(map, end, dist, false, span))
+            thread::spawn(move || drive(map, end, &dist, false, span))
         }));
-        join.extend((0..writers).into_iter().map(|_| {
+        join.extend((0..writers).map(|_| {
             let map = map.clone();
             let dist = dist.to_owned();
-            thread::spawn(move || drive(map, end, dist, true, span))
+            thread::spawn(move || drive(map, end, &dist, true, span))
         }));
         let (wres, rres): (Vec<_>, _) = join
             .drain(..)
@@ -153,15 +153,15 @@ fn main() {
         let map = concache::manual::Map::with_capacity(5_000_000);
         let start = time::Instant::now();
         let end = start + dur;
-        join.extend((0..readers).into_iter().map(|_| {
+        join.extend((0..readers).map(|_| {
             let map = map.clone();
             let dist = dist.to_owned();
-            thread::spawn(move || drive(map, end, dist, false, span))
+            thread::spawn(move || drive(map, end, &dist, false, span))
         }));
-        join.extend((0..writers).into_iter().map(|_| {
+        join.extend((0..writers).map(|_| {
             let map = map.clone();
             let dist = dist.to_owned();
-            thread::spawn(move || drive(map, end, dist, true, span))
+            thread::spawn(move || drive(map, end, &dist, true, span))
         }));
         let (wres, rres): (Vec<_>, _) = join
             .drain(..)
@@ -180,7 +180,7 @@ trait Backend {
 fn drive<B: Backend>(
     mut backend: B,
     end: time::Instant,
-    dist: String,
+    dist: &str,
     write: bool,
     span: usize,
 ) -> (bool, usize) {
@@ -218,7 +218,7 @@ impl Backend for sync::Arc<CHashMap<usize, usize>> {
 
 impl Backend for sync::Arc<sync::RwLock<HashMap<usize, usize>>> {
     fn b_get(&self, key: usize) -> usize {
-        self.read().unwrap().get(&key).map(|&v| v).unwrap_or(0)
+        self.read().unwrap().get(&key).cloned().unwrap_or(0)
     }
 
     fn b_put(&mut self, key: usize, value: usize) {

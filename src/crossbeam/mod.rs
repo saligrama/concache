@@ -24,17 +24,15 @@ impl Map {
             v.push(LinkedList::new());
         }
 
-        let ret = Map {
+        Map {
             bsize: nbuckets,
             size: Arc::new(AtomicUsize::new(0)),
             mp: Arc::new(v),
-        };
-
-        ret
+        }
     }
 
     pub fn size(&self) -> usize {
-        return self.size.load(Ordering::SeqCst);
+        self.size.load(Ordering::SeqCst)
     }
 
     pub fn insert(&self, key: usize, value: usize) -> bool {
@@ -80,7 +78,7 @@ impl fmt::Debug for Map {
         let mut all = String::new();
         for i in 0..self.bsize {
             // TODO: I'm _sure_ there's a better way to do this
-            all.push_str(&format!("{:?}", &(&self).mp[i]));
+            all.push_str(&format!("{:?}", &self.mp[i]));
         }
         let ret: String = all.chars().skip(0).take(all.len() - 2).collect();
         write!(f, "[{}]", ret)

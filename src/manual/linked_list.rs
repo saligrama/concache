@@ -14,8 +14,8 @@ pub(super) struct Node {
 impl Node {
     fn new(key: Option<usize>, val: Option<Mutex<usize>>) -> Node {
         Node {
-            key: key,
-            val: val,
+            key,
+            val,
             next: AtomicPtr::new(ptr::null_mut()),
         }
     }
@@ -75,7 +75,7 @@ impl LinkedList {
 
     #[allow(unused)]
     fn print(&self) {
-        println!("");
+        println!();
         println!("Printing List");
         let mut next_node = unsafe { &*self.head.load(OSC) };
         println!("{:?}", next_node);
@@ -123,15 +123,14 @@ impl LinkedList {
                 return None; //failed delete
             }
             right_node_next = unsafe { &*right_node }.next.load(OSC);
-            if !Self::is_marked_reference(right_node_next) {
-                if unsafe { &*right_node }.next.compare_and_swap(
+            if !Self::is_marked_reference(right_node_next)
+                && unsafe { &*right_node }.next.compare_and_swap(
                     right_node_next,
                     Self::get_marked_reference(right_node_next),
                     OSC,
                 ) == right_node_next
-                {
-                    break;
-                }
+            {
+                break;
             }
         }
 

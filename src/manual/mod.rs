@@ -117,7 +117,7 @@ impl MapHandle {
         self.epoch_counter.fetch_add(1, OSC);
         let ret = self.map.insert(key, value, &mut remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
-        if remove_nodes.len() != 0 {
+        if !remove_nodes.is_empty() {
             self.free_nodes(&remove_nodes);
         }
 
@@ -130,7 +130,7 @@ impl MapHandle {
         self.epoch_counter.fetch_add(1, OSC);
         let ret = self.map.get(key, &mut remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
-        if remove_nodes.len() != 0 {
+        if !remove_nodes.is_empty() {
             self.free_nodes(&remove_nodes);
         }
 
@@ -143,14 +143,14 @@ impl MapHandle {
         self.epoch_counter.fetch_add(1, OSC);
         let ret = self.map.delete(key, &mut remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
-        if remove_nodes.len() != 0 {
+        if !remove_nodes.is_empty() {
             self.free_nodes(&remove_nodes);
         }
 
         ret
     }
 
-    fn free_nodes(&self, remove_nodes: &Vec<*mut Node>) {
+    fn free_nodes(&self, remove_nodes: &[*mut Node]) {
         //epoch set up, load all of the values
         let mut started = Vec::new();
         let handles_map = self.map.handles.read().unwrap();
