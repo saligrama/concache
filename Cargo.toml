@@ -3,24 +3,20 @@ name = "concache"
 version = "0.1.0"
 authors = ["Aditya Saligrama <saligrama427@gmail.com>", "Andrew Shen <shenandrew95@gmail.com>", "Jon Gjengset <jon@thesquareplanet.com>"]
 
+[features]
+bench = ["clap", "zipf", "chashmap", "rand"]
+
 [dependencies]
-rand = "0.5.0"
 crossbeam = "0.3.2"
-chashmap = "2.1.0"
-clap = "2.20.3"
-zipf = "4.0.0"
+rand = { version = "0.5.0", optional = true }
+chashmap = { version = "2.1.0", optional = true }
+clap = { version = "2.20.3", optional = true }
+zipf = { version = "4.0.0", optional = true }
 
 [profile.release]
 debug = true
 
 [[bin]]
-name="crossbeam-main"
-path="src/crossbeam/main.rs"
-
-[[bin]]
-name="manual-main"
-path="src/manual/main.rs"
-
-[[bin]]
 name="benchmark"
 path="src/bin/benchmark.rs"
+required-features = ["bench"]

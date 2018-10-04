@@ -85,7 +85,7 @@ impl fmt::Debug for Map {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "bench"))]
 mod tests {
     use super::*;
     use std::thread;
