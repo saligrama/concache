@@ -86,9 +86,9 @@ impl fmt::Debug for Map {
 }
 
 #[cfg(all(test, feature = "bench"))]
-mod tests {
+mod benchmarks {
     use super::*;
-    use std::thread;
+    use rand::{thread_rng, Rng};
     use test::Bencher;
 
     //BENCHMARKS

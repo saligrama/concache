@@ -2,7 +2,7 @@
 
 extern crate crossbeam as cx;
 
-#[cfg(feature = "bench")]
+#[cfg(any(feature = "bench", test))]
 extern crate rand;
 #[cfg(feature = "bench")]
 extern crate test;

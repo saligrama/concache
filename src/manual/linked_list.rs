@@ -73,8 +73,8 @@ impl LinkedList {
         }
     }
 
-    #[allow(unused)]
-    fn print(&self) {
+    #[cfg(test)]
+    pub(super) fn print(&self) {
         println!();
         println!("Printing List");
         let mut next_node = unsafe { &*self.head.load(OSC) };

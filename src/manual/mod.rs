@@ -192,8 +192,8 @@ impl Clone for MapHandle {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::{thread_rng, Rng};
     use std::thread;
-    use test::Bencher;
 
     /*
     the data produced is a bit strange because of the way I take mod to test only even values 
@@ -202,7 +202,7 @@ mod tests {
     */
     #[test]
     fn hashmap_concurr() {
-        let mut handle = Hashmap::new(8); //changed this,
+        let handle = Map::with_capacity(8); //changed this,
         let mut threads = vec![];
         let nthreads = 5;
         // let handle = MapHandle::new(Arc::clone(&new_hashmap).table.read().unwrap());
@@ -220,7 +220,7 @@ mod tests {
                         new_handle.insert(val, val);
                     } else if two % 3 == 1 {
                         let v = new_handle.get(val);
-                        if (v.is_some()) {
+                        if v.is_some() {
                             assert_eq!(v.unwrap(), val);
                         }
                     } else {
@@ -237,7 +237,7 @@ mod tests {
 
     #[test]
     fn hashmap_handle_cloning() {
-        let mut handle = Arc::new(Hashmap::new(8)); //init with 16 bucket
+        let handle = Arc::new(Map::with_capacity(8)); //init with 16 bucket
         println!("{:?}", handle.epoch_counter);
         handle.insert(1, 3);
         assert_eq!(handle.get(1).unwrap(), 3);
@@ -252,7 +252,7 @@ mod tests {
 
     #[test]
     fn hashmap_delete() {
-        let mut handle = Hashmap::new(8);
+        let handle = Map::with_capacity(8);
         handle.insert(1, 3);
         handle.insert(2, 5);
         handle.insert(3, 8);
@@ -281,7 +281,7 @@ mod tests {
     fn linkedlist_basics() {
         let mut remove_nodes: Vec<*mut Node> = Vec::new();
 
-        let mut new_linked_list = LinkedList::new();
+        let new_linked_list = LinkedList::new();
 
         println!("{:?}", new_linked_list);
         new_linked_list.insert(3, 2, &mut remove_nodes);
@@ -299,8 +299,8 @@ mod tests {
 
     #[test]
     fn hashmap_basics() {
-        let mut new_hashmap = Hashmap::new(8); //init with 2 buckets
-                                               //input values
+        let new_hashmap = Map::with_capacity(8); //init with 2 buckets
+                                                 //input values
         new_hashmap.insert(1, 1);
         new_hashmap.insert(2, 5);
         new_hashmap.insert(12, 5);
@@ -338,7 +338,7 @@ mod tests {
     fn more_linked_list_tests() {
         let mut remove_nodes: Vec<*mut Node> = Vec::new();
 
-        let mut new_linked_list = LinkedList::new();
+        let new_linked_list = LinkedList::new();
         println!(
             "Insert: {:?}",
             new_linked_list.insert(5, 3, &mut remove_nodes)
@@ -361,11 +361,18 @@ mod tests {
 
         new_linked_list.print();
     }
+}
+
+#[cfg(all(test, feature = "bench"))]
+mod benchmarks {
+    use super::*;
+    use rand::{thread_rng, Rng};
+    use test::Bencher;
 
     //BENCHMARKS
     #[inline]
     fn getn(b: &mut Bencher, n: usize) {
-        let handle = Hashmap::new(1024);
+        let handle = Map::with_capacity(1024);
         for key in 0..n {
             handle.insert(key, 0);
         }
@@ -415,7 +422,7 @@ mod tests {
 
     #[inline]
     fn updaten(b: &mut Bencher, n: usize) {
-        let handle = Hashmap::new(1024);
+        let handle = Map::with_capacity(1024);
         for key in 0..n {
             handle.insert(key, 0);
         }
@@ -464,7 +471,7 @@ mod tests {
     }
 
     fn deleten(b: &mut Bencher, n: usize) {
-        let handle = Hashmap::new(1024);
+        let handle = Map::with_capacity(1024);
         for key in 0..n {
             handle.insert(key, 0);
         }
@@ -515,7 +522,7 @@ mod tests {
 
     #[bench]
     fn insert(b: &mut Bencher) {
-        let mut handle = Hashmap::new(1024);
+        let handle = Map::with_capacity(1024);
 
         b.iter(|| {
             handle.insert(1, 0);
