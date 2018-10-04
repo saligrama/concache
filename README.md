@@ -1,7 +1,7 @@
 # concache
-Writing concurrent hashmaps in Rust.
 
-The actual code is in the `concache` and `concache_crossbeam` directories; the other directories contain old code that is somewhat irrelevant to the current focus of the project.
+A linked-list based, (nearly) lock-free concurrent hashmap in Rust.
+
 To reproduce results, run with:
 
 ```shell
