@@ -1,12 +1,25 @@
-extern crate crossbeam;
-
-pub mod node;
-
-use self::node::Node;
-use crossbeam::epoch::{self, Atomic, Owned};
-
+use cx::epoch::{self, Atomic, Owned};
 use std::fmt;
 use std::sync::atomic::Ordering;
+use std::sync::{atomic::AtomicBool, Mutex};
+
+struct Node {
+    kv: (usize, Mutex<usize>),
+    active: AtomicBool,
+    next: Atomic<Node>,
+    prev: Atomic<Node>,
+}
+
+impl Node {
+    fn new(k: usize, v: usize) -> Self {
+        Node {
+            kv: (k, Mutex::new(v)),
+            active: AtomicBool::new(true),
+            next: Atomic::null(),
+            prev: Atomic::null(),
+        }
+    }
+}
 
 pub(super) struct LinkedList {
     first: Atomic<Node>,
@@ -120,43 +133,6 @@ impl LinkedList {
     }
 }
 
-impl fmt::Display for LinkedList {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let guard = epoch::pin();
-
-        let mut ret = String::new();
-        let mut node = &self.first;
-        loop {
-            match node.load(Ordering::SeqCst, &guard) {
-                Some(k) => {
-                    let mut raw = k.as_raw();
-                    let mut cur = unsafe { &*raw };
-                    if cur.active.load(Ordering::SeqCst) {
-                        let key = cur.kv.0;
-                        println!("Taking lock for value");
-                        let value = cur.kv.1.lock().unwrap();
-                        println!("Took lock for value");
-
-                        ret.push_str("(");
-                        ret.push_str(&key.to_string());
-                        ret.push_str(", ");
-                        ret.push_str(&value.to_string());
-                        ret.push_str("), ");
-
-                        println!("Releasing lock for value");
-                    }
-                    node = &k.next;
-                }
-                None => {
-                    break;
-                }
-            };
-        }
-
-        write!(f, "{}", ret)
-    }
-}
-
 impl fmt::Debug for LinkedList {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let guard = epoch::pin();
@@ -170,17 +146,13 @@ impl fmt::Debug for LinkedList {
                     let mut cur = unsafe { &*raw };
                     if cur.active.load(Ordering::SeqCst) {
                         let key = cur.kv.0;
-                        println!("Taking lock for value");
                         let value = cur.kv.1.lock().unwrap();
-                        println!("Took lock for value");
 
                         ret.push_str("(");
                         ret.push_str(&key.to_string());
                         ret.push_str(", ");
                         ret.push_str(&value.to_string());
                         ret.push_str("), ");
-
-                        println!("Releasing lock for value");
                     }
                     node = &k.next;
                 }

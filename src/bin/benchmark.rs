@@ -1,18 +1,17 @@
 extern crate chashmap;
 #[macro_use]
 extern crate clap;
-extern crate concache_crossbeam;
+extern crate concache;
 extern crate rand;
 extern crate zipf;
 
-use concache_crossbeam::concache_crossbeam::ConcacheCrossbeam;
 use chashmap::CHashMap;
-use std::collections::HashMap;
 use clap::{App, Arg};
-
-use std::time;
+use rand::distributions::Distribution;
+use std::collections::HashMap;
 use std::sync;
 use std::thread;
+use std::time;
 
 fn main() {
     let matches = App::new("Concurrent HashMap Benchmarker")
@@ -62,8 +61,8 @@ fn main() {
     let dur_in_s = dur_in_ns as f64 / 1_000_000_000_f64;
     let span = 10000;
 
-    let stat =
-        |var: &str, op, results: Vec<(_, usize)>| for (i, res) in results.into_iter().enumerate() {
+    let stat = |var: &str, op, results: Vec<(_, usize)>| {
+        for (i, res) in results.into_iter().enumerate() {
             println!(
                 "{:2} {:2} {:10} {:10} {:8.0} ops/s {} {}",
                 readers,
@@ -74,12 +73,13 @@ fn main() {
                 op,
                 i
             )
-        };
+        }
+    };
 
     let mut join = Vec::with_capacity(readers + writers);
     // first, benchmark Arc<RwLock<HashMap>>
     if matches.is_present("compare") {
-        let map: HashMap<u64, u64> = HashMap::with_capacity(5_000_000);
+        let map: HashMap<usize, usize> = HashMap::with_capacity(5_000_000);
         let map = sync::Arc::new(sync::RwLock::new(map));
         let start = time::Instant::now();
         let end = start + dur;
@@ -93,7 +93,8 @@ fn main() {
             let dist = dist.to_owned();
             thread::spawn(move || drive(map, end, dist, true, span))
         }));
-        let (wres, rres): (Vec<_>, _) = join.drain(..)
+        let (wres, rres): (Vec<_>, _) = join
+            .drain(..)
             .map(|jh| jh.join().unwrap())
             .partition(|&(write, _)| write);
         stat("std", "write", wres);
@@ -102,7 +103,7 @@ fn main() {
 
     // then, benchmark Arc<CHashMap>
     if matches.is_present("compare") {
-        let map: CHashMap<u64, u64> = CHashMap::with_capacity(5_000_000);
+        let map: CHashMap<usize, usize> = CHashMap::with_capacity(5_000_000);
         let map = sync::Arc::new(map);
         let start = time::Instant::now();
         let end = start + dur;
@@ -116,16 +117,17 @@ fn main() {
             let dist = dist.to_owned();
             thread::spawn(move || drive(map, end, dist, true, span))
         }));
-        let (wres, rres): (Vec<_>, _) = join.drain(..)
+        let (wres, rres): (Vec<_>, _) = join
+            .drain(..)
             .map(|jh| jh.join().unwrap())
             .partition(|&(write, _)| write);
         stat("chashmap", "write", wres);
         stat("chashmap", "read", rres);
     }
 
-    // benchmark concache_crossbeam
+    // benchmark concache::crossbeam
     {
-        let map: ConcacheCrossbeam = ConcacheCrossbeam::with_capacity(5_000_000);
+        let map = concache::crossbeam::Map::with_capacity(5_000_000);
         let start = time::Instant::now();
         let end = start + dur;
         join.extend((0..readers).into_iter().map(|_| {
@@ -138,17 +140,41 @@ fn main() {
             let dist = dist.to_owned();
             thread::spawn(move || drive(map, end, dist, true, span))
         }));
-        let (wres, rres): (Vec<_>, _) = join.drain(..)
+        let (wres, rres): (Vec<_>, _) = join
+            .drain(..)
             .map(|jh| jh.join().unwrap())
             .partition(|&(write, _)| write);
-        stat("concache_crossbeam", "write", wres);
-        stat("concache_crossbeam", "read", rres);
+        stat("concache::crossbeam", "write", wres);
+        stat("concache::crossbeam", "read", rres);
+    }
+
+    // benchmark concache::manual
+    {
+        let map = concache::manual::Map::with_capacity(5_000_000);
+        let start = time::Instant::now();
+        let end = start + dur;
+        join.extend((0..readers).into_iter().map(|_| {
+            let map = map.clone();
+            let dist = dist.to_owned();
+            thread::spawn(move || drive(map, end, dist, false, span))
+        }));
+        join.extend((0..writers).into_iter().map(|_| {
+            let map = map.clone();
+            let dist = dist.to_owned();
+            thread::spawn(move || drive(map, end, dist, true, span))
+        }));
+        let (wres, rres): (Vec<_>, _) = join
+            .drain(..)
+            .map(|jh| jh.join().unwrap())
+            .partition(|&(write, _)| write);
+        stat("concache::manual", "write", wres);
+        stat("concache::manual", "read", rres);
     }
 }
 
 trait Backend {
-    fn b_get(&self, key: u64) -> u64;
-    fn b_put(&mut self, key: u64, value: u64);
+    fn b_get(&self, key: usize) -> usize;
+    fn b_put(&mut self, key: usize, value: usize);
 }
 
 fn drive<B: Backend>(
@@ -163,14 +189,14 @@ fn drive<B: Backend>(
     let mut ops = 0;
     let skewed = dist == "skewed";
     let mut t_rng = rand::thread_rng();
-    let mut zipf = zipf::ZipfDistribution::new(rand::thread_rng(), span, 1.03).unwrap();
+    let zipf = zipf::ZipfDistribution::new(span, 1.03).unwrap();
     while time::Instant::now() < end {
         // generate both so that overhead is always the same
-        let id_uniform: u64 = t_rng.gen_range(0, span as u64);
-        let id_skewed = zipf.next_u64();
+        let id_uniform: usize = t_rng.gen_range(0, span);
+        let id_skewed: usize = zipf.sample(&mut t_rng);
         let id = if skewed { id_skewed } else { id_uniform };
         if write {
-            backend.b_put(id, t_rng.next_u64());
+            backend.b_put(id, t_rng.gen());
         } else {
             backend.b_get(id);
         }
@@ -180,43 +206,53 @@ fn drive<B: Backend>(
     (write, ops)
 }
 
-impl Backend for sync::Arc<CHashMap<u64, u64>> {
-    fn b_get(&self, key: u64) -> u64 {
+impl Backend for sync::Arc<CHashMap<usize, usize>> {
+    fn b_get(&self, key: usize) -> usize {
         self.get(&key).map(|v| *v).unwrap_or(0)
     }
 
-    fn b_put(&mut self, key: u64, value: u64) {
+    fn b_put(&mut self, key: usize, value: usize) {
         self.insert(key, value);
     }
 }
 
-impl Backend for sync::Arc<sync::RwLock<HashMap<u64, u64>>> {
-    fn b_get(&self, key: u64) -> u64 {
+impl Backend for sync::Arc<sync::RwLock<HashMap<usize, usize>>> {
+    fn b_get(&self, key: usize) -> usize {
         self.read().unwrap().get(&key).map(|&v| v).unwrap_or(0)
     }
 
-    fn b_put(&mut self, key: u64, value: u64) {
+    fn b_put(&mut self, key: usize, value: usize) {
         self.write().unwrap().insert(key, value);
     }
 }
 
-impl Backend for ConcacheCrossbeam {
-    fn b_get(&self, key: u64) -> u64 {
-        self.get(key as usize).unwrap_or(0) as u64
+impl Backend for concache::crossbeam::Map {
+    fn b_get(&self, key: usize) -> usize {
+        self.get(key as usize).unwrap_or(0) as usize
     }
 
-    fn b_put (&mut self, key: u64, value: u64) {
+    fn b_put(&mut self, key: usize, value: usize) {
+        self.insert(key as usize, value as usize);
+    }
+}
+
+impl Backend for concache::manual::MapHandle {
+    fn b_get(&self, key: usize) -> usize {
+        self.get(key as usize).unwrap_or(0) as usize
+    }
+
+    fn b_put(&mut self, key: usize, value: usize) {
         self.insert(key as usize, value as usize);
     }
 }
 
 /*enum EvHandle {
-    Read(evmap::ReadHandle<u64, u64>),
-    Write(sync::Arc<sync::Mutex<(evmap::WriteHandle<u64, u64>, usize, usize)>>),
+    Read(evmap::ReadHandle<usize, usize>),
+    Write(sync::Arc<sync::Mutex<(evmap::WriteHandle<usize, usize>, usize, usize)>>),
 }
 
 impl Backend for EvHandle {
-    fn b_get(&self, key: u64) -> u64 {
+    fn b_get(&self, key: usize) -> usize {
         if let EvHandle::Read(ref r) = *self {
             r.get_and(&key, |v| v[0]).unwrap_or(0)
         } else {
@@ -224,7 +260,7 @@ impl Backend for EvHandle {
         }
     }
 
-    fn b_put(&mut self, key: u64, value: u64) {
+    fn b_put(&mut self, key: usize, value: usize) {
         if let EvHandle::Write(ref w) = *self {
             let mut w = w.lock().unwrap();
             w.0.update(key, value);

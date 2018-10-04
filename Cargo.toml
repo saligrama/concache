@@ -8,15 +8,19 @@ rand = "0.5.0"
 crossbeam = "0.3.2"
 chashmap = "2.1.0"
 clap = "2.20.3"
-zipf = "0.2.0"
+zipf = "4.0.0"
 
 [profile.release]
 debug = true
 
 [[bin]]
-name="crossbeam-bench"
+name="crossbeam-main"
 path="src/crossbeam/main.rs"
 
 [[bin]]
-name="manual-bench"
+name="manual-main"
 path="src/manual/main.rs"
+
+[[bin]]
+name="benchmark"
+path="src/bin/benchmark.rs"

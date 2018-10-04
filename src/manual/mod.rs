@@ -1,249 +1,12 @@
-#![allow(unused)]
-#![feature(test)]
-
-extern crate rand;
-extern crate test;
-
-use rand::{thread_rng, Rng};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::marker::PhantomData;
-use std::mem;
-use std::ptr;
-use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, RwLock};
-use std::thread;
-use test::Bencher;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, RwLock};
+
+mod linked_list;
+use self::linked_list::{LinkedList, Node};
 
 const OSC: Ordering = Ordering::SeqCst;
-
-#[derive(Debug)]
-struct Node {
-    key: Option<usize>,
-    val: Option<Mutex<usize>>,
-    next: AtomicPtr<Node>,
-}
-
-impl Node {
-    fn new(key: Option<usize>, val: Option<Mutex<usize>>) -> Node {
-        Node {
-            key: key,
-            val: val,
-            next: AtomicPtr::new(ptr::null_mut()),
-        }
-    }
-}
-
-#[derive(Debug)]
-struct LinkedList {
-    head: AtomicPtr<Node>,
-    tail: AtomicPtr<Node>,
-}
-
-impl LinkedList {
-    fn new() -> Self {
-        let head = Box::new(Node::new(None, None));
-        let tail = Box::into_raw(Box::new(Node::new(None, None)));
-        head.next.store(tail, OSC);
-
-        LinkedList {
-            head: AtomicPtr::new(Box::into_raw(head)),
-            tail: AtomicPtr::new(tail),
-        }
-    }
-
-    fn insert(&self, key: usize, val: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        let mut new_node = Box::new(Node::new(Some(key), Some(Mutex::new(val))));
-        let mut left_node: *mut Node = ptr::null_mut();
-        let mut right_node: *mut Node = ptr::null_mut();
-
-        loop {
-            right_node = self.search(key, &mut left_node, remove_nodes);
-
-            if ((right_node != self.tail.load(OSC)) && (unsafe { &*right_node }.key == Some(key))) {
-                let rn = unsafe { &*right_node };
-                let mut mx = rn.val.as_ref().unwrap().lock().unwrap();
-                let old = *mx;
-                *mx = val;
-                return Some(old);
-            }
-
-            new_node.next.store(right_node, OSC);
-
-            let new_node_ptr = Box::into_raw(new_node);
-            if unsafe { &*left_node }
-                .next
-                .compare_and_swap(right_node, new_node_ptr, OSC)
-                == right_node
-            {
-                return None;
-            }
-            new_node = unsafe { Box::from_raw(new_node_ptr) };
-        }
-    }
-
-    fn print(&self) {
-        println!("");
-        println!("Printing List");
-        let mut next_node = unsafe { &*self.head.load(OSC) };
-        println!("{:?}", next_node);
-
-        loop {
-            next_node = unsafe { &*next_node.next.load(OSC) };
-            println!("{:?}", next_node);
-            if next_node.next.load(OSC) == self.tail.load(OSC) {
-                break;
-            }
-        }
-    }
-
-    fn get(&self, search_key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        let mut left_node: *mut Node = ptr::null_mut();
-        let right_node = self.search(search_key, &mut left_node, remove_nodes);
-        if right_node == self.tail.load(OSC) || unsafe { &*right_node }.key != Some(search_key) {
-            None
-        } else {
-            unsafe { &*right_node }
-                .val
-                .as_ref()
-                .map(|v| *v.lock().unwrap())
-        }
-    }
-
-    fn delete(&self, search_key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        let mut left_node: *mut Node = ptr::null_mut();
-        let mut right_node: *mut Node = ptr::null_mut();
-        let mut right_node_next: *mut Node = ptr::null_mut();
-
-        loop {
-            right_node = self.search(search_key, &mut left_node, remove_nodes);
-            if (right_node == self.tail.load(OSC))
-                || unsafe { &*right_node }.key != Some(search_key)
-            {
-                return None; //failed delete
-            }
-            right_node_next = unsafe { &*right_node }.next.load(OSC);
-            if !Self::is_marked_reference(right_node_next) {
-                if unsafe { &*right_node }.next.compare_and_swap(
-                    right_node_next,
-                    Self::get_marked_reference(right_node_next),
-                    OSC,
-                ) == right_node_next
-                {
-                    break;
-                }
-            }
-        }
-
-        //get value to return
-        let rn = unsafe { &*right_node };
-        let mx = rn.val.as_ref().unwrap().lock().unwrap();
-
-        if unsafe { &*left_node }
-            .next
-            .compare_and_swap(right_node, right_node_next, OSC)
-            != right_node
-        {
-            right_node = self.search(
-                unsafe { &*right_node }.key.unwrap(),
-                &mut left_node,
-                remove_nodes,
-            );
-        }
-
-        Some(*mx) //successful delete
-    }
-
-    fn is_marked_reference(ptr: *mut Node) -> bool {
-        (ptr as usize & 0x1) == 1
-    }
-    fn get_marked_reference(ptr: *mut Node) -> *mut Node {
-        (ptr as usize | 0x1) as *mut Node
-    }
-    fn get_unmarked_reference(ptr: *mut Node) -> *mut Node {
-        (ptr as usize & !0x1) as *mut Node
-    }
-
-    fn search(
-        &self,
-        search_key: usize,
-        left_node: &mut *mut Node,
-        remove_nodes: &mut Vec<*mut Node>,
-    ) -> *mut Node {
-        let mut left_node_next: *mut Node = ptr::null_mut();
-        let mut right_node: *mut Node = ptr::null_mut();
-
-        //search
-        'search_again: loop {
-            let mut t = self.head.load(OSC);
-            let mut t_next = unsafe { &*t }.next.load(OSC);
-
-            /* 1: Find left_node and right_node */
-            loop {
-                if !Self::is_marked_reference(t_next) {
-                    *left_node = t;
-                    left_node_next = t_next;
-                }
-                t = Self::get_unmarked_reference(t_next);
-                if t == self.tail.load(OSC) {
-                    break;
-                }
-                t_next = unsafe { &*t }.next.load(OSC);
-                if !Self::is_marked_reference(t_next) && unsafe { &*t }.key >= Some(search_key) {
-                    break;
-                }
-            }
-            right_node = t;
-
-            /* 2: Check nodes are adjacent */
-            if left_node_next == right_node {
-                if right_node != self.tail.load(OSC)
-                    && Self::is_marked_reference(unsafe { &*right_node }.next.load(OSC))
-                {
-                    continue 'search_again;
-                } else {
-                    return right_node;
-                }
-            }
-
-            /* 3: Remove one or more marked nodes */
-            if unsafe { &**left_node }
-                .next
-                .compare_and_swap(left_node_next, right_node, OSC)
-                == left_node_next
-            {
-                //drop all of the Nodes that we crossed over,
-                //we know nothing inside can be modified so we can just drop all of them with
-                //loop until we are at the right_node pointer
-
-                //add to remove_nodes, to be removed
-                let mut curr_node = left_node_next; //left_node_next is to be deleted, the ones after it are
-                                                    // println!("start curr_node: {:?}", curr_node);
-
-                loop {
-                    //start with left_node_next, then go to on until the right_node, but do use that one
-                    assert_eq!(Self::is_marked_reference(curr_node), false);
-                    remove_nodes.push(curr_node);
-                    curr_node = unsafe { &*curr_node }.next.load(OSC);
-                    assert_eq!(Self::is_marked_reference(curr_node), true);
-                    curr_node = Self::get_unmarked_reference(curr_node); //we need unmarked to deref and comp to right_node
-                                                                         // println!("curr_node: {:?}", curr_node);
-                    if curr_node == right_node {
-                        break;
-                    }
-                }
-
-                if right_node != self.tail.load(OSC)
-                    && Self::is_marked_reference(unsafe { &*right_node }.next.load(OSC))
-                {
-                    continue 'search_again;
-                } else {
-                    return right_node;
-                }
-            }
-        }
-    }
-}
 
 struct Table {
     nbuckets: usize,
@@ -267,8 +30,6 @@ impl Table {
     }
 
     fn insert(&self, key: usize, value: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        let check = self.nitems.load(OSC);
-
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
@@ -308,13 +69,49 @@ impl Table {
     }
 }
 
-struct MapHandle {
-    map: Arc<Hashmap>,
+pub struct Map {
+    table: Table,
+    handles: RwLock<Vec<Arc<AtomicUsize>>>, //(started, finished)
+}
+
+impl Map {
+    pub fn with_capacity(num_items: usize) -> MapHandle {
+        let new_hashmap = Map {
+            table: Table::new(num_items),
+            handles: RwLock::new(Vec::new()),
+        };
+        let ret = MapHandle {
+            map: Arc::new(new_hashmap),
+            epoch_counter: Arc::new(AtomicUsize::new(0)),
+        };
+
+        //push the first maphandle into the epoch system
+        let hashmap = Arc::clone(&ret.map);
+        let mut handles_vec = hashmap.handles.write().unwrap();
+        handles_vec.push(Arc::clone(&ret.epoch_counter));
+        ret
+    }
+
+    fn insert(&self, key: usize, value: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
+        self.table.insert(key, value, remove_nodes)
+    }
+
+    fn get(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
+        self.table.get(key, remove_nodes)
+    }
+
+    fn delete(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
+        self.table.delete(key, remove_nodes)
+    }
+}
+
+pub struct MapHandle {
+    map: Arc<Map>,
     epoch_counter: Arc<AtomicUsize>,
 }
 
 impl MapHandle {
-    fn insert(&self, key: usize, value: usize) -> Option<usize> {
+    pub fn insert(&self, key: usize, value: usize) -> Option<usize> {
         let mut remove_nodes: Vec<*mut Node> = Vec::new();
 
         self.epoch_counter.fetch_add(1, OSC);
@@ -327,7 +124,7 @@ impl MapHandle {
         ret
     }
 
-    fn get(&self, key: usize) -> Option<usize> {
+    pub fn get(&self, key: usize) -> Option<usize> {
         let mut remove_nodes: Vec<*mut Node> = Vec::new();
 
         self.epoch_counter.fetch_add(1, OSC);
@@ -340,7 +137,7 @@ impl MapHandle {
         ret
     }
 
-    fn delete(&self, key: usize) -> Option<usize> {
+    pub fn delete(&self, key: usize) -> Option<usize> {
         let mut remove_nodes: Vec<*mut Node> = Vec::new();
 
         self.epoch_counter.fetch_add(1, OSC);
@@ -373,7 +170,7 @@ impl MapHandle {
         // epoch rolled over, so we know we have exclusive access to the node
 
         for to_drop in remove_nodes {
-            let n = unsafe { Box::from_raw(*to_drop) };
+            drop(unsafe { Box::from_raw(*to_drop) });
         }
     }
 }
@@ -385,68 +182,19 @@ impl Clone for MapHandle {
             epoch_counter: Arc::new(AtomicUsize::new(0)),
         };
 
-        let mut hashmap = &self.map;
-        let mut handles_vec = hashmap.handles.write().unwrap(); //handles vector
+        let mut handles_vec = self.map.handles.write().unwrap(); //handles vector
         handles_vec.push(Arc::clone(&ret.epoch_counter));
 
         ret
     }
-}
-
-struct Hashmap {
-    table: Table,
-    handles: RwLock<Vec<Arc<AtomicUsize>>>, //(started, finished)
-}
-
-impl Hashmap {
-    fn new(num_items: usize) -> MapHandle {
-        let new_hashmap = Hashmap {
-            table: Table::new(num_items),
-            handles: RwLock::new(Vec::new()),
-        };
-        let mut ret = MapHandle {
-            map: Arc::new(new_hashmap),
-            epoch_counter: Arc::new(AtomicUsize::new(0)),
-        };
-
-        //push the first maphandle into the epoch system
-        let mut hashmap = Arc::clone(&ret.map);
-        let mut handles_vec = hashmap.handles.write().unwrap();
-        handles_vec.push(Arc::clone(&ret.epoch_counter));
-        ret
-    }
-
-    fn insert(&self, key: usize, value: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        self.table.insert(key, value, remove_nodes)
-    }
-
-    fn get(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        self.table.get(key, remove_nodes)
-    }
-
-    fn delete(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        self.table.delete(key, remove_nodes)
-    }
-}
-
-fn main() {
-    println!("Started.");
-    let mut handle = Hashmap::new(8);
-
-    for i in 0..16 {
-        let mut rng = thread_rng();
-        let val = rng.gen_range(0, 128);
-        let key = rng.gen_range(0, 128);
-        println!("{:?}", val);
-        println!("{:?}", key);
-        handle.insert(key, val);
-    }
-    println!("Finished.");
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::thread;
+    use test::Bencher;
+
     /*
     the data produced is a bit strange because of the way I take mod to test only even values 
     are inserted so the end number of values should be n/2 (computer style) and the capacity 
@@ -613,165 +361,165 @@ mod tests {
 
         new_linked_list.print();
     }
-}
 
-//BENCHMARKS
-#[inline]
-fn getn(b: &mut Bencher, n: usize) {
-    let handle = Hashmap::new(1024);
-    for key in 0..n {
-        handle.insert(key, 0);
+    //BENCHMARKS
+    #[inline]
+    fn getn(b: &mut Bencher, n: usize) {
+        let handle = Hashmap::new(1024);
+        for key in 0..n {
+            handle.insert(key, 0);
+        }
+        let mut rng = thread_rng();
+
+        b.iter(|| {
+            let key = rng.gen_range(0, n);
+            handle.get(key);
+        });
     }
-    let mut rng = thread_rng();
 
-    b.iter(|| {
-        let key = rng.gen_range(0, n);
-        handle.get(key);
-    });
-}
-
-//get
-#[bench]
-fn get0128(b: &mut Bencher) {
-    getn(b, 128);
-}
-
-#[bench]
-fn get0256(b: &mut Bencher) {
-    getn(b, 256);
-}
-
-#[bench]
-fn get0512(b: &mut Bencher) {
-    getn(b, 512);
-}
-
-#[bench]
-fn get1024(b: &mut Bencher) {
-    getn(b, 1024);
-}
-
-#[bench]
-fn get2048(b: &mut Bencher) {
-    getn(b, 2048);
-}
-
-#[bench]
-fn get4096(b: &mut Bencher) {
-    getn(b, 4096);
-}
-
-#[bench]
-fn get8192(b: &mut Bencher) {
-    getn(b, 8192);
-}
-
-#[inline]
-fn updaten(b: &mut Bencher, n: usize) {
-    let handle = Hashmap::new(1024);
-    for key in 0..n {
-        handle.insert(key, 0);
+    //get
+    #[bench]
+    fn get0128(b: &mut Bencher) {
+        getn(b, 128);
     }
-    let mut rng = thread_rng();
 
-    b.iter(|| {
-        let key = rng.gen_range(0, n);
-        handle.insert(key, 1);
-    });
-}
-
-//update
-#[bench]
-fn update0128(b: &mut Bencher) {
-    updaten(b, 128);
-}
-
-#[bench]
-fn update0256(b: &mut Bencher) {
-    updaten(b, 256);
-}
-
-#[bench]
-fn update0512(b: &mut Bencher) {
-    updaten(b, 512);
-}
-
-#[bench]
-fn update1024(b: &mut Bencher) {
-    updaten(b, 1024);
-}
-
-#[bench]
-fn update2048(b: &mut Bencher) {
-    updaten(b, 2048);
-}
-
-#[bench]
-fn update4096(b: &mut Bencher) {
-    updaten(b, 4096);
-}
-
-#[bench]
-fn update8192(b: &mut Bencher) {
-    updaten(b, 8192);
-}
-
-fn deleten(b: &mut Bencher, n: usize) {
-    let handle = Hashmap::new(1024);
-    for key in 0..n {
-        handle.insert(key, 0);
+    #[bench]
+    fn get0256(b: &mut Bencher) {
+        getn(b, 256);
     }
-    let mut rng = thread_rng();
 
-    b.iter(|| {
-        let key = rng.gen_range(0, n);
-        handle.delete(key);
-        handle.insert(key, 0);
-    });
-}
+    #[bench]
+    fn get0512(b: &mut Bencher) {
+        getn(b, 512);
+    }
 
-//delete
-#[bench]
-fn delete0128(b: &mut Bencher) {
-    deleten(b, 128);
-}
+    #[bench]
+    fn get1024(b: &mut Bencher) {
+        getn(b, 1024);
+    }
 
-#[bench]
-fn delete0256(b: &mut Bencher) {
-    deleten(b, 256);
-}
+    #[bench]
+    fn get2048(b: &mut Bencher) {
+        getn(b, 2048);
+    }
 
-#[bench]
-fn delete0512(b: &mut Bencher) {
-    deleten(b, 512);
-}
+    #[bench]
+    fn get4096(b: &mut Bencher) {
+        getn(b, 4096);
+    }
 
-#[bench]
-fn delete1024(b: &mut Bencher) {
-    deleten(b, 1024);
-}
+    #[bench]
+    fn get8192(b: &mut Bencher) {
+        getn(b, 8192);
+    }
 
-#[bench]
-fn delete2048(b: &mut Bencher) {
-    deleten(b, 2048);
-}
+    #[inline]
+    fn updaten(b: &mut Bencher, n: usize) {
+        let handle = Hashmap::new(1024);
+        for key in 0..n {
+            handle.insert(key, 0);
+        }
+        let mut rng = thread_rng();
 
-#[bench]
-fn delete4096(b: &mut Bencher) {
-    deleten(b, 4096);
-}
+        b.iter(|| {
+            let key = rng.gen_range(0, n);
+            handle.insert(key, 1);
+        });
+    }
 
-#[bench]
-fn delete8192(b: &mut Bencher) {
-    deleten(b, 8192);
-}
+    //update
+    #[bench]
+    fn update0128(b: &mut Bencher) {
+        updaten(b, 128);
+    }
 
-#[bench]
-fn insert(b: &mut Bencher) {
-    let mut handle = Hashmap::new(1024);
+    #[bench]
+    fn update0256(b: &mut Bencher) {
+        updaten(b, 256);
+    }
 
-    b.iter(|| {
-        handle.insert(1, 0);
-        handle.delete(1);
-    })
+    #[bench]
+    fn update0512(b: &mut Bencher) {
+        updaten(b, 512);
+    }
+
+    #[bench]
+    fn update1024(b: &mut Bencher) {
+        updaten(b, 1024);
+    }
+
+    #[bench]
+    fn update2048(b: &mut Bencher) {
+        updaten(b, 2048);
+    }
+
+    #[bench]
+    fn update4096(b: &mut Bencher) {
+        updaten(b, 4096);
+    }
+
+    #[bench]
+    fn update8192(b: &mut Bencher) {
+        updaten(b, 8192);
+    }
+
+    fn deleten(b: &mut Bencher, n: usize) {
+        let handle = Hashmap::new(1024);
+        for key in 0..n {
+            handle.insert(key, 0);
+        }
+        let mut rng = thread_rng();
+
+        b.iter(|| {
+            let key = rng.gen_range(0, n);
+            handle.delete(key);
+            handle.insert(key, 0);
+        });
+    }
+
+    //delete
+    #[bench]
+    fn delete0128(b: &mut Bencher) {
+        deleten(b, 128);
+    }
+
+    #[bench]
+    fn delete0256(b: &mut Bencher) {
+        deleten(b, 256);
+    }
+
+    #[bench]
+    fn delete0512(b: &mut Bencher) {
+        deleten(b, 512);
+    }
+
+    #[bench]
+    fn delete1024(b: &mut Bencher) {
+        deleten(b, 1024);
+    }
+
+    #[bench]
+    fn delete2048(b: &mut Bencher) {
+        deleten(b, 2048);
+    }
+
+    #[bench]
+    fn delete4096(b: &mut Bencher) {
+        deleten(b, 4096);
+    }
+
+    #[bench]
+    fn delete8192(b: &mut Bencher) {
+        deleten(b, 8192);
+    }
+
+    #[bench]
+    fn insert(b: &mut Bencher) {
+        let mut handle = Hashmap::new(1024);
+
+        b.iter(|| {
+            handle.insert(1, 0);
+            handle.delete(1);
+        })
+    }
 }
