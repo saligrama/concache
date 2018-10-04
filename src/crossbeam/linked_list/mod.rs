@@ -5,21 +5,21 @@ pub mod node;
 use self::node::Node;
 use crossbeam::epoch::{self, Atomic, Owned};
 
-use std::sync::atomic::Ordering;
 use std::fmt;
+use std::sync::atomic::Ordering;
 
-pub (super) struct LinkedList {
+pub(super) struct LinkedList {
     first: Atomic<Node>,
 }
 
 impl LinkedList {
-    pub (super) fn new () -> Self {
+    pub(super) fn new() -> Self {
         LinkedList {
-            first: Atomic::null()
+            first: Atomic::null(),
         }
     }
 
-    pub (super) fn insert (&self, kv : (usize, usize)) -> bool {
+    pub(super) fn insert(&self, kv: (usize, usize)) -> bool {
         let guard = epoch::pin();
 
         let mut node = &self.first;
@@ -43,7 +43,7 @@ impl LinkedList {
                         cur.next.store_and_ref(ins, Ordering::SeqCst, &guard);
                         return true;
                     }
-                },
+                }
                 None => {
                     // first is null
                     let mut ins = Owned::new(Node::new(kv.0, kv.1));
@@ -54,7 +54,7 @@ impl LinkedList {
         }
     }
 
-    pub (super) fn get (&self, key : usize) -> Option<usize> {
+    pub(super) fn get(&self, key: usize) -> Option<usize> {
         let guard = epoch::pin();
 
         let mut node = &self.first;
@@ -68,16 +68,15 @@ impl LinkedList {
                         return Some(*value);
                     }
                     node = &k.next;
-                },
+                }
                 None => {
                     return None;
                 }
             };
         }
-
     }
 
-    pub (super) fn remove (&self, key : usize) -> bool {
+    pub(super) fn remove(&self, key: usize) -> bool {
         let guard = epoch::pin();
 
         let mut node = &self.first;
@@ -102,13 +101,16 @@ impl LinkedList {
                         };
                         let mut new_node_raw_cur = unsafe { &*new_node.as_raw() };
 
-                        if new_node_raw_cur.prev.cas_shared(Some(k), prev, Ordering::Release) {
+                        if new_node_raw_cur
+                            .prev
+                            .cas_shared(Some(k), prev, Ordering::Release)
+                        {
                             unsafe { guard.unlinked(k) };
                             return true;
                         }
                     }
                     node = &k.next;
-                },
+                }
                 None => {
                     // the node with key key didn't exist
                     return false;
@@ -118,9 +120,8 @@ impl LinkedList {
     }
 }
 
-
 impl fmt::Display for LinkedList {
-    fn fmt (&self, f : &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let guard = epoch::pin();
 
         let mut ret = String::new();
@@ -145,7 +146,7 @@ impl fmt::Display for LinkedList {
                         println!("Releasing lock for value");
                     }
                     node = &k.next;
-                },
+                }
                 None => {
                     break;
                 }
@@ -157,7 +158,7 @@ impl fmt::Display for LinkedList {
 }
 
 impl fmt::Debug for LinkedList {
-    fn fmt (&self, f : &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let guard = epoch::pin();
 
         let mut ret = String::new();
@@ -182,7 +183,7 @@ impl fmt::Debug for LinkedList {
                         println!("Releasing lock for value");
                     }
                     node = &k.next;
-                },
+                }
                 None => {
                     break;
                 }

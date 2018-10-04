@@ -1,21 +1,21 @@
 #![feature(test)]
 
 extern crate concache_crossbeam;
-extern crate test;
 extern crate rand;
+extern crate test;
 
+use concache_crossbeam::concache_crossbeam::ConcacheCrossbeam;
 use rand::{thread_rng, Rng};
-use std::sync::atomic::{Ordering};
-use std::sync::{Arc};
+use std::sync::atomic::Ordering;
+use std::sync::Arc;
 use std::thread;
 use test::Bencher;
-use concache_crossbeam::concache_crossbeam::ConcacheCrossbeam;
 
 const OSC: Ordering = Ordering::SeqCst;
 
 fn main() {
     let handle = ConcacheCrossbeam::with_capacity(1024);
-    handle.insert(1,3);
+    handle.insert(1, 3);
     handle.remove(1);
 }
 

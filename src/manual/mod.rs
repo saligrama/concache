@@ -117,15 +117,18 @@ impl LinkedList {
 
         loop {
             right_node = self.search(search_key, &mut left_node, remove_nodes);
-            if (right_node == self.tail.load(OSC)) || unsafe { &*right_node }.key != Some(search_key) {
+            if (right_node == self.tail.load(OSC))
+                || unsafe { &*right_node }.key != Some(search_key)
+            {
                 return None; //failed delete
             }
             right_node_next = unsafe { &*right_node }.next.load(OSC);
             if !Self::is_marked_reference(right_node_next) {
-                if unsafe { &*right_node }
-                    .next
-                    .compare_and_swap(right_node_next, Self::get_marked_reference(right_node_next), OSC)
-                    == right_node_next
+                if unsafe { &*right_node }.next.compare_and_swap(
+                    right_node_next,
+                    Self::get_marked_reference(right_node_next),
+                    OSC,
+                ) == right_node_next
                 {
                     break;
                 }
@@ -141,9 +144,13 @@ impl LinkedList {
             .compare_and_swap(right_node, right_node_next, OSC)
             != right_node
         {
-            right_node = self.search(unsafe { &*right_node }.key.unwrap(), &mut left_node, remove_nodes);
+            right_node = self.search(
+                unsafe { &*right_node }.key.unwrap(),
+                &mut left_node,
+                remove_nodes,
+            );
         }
-    
+
         Some(*mx) //successful delete
     }
 
@@ -157,7 +164,12 @@ impl LinkedList {
         (ptr as usize & !0x1) as *mut Node
     }
 
-    fn search(&self, search_key: usize, left_node: &mut *mut Node, remove_nodes: &mut Vec<*mut Node>) -> *mut Node {
+    fn search(
+        &self,
+        search_key: usize,
+        left_node: &mut *mut Node,
+        remove_nodes: &mut Vec<*mut Node>,
+    ) -> *mut Node {
         let mut left_node_next: *mut Node = ptr::null_mut();
         let mut right_node: *mut Node = ptr::null_mut();
 
@@ -200,13 +212,13 @@ impl LinkedList {
                 .compare_and_swap(left_node_next, right_node, OSC)
                 == left_node_next
             {
-                //drop all of the Nodes that we crossed over, 
-                //we know nothing inside can be modified so we can just drop all of them with 
+                //drop all of the Nodes that we crossed over,
+                //we know nothing inside can be modified so we can just drop all of them with
                 //loop until we are at the right_node pointer
 
                 //add to remove_nodes, to be removed
                 let mut curr_node = left_node_next; //left_node_next is to be deleted, the ones after it are
-                // println!("start curr_node: {:?}", curr_node);
+                                                    // println!("start curr_node: {:?}", curr_node);
 
                 loop {
                     //start with left_node_next, then go to on until the right_node, but do use that one
@@ -215,7 +227,7 @@ impl LinkedList {
                     curr_node = unsafe { &*curr_node }.next.load(OSC);
                     assert_eq!(Self::is_marked_reference(curr_node), true);
                     curr_node = Self::get_unmarked_reference(curr_node); //we need unmarked to deref and comp to right_node
-                    // println!("curr_node: {:?}", curr_node);
+                                                                         // println!("curr_node: {:?}", curr_node);
                     if curr_node == right_node {
                         break;
                     }
@@ -324,7 +336,6 @@ impl MapHandle {
         if remove_nodes.len() != 0 {
             self.free_nodes(&remove_nodes);
         }
-        
 
         ret
     }
@@ -349,9 +360,9 @@ impl MapHandle {
         for h in handles_map.iter() {
             started.push(h.load(OSC));
         }
-        for (i,h) in handles_map.iter().enumerate() {
+        for (i, h) in handles_map.iter().enumerate() {
             let mut check = h.load(OSC);
-            while (check <= started[i]) && (check%2 == 1) {
+            while (check <= started[i]) && (check % 2 == 1) {
                 check = h.load(OSC);
                 //do nothing, epoch spinning
             }
@@ -360,7 +371,7 @@ impl MapHandle {
 
         //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
         // epoch rolled over, so we know we have exclusive access to the node
-        
+
         for to_drop in remove_nodes {
             let n = unsafe { Box::from_raw(*to_drop) };
         }
@@ -421,7 +432,7 @@ impl Hashmap {
 fn main() {
     println!("Started.");
     let mut handle = Hashmap::new(8);
-    
+
     for i in 0..16 {
         let mut rng = thread_rng();
         let val = rng.gen_range(0, 128);
@@ -468,7 +479,7 @@ mod tests {
                         new_handle.delete(val);
                     }
                 }
-                assert_eq!(new_handle.epoch_counter.load(OSC), num_iterations*2);
+                assert_eq!(new_handle.epoch_counter.load(OSC), num_iterations * 2);
             }));
         }
         for t in threads {
@@ -541,7 +552,7 @@ mod tests {
     #[test]
     fn hashmap_basics() {
         let mut new_hashmap = Hashmap::new(8); //init with 2 buckets
-                                              //input values
+                                               //input values
         new_hashmap.insert(1, 1);
         new_hashmap.insert(2, 5);
         new_hashmap.insert(12, 5);
@@ -578,12 +589,20 @@ mod tests {
     #[test]
     fn more_linked_list_tests() {
         let mut remove_nodes: Vec<*mut Node> = Vec::new();
-        
-        let mut new_linked_list = LinkedList::new();
-        println!("Insert: {:?}", new_linked_list.insert(5, 3, &mut remove_nodes));
-        println!("Insert: {:?}", new_linked_list.insert(5, 8, &mut remove_nodes));
-        println!("Insert: {:?}", new_linked_list.insert(2, 3, &mut remove_nodes));
 
+        let mut new_linked_list = LinkedList::new();
+        println!(
+            "Insert: {:?}",
+            new_linked_list.insert(5, 3, &mut remove_nodes)
+        );
+        println!(
+            "Insert: {:?}",
+            new_linked_list.insert(5, 8, &mut remove_nodes)
+        );
+        println!(
+            "Insert: {:?}",
+            new_linked_list.insert(2, 3, &mut remove_nodes)
+        );
 
         println!("Get: {:?}", new_linked_list.get(5, &mut remove_nodes));
 
