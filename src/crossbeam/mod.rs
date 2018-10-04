@@ -1,4 +1,4 @@
-pub mod linked_list;
+mod linked_list;
 
 use self::linked_list::LinkedList;
 

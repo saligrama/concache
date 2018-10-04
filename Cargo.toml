@@ -1,14 +1,22 @@
 [package]
-name = "concache-bench"
+name = "concache"
 version = "0.1.0"
 authors = ["Aditya Saligrama <saligrama427@gmail.com>", "Andrew Shen <shenandrew95@gmail.com>", "Jon Gjengset <jon@thesquareplanet.com>"]
 
 [dependencies]
-concache_crossbeam = { path = "../concache_crossbeam" }
+rand = "0.5.0"
+crossbeam = "0.3.2"
 chashmap = "2.1.0"
 clap = "2.20.3"
 zipf = "0.2.0"
-rand = "0.3"
 
 [profile.release]
 debug = true
+
+[[bin]]
+name="crossbeam-bench"
+path="src/crossbeam/main.rs"
+
+[[bin]]
+name="manual-bench"
+path="src/manual/main.rs"
