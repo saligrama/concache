@@ -29,7 +29,12 @@ impl Table {
         t
     }
 
-    fn insert(&self, key: usize, value: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
+    fn insert(
+        &self,
+        key: usize,
+        value: usize,
+        remove_nodes: &mut Vec<*mut Node>,
+    ) -> Option<*mut usize> {
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
@@ -69,42 +74,6 @@ impl Table {
     }
 }
 
-pub struct Map {
-    table: Table,
-    handles: RwLock<Vec<Arc<AtomicUsize>>>, //(started, finished)
-}
-
-impl Map {
-    pub fn with_capacity(num_items: usize) -> MapHandle {
-        let new_hashmap = Map {
-            table: Table::new(num_items),
-            handles: RwLock::new(Vec::new()),
-        };
-        let ret = MapHandle {
-            map: Arc::new(new_hashmap),
-            epoch_counter: Arc::new(AtomicUsize::new(0)),
-        };
-
-        //push the first maphandle into the epoch system
-        let hashmap = Arc::clone(&ret.map);
-        let mut handles_vec = hashmap.handles.write().unwrap();
-        handles_vec.push(Arc::clone(&ret.epoch_counter));
-        ret
-    }
-
-    fn insert(&self, key: usize, value: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        self.table.insert(key, value, remove_nodes)
-    }
-
-    fn get(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        self.table.get(key, remove_nodes)
-    }
-
-    fn delete(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
-        self.table.delete(key, remove_nodes)
-    }
-}
-
 pub struct MapHandle {
     map: Arc<Map>,
     epoch_counter: Arc<AtomicUsize>,
@@ -115,8 +84,16 @@ impl MapHandle {
         let mut remove_nodes: Vec<*mut Node> = Vec::new();
 
         self.epoch_counter.fetch_add(1, OSC);
-        let ret = self.map.insert(key, value, &mut remove_nodes);
+        let val = self.map.insert(key, value, &mut remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
+
+        let mut ret = None;
+
+        if let Some(v) = val {
+            ret = Some(unsafe { *v });
+            self.free_val(v);
+        }
+
         if !remove_nodes.is_empty() {
             self.free_nodes(&remove_nodes);
         }
@@ -148,6 +125,28 @@ impl MapHandle {
         }
 
         ret
+    }
+
+    fn free_val(&self, remove_val: *mut usize) {
+        //epoch set up, load all of the values
+        let mut started = Vec::new();
+        let handles_map = self.map.handles.read().unwrap();
+        for h in handles_map.iter() {
+            started.push(h.load(OSC));
+        }
+        for (i, h) in handles_map.iter().enumerate() {
+            let mut check = h.load(OSC);
+            while (check <= started[i]) && (check % 2 == 1) {
+                check = h.load(OSC);
+                //do nothing, epoch spinning
+            }
+            //now finished is greater than or equal to started
+        }
+
+        //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
+        // epoch rolled over, so we know we have exclusive access to the node
+
+        drop(unsafe { Box::from_raw(remove_val) });
     }
 
     fn free_nodes(&self, remove_nodes: &[*mut Node]) {
@@ -186,6 +185,47 @@ impl Clone for MapHandle {
         handles_vec.push(Arc::clone(&ret.epoch_counter));
 
         ret
+    }
+}
+
+pub struct Map {
+    table: Table,
+    handles: RwLock<Vec<Arc<AtomicUsize>>>, //(started, finished)
+}
+
+impl Map {
+    pub fn with_capacity(num_items: usize) -> MapHandle {
+        let new_hashmap = Map {
+            table: Table::new(num_items),
+            handles: RwLock::new(Vec::new()),
+        };
+        let ret = MapHandle {
+            map: Arc::new(new_hashmap),
+            epoch_counter: Arc::new(AtomicUsize::new(0)),
+        };
+
+        //push the first maphandle into the epoch system
+        let hashmap = Arc::clone(&ret.map);
+        let mut handles_vec = hashmap.handles.write().unwrap();
+        handles_vec.push(Arc::clone(&ret.epoch_counter));
+        ret
+    }
+
+    fn insert(
+        &self,
+        key: usize,
+        value: usize,
+        remove_nodes: &mut Vec<*mut Node>,
+    ) -> Option<*mut usize> {
+        self.table.insert(key, value, remove_nodes)
+    }
+
+    fn get(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
+        self.table.get(key, remove_nodes)
+    }
+
+    fn delete(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
+        self.table.delete(key, remove_nodes)
     }
 }
 
@@ -290,7 +330,7 @@ mod tests {
         new_linked_list.insert(4, 6, &mut remove_nodes);
         new_linked_list.insert(1, 8, &mut remove_nodes);
         new_linked_list.insert(6, 6, &mut remove_nodes);
-        new_linked_list.print();
+        //new_linked_list.print();
 
         assert_eq!(new_linked_list.get(3, &mut remove_nodes).unwrap(), 4);
         assert_eq!(new_linked_list.get(5, &mut remove_nodes).unwrap(), 8);
@@ -355,11 +395,11 @@ mod tests {
         println!("Get: {:?}", new_linked_list.get(5, &mut remove_nodes));
 
         // println!("{:?}", new_linked_list.head.load(OSC));
-        new_linked_list.print();
+        // new_linked_list.print();
 
         new_linked_list.delete(5, &mut remove_nodes);
 
-        new_linked_list.print();
+        // new_linked_list.print();
     }
 }
 

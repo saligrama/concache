@@ -1,21 +1,21 @@
 use std::ptr;
 use std::sync::atomic::{AtomicPtr, Ordering};
-use std::sync::Mutex;
 
 const OSC: Ordering = Ordering::SeqCst;
 
 #[derive(Debug)]
 pub(super) struct Node {
     key: Option<usize>,
-    val: Option<Mutex<usize>>,
+    val: AtomicPtr<usize>,
     next: AtomicPtr<Node>,
 }
 
 impl Node {
-    fn new(key: Option<usize>, val: Option<Mutex<usize>>) -> Node {
+    fn new(key: Option<usize>, val: usize) -> Node {
+        let v = Box::new(val);
         Node {
             key,
-            val,
+            val: AtomicPtr::new(Box::into_raw(v)),
             next: AtomicPtr::new(ptr::null_mut()),
         }
     }
@@ -29,8 +29,8 @@ pub(super) struct LinkedList {
 
 impl LinkedList {
     pub(super) fn new() -> Self {
-        let head = Box::new(Node::new(None, None));
-        let tail = Box::into_raw(Box::new(Node::new(None, None)));
+        let head = Box::new(Node::new(None, 0));
+        let tail = Box::into_raw(Box::new(Node::new(None, 0)));
         head.next.store(tail, OSC);
 
         LinkedList {
@@ -44,8 +44,8 @@ impl LinkedList {
         key: usize,
         val: usize,
         remove_nodes: &mut Vec<*mut Node>,
-    ) -> Option<usize> {
-        let mut new_node = Box::new(Node::new(Some(key), Some(Mutex::new(val))));
+    ) -> Option<*mut usize> {
+        let mut new_node = Box::new(Node::new(Some(key), val));
         let mut left_node: *mut Node = ptr::null_mut();
 
         loop {
@@ -53,9 +53,8 @@ impl LinkedList {
 
             if right_node != self.tail.load(OSC) && unsafe { &*right_node }.key == Some(key) {
                 let rn = unsafe { &*right_node };
-                let mut mx = rn.val.as_ref().unwrap().lock().unwrap();
-                let old = *mx;
-                *mx = val;
+                let v = Box::new(val);
+                let old = rn.val.swap(Box::into_raw(v), OSC);
                 return Some(old);
             }
 
@@ -73,22 +72,6 @@ impl LinkedList {
         }
     }
 
-    #[cfg(test)]
-    pub(super) fn print(&self) {
-        println!();
-        println!("Printing List");
-        let mut next_node = unsafe { &*self.head.load(OSC) };
-        println!("{:?}", next_node);
-
-        loop {
-            next_node = unsafe { &*next_node.next.load(OSC) };
-            println!("{:?}", next_node);
-            if next_node.next.load(OSC) == self.tail.load(OSC) {
-                break;
-            }
-        }
-    }
-
     pub(super) fn get(
         &self,
         search_key: usize,
@@ -99,10 +82,7 @@ impl LinkedList {
         if right_node == self.tail.load(OSC) || unsafe { &*right_node }.key != Some(search_key) {
             None
         } else {
-            unsafe { &*right_node }
-                .val
-                .as_ref()
-                .map(|v| *v.lock().unwrap())
+            unsafe { Some(*(&*right_node).val.load(OSC)) }
         }
     }
 
@@ -136,7 +116,7 @@ impl LinkedList {
 
         //get value to return
         let rn = unsafe { &*right_node };
-        let mx = rn.val.as_ref().unwrap().lock().unwrap();
+        let old = unsafe { *rn.val.load(OSC) };
 
         if unsafe { &*left_node }
             .next
@@ -151,7 +131,7 @@ impl LinkedList {
             );
         }
 
-        Some(*mx) //successful delete
+        Some(old) //successful delete
     }
 
     fn is_marked_reference(ptr: *mut Node) -> bool {
