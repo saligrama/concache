@@ -318,26 +318,6 @@ mod tests {
     }
 
     #[test]
-    fn linkedlist_basics() {
-        let mut remove_nodes: Vec<*mut Node> = Vec::new();
-
-        let new_linked_list = LinkedList::new();
-
-        println!("{:?}", new_linked_list);
-        new_linked_list.insert(3, 2, &mut remove_nodes);
-        new_linked_list.insert(3, 4, &mut remove_nodes);
-        new_linked_list.insert(5, 8, &mut remove_nodes);
-        new_linked_list.insert(4, 6, &mut remove_nodes);
-        new_linked_list.insert(1, 8, &mut remove_nodes);
-        new_linked_list.insert(6, 6, &mut remove_nodes);
-        //new_linked_list.print();
-
-        assert_eq!(new_linked_list.get(3, &mut remove_nodes).unwrap(), 4);
-        assert_eq!(new_linked_list.get(5, &mut remove_nodes).unwrap(), 8);
-        assert_eq!(new_linked_list.get(2, &mut remove_nodes), None);
-    }
-
-    #[test]
     fn hashmap_basics() {
         let new_hashmap = Map::with_capacity(8); //init with 2 buckets
                                                  //input values
@@ -372,34 +352,6 @@ mod tests {
         assert_eq!(new_hashmap.get(1).unwrap(), 1);
         assert_eq!(new_hashmap.get(0).unwrap(), 0);
         assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
-    }
-
-    #[test]
-    fn more_linked_list_tests() {
-        let mut remove_nodes: Vec<*mut Node> = Vec::new();
-
-        let new_linked_list = LinkedList::new();
-        println!(
-            "Insert: {:?}",
-            new_linked_list.insert(5, 3, &mut remove_nodes)
-        );
-        println!(
-            "Insert: {:?}",
-            new_linked_list.insert(5, 8, &mut remove_nodes)
-        );
-        println!(
-            "Insert: {:?}",
-            new_linked_list.insert(2, 3, &mut remove_nodes)
-        );
-
-        println!("Get: {:?}", new_linked_list.get(5, &mut remove_nodes));
-
-        // println!("{:?}", new_linked_list.head.load(OSC));
-        // new_linked_list.print();
-
-        new_linked_list.delete(5, &mut remove_nodes);
-
-        // new_linked_list.print();
     }
 }
 
