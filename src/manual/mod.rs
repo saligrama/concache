@@ -135,6 +135,9 @@ impl MapHandle {
             started.push(h.load(OSC));
         }
         for (i, h) in handles_map.iter().enumerate() {
+            if started[i] % 2 == 0 {
+                continue;
+            }
             let mut check = h.load(OSC);
             while (check <= started[i]) && (check % 2 == 1) {
                 check = h.load(OSC);
@@ -157,6 +160,9 @@ impl MapHandle {
             started.push(h.load(OSC));
         }
         for (i, h) in handles_map.iter().enumerate() {
+            if started[i] % 2 == 0 {
+                continue;
+            }
             let mut check = h.load(OSC);
             while (check <= started[i]) && (check % 2 == 1) {
                 check = h.load(OSC);
@@ -355,7 +361,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, feature = "bench"))]
+
 mod benchmarks {
     use super::*;
     use rand::{thread_rng, Rng};
