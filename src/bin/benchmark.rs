@@ -125,28 +125,28 @@ fn main() {
         stat("chashmap", "read", rres);
     }
 
-    // benchmark concache::crossbeam
-    {
-        let map = concache::crossbeam::Map::with_capacity(5_000_000);
-        let start = time::Instant::now();
-        let end = start + dur;
-        join.extend((0..readers).map(|_| {
-            let map = map.clone();
-            let dist = dist.to_owned();
-            thread::spawn(move || drive(map, end, &dist, false, span))
-        }));
-        join.extend((0..writers).map(|_| {
-            let map = map.clone();
-            let dist = dist.to_owned();
-            thread::spawn(move || drive(map, end, &dist, true, span))
-        }));
-        let (wres, rres): (Vec<_>, _) = join
-            .drain(..)
-            .map(|jh| jh.join().unwrap())
-            .partition(|&(write, _)| write);
-        stat("concache::crossbeam", "write", wres);
-        stat("concache::crossbeam", "read", rres);
-    }
+    // // benchmark concache::crossbeam
+    // {
+    //     let map = concache::crossbeam::Map::with_capacity(5_000_000);
+    //     let start = time::Instant::now();
+    //     let end = start + dur;
+    //     join.extend((0..readers).map(|_| {
+    //         let map = map.clone();
+    //         let dist = dist.to_owned();
+    //         thread::spawn(move || drive(map, end, &dist, false, span))
+    //     }));
+    //     join.extend((0..writers).map(|_| {
+    //         let map = map.clone();
+    //         let dist = dist.to_owned();
+    //         thread::spawn(move || drive(map, end, &dist, true, span))
+    //     }));
+    //     let (wres, rres): (Vec<_>, _) = join
+    //         .drain(..)
+    //         .map(|jh| jh.join().unwrap())
+    //         .partition(|&(write, _)| write);
+    //     stat("concache::crossbeam", "write", wres);
+    //     stat("concache::crossbeam", "read", rres);
+    // }
 
     // benchmark concache::manual
     {
