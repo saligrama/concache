@@ -2,6 +2,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock};
+use std::thread;
 
 mod linked_list;
 use self::linked_list::{LinkedList, Node};
@@ -139,8 +140,14 @@ impl MapHandle {
                 continue;
             }
             let mut check = h.load(OSC);
+            let mut iter = 0;
             while (check <= started[i]) && (check % 2 == 1) {
+                if iter % 4 == 0 {
+                    // we may be waiting for a thread that isn't currently running
+                    thread::yield_now();
+                }
                 check = h.load(OSC);
+                iter += 1;
                 //do nothing, epoch spinning
             }
             //now finished is greater than or equal to started
@@ -164,8 +171,14 @@ impl MapHandle {
                 continue;
             }
             let mut check = h.load(OSC);
+            let mut iter = 0;
             while (check <= started[i]) && (check % 2 == 1) {
+                if iter % 4 == 0 {
+                    // we may be waiting for a thread that isn't currently running
+                    thread::yield_now();
+                }
                 check = h.load(OSC);
+                iter += 1;
                 //do nothing, epoch spinning
             }
             //now finished is greater than or equal to started
@@ -256,7 +269,7 @@ mod tests {
             let new_handle = handle.clone();
 
             threads.push(thread::spawn(move || {
-                let num_iterations = 100000;
+                let num_iterations = 1000000;
                 for _ in 0..num_iterations {
                     let mut rng = thread_rng();
                     let val = rng.gen_range(0, 128);
