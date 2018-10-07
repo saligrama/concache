@@ -4,7 +4,7 @@ use std::sync::atomic::Ordering;
 use std::sync::{atomic::AtomicBool, Mutex};
 
 struct Node {
-    kv: (usize, Mutex<usize>),
+    kv: (usize, Atomic<usize>),
     active: AtomicBool,
     next: Atomic<Node>,
     prev: Atomic<Node>,
@@ -13,7 +13,7 @@ struct Node {
 impl Node {
     fn new(k: usize, v: usize) -> Self {
         Node {
-            kv: (k, Mutex::new(v)),
+            kv: (k, Atomic::new(v)),
             active: AtomicBool::new(true),
             next: Atomic::null(),
             prev: Atomic::null(),
@@ -43,8 +43,8 @@ impl LinkedList {
                     let mut raw = k.as_raw();
                     let mut cur = unsafe { &*raw };
                     if cur.kv.0 == kv.0 && cur.active.load(Ordering::SeqCst) {
-                        let mut change = cur.kv.1.lock().unwrap();
-                        *change = kv.1;
+                        let mut ins = Owned::new(kv.1);
+                        cur.kv.1.store_and_ref(ins, Ordering::SeqCst, &guard);
                         return false;
                     }
                     node = &k.next;
@@ -77,8 +77,8 @@ impl LinkedList {
                     let mut raw = k.as_raw();
                     let mut cur = unsafe { &*raw };
                     if cur.kv.0 == key && cur.active.load(Ordering::SeqCst) {
-                        let value = cur.kv.1.lock().unwrap();
-                        return Some(*value);
+                        let value = cur.kv.1.load(Ordering::SeqCst, &guard).unwrap();
+                        return Some(**value);
                     }
                     node = &k.next;
                 }
@@ -144,7 +144,7 @@ impl fmt::Debug for LinkedList {
             let mut cur = unsafe { &*raw };
             if cur.active.load(Ordering::SeqCst) {
                 let key = cur.kv.0;
-                let value = cur.kv.1.lock().unwrap();
+                let value = cur.kv.1.load(Ordering::SeqCst, &guard).unwrap();
 
                 ret.push_str("(");
                 ret.push_str(&key.to_string());
