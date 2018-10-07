@@ -237,7 +237,7 @@ impl Backend for concache::crossbeam::Map {
 }
 
 impl Backend for concache::manual::MapHandle {
-    fn b_get(&mut self, key: usize) -> usize {
+    fn b_get(&self, key: usize) -> usize {
         self.get(key as usize).unwrap_or(0) as usize
     }
 
