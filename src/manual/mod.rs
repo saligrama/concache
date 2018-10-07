@@ -8,6 +8,8 @@ mod linked_list;
 use self::linked_list::{LinkedList, Node};
 
 const OSC: Ordering = Ordering::SeqCst;
+const REFRESH_RATE: usize = 100;
+
 
 struct Table {
     nbuckets: usize,
@@ -78,118 +80,111 @@ impl Table {
 pub struct MapHandle {
     map: Arc<Map>,
     epoch_counter: Arc<AtomicUsize>,
+    remove_nodes: Vec<*mut Node>,
+    remove_val: Vec<*mut usize>,
+    refresh: usize, 
 }
 
+unsafe impl Send for MapHandle {}
+
+
 impl MapHandle {
-    pub fn insert(&self, key: usize, value: usize) -> Option<usize> {
-        let mut remove_nodes: Vec<*mut Node> = Vec::new();
+    pub fn cleanup(&mut self) {
+        // println!("Cleaning");
+        //epoch set up, load all of the values
+        let mut started = Vec::new();
+        let handles_map = self.map.handles.read().unwrap();
+        for h in handles_map.iter() {
+            started.push(h.load(OSC));
+        }
+        for (i, h) in handles_map.iter().enumerate() {
+            if started[i] % 2 == 0 {
+                continue;
+            }
+            let mut check = h.load(OSC);
+            let mut iter = 0;
+            while (check <= started[i]) && (check % 2 == 1) {
+                if iter % 4 == 0 {
+                    // we may be waiting for a thread that isn't currently running
+                    thread::yield_now();
+                }
+                check = h.load(OSC);
+                iter += 1;
+                //do nothing, epoch spinning
+            }
+        }
+
+        //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
+        //epoch rolled over, so we know we have exclusive access to the node
+
+        // println!("{:?}", &self.remove_nodes.len());
+        for to_drop in &self.remove_nodes {
+            let n = unsafe { (&**to_drop).val.load(OSC) };
+            self.remove_val.push(n);
+            //[drop the value inside of the node, or add to remove_val]
+            drop(unsafe { Box::from_raw(*to_drop) });
+        }
+
+        // println!("{:?}", &self.remove_val.len());
+        for to_drop in &self.remove_val {
+            drop(unsafe { Box::from_raw(*to_drop) });
+        }
+
+        //reset
+        self.remove_nodes = Vec::new();
+        self.remove_val = Vec::new();
+    }
+
+    pub fn insert(&mut self, key: usize, value: usize) -> Option<usize> {
+        self.refresh += 1;
 
         self.epoch_counter.fetch_add(1, OSC);
-        let val = self.map.insert(key, value, &mut remove_nodes);
+        let val = self.map.insert(key, value, &mut self.remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
 
         let mut ret = None;
 
         if let Some(v) = val {
             ret = Some(unsafe { *v });
-            self.free_val(v);
+            self.remove_val.push(v);
         }
 
-        if !remove_nodes.is_empty() {
-            self.free_nodes(&remove_nodes);
-        }
-
-        ret
-    }
-
-    pub fn get(&self, key: usize) -> Option<usize> {
-        let mut remove_nodes: Vec<*mut Node> = Vec::new();
-
-        self.epoch_counter.fetch_add(1, OSC);
-        let ret = self.map.get(key, &mut remove_nodes);
-        self.epoch_counter.fetch_add(1, OSC);
-        if !remove_nodes.is_empty() {
-            self.free_nodes(&remove_nodes);
+        if self.refresh == REFRESH_RATE {
+            self.refresh = 0;
+            self.cleanup();
         }
 
         ret
     }
 
-    pub fn delete(&self, key: usize) -> Option<usize> {
-        let mut remove_nodes: Vec<*mut Node> = Vec::new();
+    pub fn get(&mut self, key: usize) -> Option<usize> {
+        self.refresh = (self.refresh + 1) % REFRESH_RATE;
 
         self.epoch_counter.fetch_add(1, OSC);
-        let ret = self.map.delete(key, &mut remove_nodes);
+        let ret = self.map.get(key, &mut self.remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
-        if !remove_nodes.is_empty() {
-            self.free_nodes(&remove_nodes);
+
+        if self.refresh == REFRESH_RATE {
+            self.refresh = 0;
+            self.cleanup();
         }
 
         ret
     }
 
-    fn free_val(&self, remove_val: *mut usize) {
-        //epoch set up, load all of the values
-        let mut started = Vec::new();
-        let handles_map = self.map.handles.read().unwrap();
-        for h in handles_map.iter() {
-            started.push(h.load(OSC));
-        }
-        for (i, h) in handles_map.iter().enumerate() {
-            if started[i] % 2 == 0 {
-                continue;
-            }
-            let mut check = h.load(OSC);
-            let mut iter = 0;
-            while (check <= started[i]) && (check % 2 == 1) {
-                if iter % 4 == 0 {
-                    // we may be waiting for a thread that isn't currently running
-                    thread::yield_now();
-                }
-                check = h.load(OSC);
-                iter += 1;
-                //do nothing, epoch spinning
-            }
-            //now finished is greater than or equal to started
+    pub fn delete(&mut self, key: usize) -> Option<usize> {
+        self.refresh = (self.refresh + 1) % REFRESH_RATE;
+
+        self.epoch_counter.fetch_add(1, OSC);
+        let ret = self.map.delete(key, &mut self.remove_nodes);
+        self.epoch_counter.fetch_add(1, OSC);
+
+        if self.refresh == REFRESH_RATE {
+            self.refresh = 0;
+            self.cleanup();
         }
 
-        //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
-        // epoch rolled over, so we know we have exclusive access to the node
-
-        drop(unsafe { Box::from_raw(remove_val) });
-    }
-
-    fn free_nodes(&self, remove_nodes: &[*mut Node]) {
-        //epoch set up, load all of the values
-        let mut started = Vec::new();
-        let handles_map = self.map.handles.read().unwrap();
-        for h in handles_map.iter() {
-            started.push(h.load(OSC));
-        }
-        for (i, h) in handles_map.iter().enumerate() {
-            if started[i] % 2 == 0 {
-                continue;
-            }
-            let mut check = h.load(OSC);
-            let mut iter = 0;
-            while (check <= started[i]) && (check % 2 == 1) {
-                if iter % 4 == 0 {
-                    // we may be waiting for a thread that isn't currently running
-                    thread::yield_now();
-                }
-                check = h.load(OSC);
-                iter += 1;
-                //do nothing, epoch spinning
-            }
-            //now finished is greater than or equal to started
-        }
-
-        //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
-        // epoch rolled over, so we know we have exclusive access to the node
-
-        for to_drop in remove_nodes {
-            drop(unsafe { Box::from_raw(*to_drop) });
-        }
+        ret
     }
 }
 
@@ -198,6 +193,9 @@ impl Clone for MapHandle {
         let ret = Self {
             map: Arc::clone(&self.map),
             epoch_counter: Arc::new(AtomicUsize::new(0)),
+            remove_nodes: Vec::new(),
+            remove_val: Vec::new(),
+            refresh: 0,
         };
 
         let mut handles_vec = self.map.handles.write().unwrap(); //handles vector
@@ -221,6 +219,9 @@ impl Map {
         let ret = MapHandle {
             map: Arc::new(new_hashmap),
             epoch_counter: Arc::new(AtomicUsize::new(0)),
+            remove_nodes: Vec::new(),
+            remove_val: Vec::new(),
+            refresh: 0,
         };
 
         //push the first maphandle into the epoch system
@@ -266,7 +267,7 @@ mod tests {
         let nthreads = 5;
         // let handle = MapHandle::new(Arc::clone(&new_hashmap).table.read().unwrap());
         for _ in 0..nthreads {
-            let new_handle = handle.clone();
+            let mut new_handle = handle.clone();
 
             threads.push(thread::spawn(move || {
                 let num_iterations = 1000000;
@@ -295,23 +296,8 @@ mod tests {
     }
 
     #[test]
-    fn hashmap_handle_cloning() {
-        let handle = Arc::new(Map::with_capacity(8)); //init with 16 bucket
-        println!("{:?}", handle.epoch_counter);
-        handle.insert(1, 3);
-        assert_eq!(handle.get(1).unwrap(), 3);
-
-        //create a new handle
-        let new_handle = Arc::clone(&handle);
-        assert_eq!(new_handle.get(1).unwrap(), 3);
-        new_handle.insert(2, 5);
-
-        assert_eq!(handle.get(2).unwrap(), 5);
-    }
-
-    #[test]
     fn hashmap_delete() {
-        let handle = Map::with_capacity(8);
+        let mut handle = Map::with_capacity(8);
         handle.insert(1, 3);
         handle.insert(2, 5);
         handle.insert(3, 8);
@@ -338,7 +324,7 @@ mod tests {
 
     #[test]
     fn hashmap_basics() {
-        let new_hashmap = Map::with_capacity(8); //init with 2 buckets
+        let mut new_hashmap = Map::with_capacity(8); //init with 2 buckets
                                                  //input values
         new_hashmap.insert(1, 1);
         new_hashmap.insert(2, 5);
@@ -375,169 +361,169 @@ mod tests {
 }
 
 
-mod benchmarks {
-    use super::*;
-    use rand::{thread_rng, Rng};
-    use test::Bencher;
+// mod benchmarks {
+//     use super::*;
+//     use rand::{thread_rng, Rng};
+//     use test::Bencher;
 
-    //BENCHMARKS
-    #[inline]
-    fn getn(b: &mut Bencher, n: usize) {
-        let handle = Map::with_capacity(1024);
-        for key in 0..n {
-            handle.insert(key, 0);
-        }
-        let mut rng = thread_rng();
+//     //BENCHMARKS
+//     #[inline]
+//     fn getn(b: &mut Bencher, n: usize) {
+//         let handle = Map::with_capacity(1024);
+//         for key in 0..n {
+//             handle.insert(key, 0);
+//         }
+//         let mut rng = thread_rng();
 
-        b.iter(|| {
-            let key = rng.gen_range(0, n);
-            handle.get(key);
-        });
-    }
+//         b.iter(|| {
+//             let key = rng.gen_range(0, n);
+//             handle.get(key);
+//         });
+//     }
 
-    //get
-    #[bench]
-    fn get0128(b: &mut Bencher) {
-        getn(b, 128);
-    }
+//     //get
+//     #[bench]
+//     fn get0128(b: &mut Bencher) {
+//         getn(b, 128);
+//     }
 
-    #[bench]
-    fn get0256(b: &mut Bencher) {
-        getn(b, 256);
-    }
+//     #[bench]
+//     fn get0256(b: &mut Bencher) {
+//         getn(b, 256);
+//     }
 
-    #[bench]
-    fn get0512(b: &mut Bencher) {
-        getn(b, 512);
-    }
+//     #[bench]
+//     fn get0512(b: &mut Bencher) {
+//         getn(b, 512);
+//     }
 
-    #[bench]
-    fn get1024(b: &mut Bencher) {
-        getn(b, 1024);
-    }
+//     #[bench]
+//     fn get1024(b: &mut Bencher) {
+//         getn(b, 1024);
+//     }
 
-    #[bench]
-    fn get2048(b: &mut Bencher) {
-        getn(b, 2048);
-    }
+//     #[bench]
+//     fn get2048(b: &mut Bencher) {
+//         getn(b, 2048);
+//     }
 
-    #[bench]
-    fn get4096(b: &mut Bencher) {
-        getn(b, 4096);
-    }
+//     #[bench]
+//     fn get4096(b: &mut Bencher) {
+//         getn(b, 4096);
+//     }
 
-    #[bench]
-    fn get8192(b: &mut Bencher) {
-        getn(b, 8192);
-    }
+//     #[bench]
+//     fn get8192(b: &mut Bencher) {
+//         getn(b, 8192);
+//     }
 
-    #[inline]
-    fn updaten(b: &mut Bencher, n: usize) {
-        let handle = Map::with_capacity(1024);
-        for key in 0..n {
-            handle.insert(key, 0);
-        }
-        let mut rng = thread_rng();
+//     #[inline]
+//     fn updaten(b: &mut Bencher, n: usize) {
+//         let handle = Map::with_capacity(1024);
+//         for key in 0..n {
+//             handle.insert(key, 0);
+//         }
+//         let mut rng = thread_rng();
 
-        b.iter(|| {
-            let key = rng.gen_range(0, n);
-            handle.insert(key, 1);
-        });
-    }
+//         b.iter(|| {
+//             let key = rng.gen_range(0, n);
+//             handle.insert(key, 1);
+//         });
+//     }
 
-    //update
-    #[bench]
-    fn update0128(b: &mut Bencher) {
-        updaten(b, 128);
-    }
+//     //update
+//     #[bench]
+//     fn update0128(b: &mut Bencher) {
+//         updaten(b, 128);
+//     }
 
-    #[bench]
-    fn update0256(b: &mut Bencher) {
-        updaten(b, 256);
-    }
+//     #[bench]
+//     fn update0256(b: &mut Bencher) {
+//         updaten(b, 256);
+//     }
 
-    #[bench]
-    fn update0512(b: &mut Bencher) {
-        updaten(b, 512);
-    }
+//     #[bench]
+//     fn update0512(b: &mut Bencher) {
+//         updaten(b, 512);
+//     }
 
-    #[bench]
-    fn update1024(b: &mut Bencher) {
-        updaten(b, 1024);
-    }
+//     #[bench]
+//     fn update1024(b: &mut Bencher) {
+//         updaten(b, 1024);
+//     }
 
-    #[bench]
-    fn update2048(b: &mut Bencher) {
-        updaten(b, 2048);
-    }
+//     #[bench]
+//     fn update2048(b: &mut Bencher) {
+//         updaten(b, 2048);
+//     }
 
-    #[bench]
-    fn update4096(b: &mut Bencher) {
-        updaten(b, 4096);
-    }
+//     #[bench]
+//     fn update4096(b: &mut Bencher) {
+//         updaten(b, 4096);
+//     }
 
-    #[bench]
-    fn update8192(b: &mut Bencher) {
-        updaten(b, 8192);
-    }
+//     #[bench]
+//     fn update8192(b: &mut Bencher) {
+//         updaten(b, 8192);
+//     }
 
-    fn deleten(b: &mut Bencher, n: usize) {
-        let handle = Map::with_capacity(1024);
-        for key in 0..n {
-            handle.insert(key, 0);
-        }
-        let mut rng = thread_rng();
+//     fn deleten(b: &mut Bencher, n: usize) {
+//         let handle = Map::with_capacity(1024);
+//         for key in 0..n {
+//             handle.insert(key, 0);
+//         }
+//         let mut rng = thread_rng();
 
-        b.iter(|| {
-            let key = rng.gen_range(0, n);
-            handle.delete(key);
-            handle.insert(key, 0);
-        });
-    }
+//         b.iter(|| {
+//             let key = rng.gen_range(0, n);
+//             handle.delete(key);
+//             handle.insert(key, 0);
+//         });
+//     }
 
-    //delete
-    #[bench]
-    fn delete0128(b: &mut Bencher) {
-        deleten(b, 128);
-    }
+//     //delete
+//     #[bench]
+//     fn delete0128(b: &mut Bencher) {
+//         deleten(b, 128);
+//     }
 
-    #[bench]
-    fn delete0256(b: &mut Bencher) {
-        deleten(b, 256);
-    }
+//     #[bench]
+//     fn delete0256(b: &mut Bencher) {
+//         deleten(b, 256);
+//     }
 
-    #[bench]
-    fn delete0512(b: &mut Bencher) {
-        deleten(b, 512);
-    }
+//     #[bench]
+//     fn delete0512(b: &mut Bencher) {
+//         deleten(b, 512);
+//     }
 
-    #[bench]
-    fn delete1024(b: &mut Bencher) {
-        deleten(b, 1024);
-    }
+//     #[bench]
+//     fn delete1024(b: &mut Bencher) {
+//         deleten(b, 1024);
+//     }
 
-    #[bench]
-    fn delete2048(b: &mut Bencher) {
-        deleten(b, 2048);
-    }
+//     #[bench]
+//     fn delete2048(b: &mut Bencher) {
+//         deleten(b, 2048);
+//     }
 
-    #[bench]
-    fn delete4096(b: &mut Bencher) {
-        deleten(b, 4096);
-    }
+//     #[bench]
+//     fn delete4096(b: &mut Bencher) {
+//         deleten(b, 4096);
+//     }
 
-    #[bench]
-    fn delete8192(b: &mut Bencher) {
-        deleten(b, 8192);
-    }
+//     #[bench]
+//     fn delete8192(b: &mut Bencher) {
+//         deleten(b, 8192);
+//     }
 
-    #[bench]
-    fn insert(b: &mut Bencher) {
-        let handle = Map::with_capacity(1024);
+//     #[bench]
+//     fn insert(b: &mut Bencher) {
+//         let handle = Map::with_capacity(1024);
 
-        b.iter(|| {
-            handle.insert(1, 0);
-            handle.delete(1);
-        })
-    }
-}
+//         b.iter(|| {
+//             handle.insert(1, 0);
+//             handle.delete(1);
+//         })
+//     }
+// }

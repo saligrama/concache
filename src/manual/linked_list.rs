@@ -6,7 +6,7 @@ const OSC: Ordering = Ordering::SeqCst;
 #[derive(Debug)]
 pub(super) struct Node {
     key: Option<usize>,
-    val: AtomicPtr<usize>,
+    pub val: AtomicPtr<usize>,
     next: AtomicPtr<Node>,
 }
 
