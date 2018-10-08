@@ -43,6 +43,9 @@ impl LinkedList {
                     let mut raw = k.as_raw();
                     let mut cur = unsafe { &*raw };
                     if cur.kv.0 == kv.0 && cur.active.load(Ordering::SeqCst) {
+                        if let Some(old) = cur.kv.1.load(Ordering::SeqCst, &guard) {
+                            unsafe { guard.unlinked(old); }
+                        }
                         let mut ins = Owned::new(kv.1);
                         cur.kv.1.store_and_ref(ins, Ordering::SeqCst, &guard);
                         return false;
