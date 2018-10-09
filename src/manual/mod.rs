@@ -361,169 +361,169 @@ mod tests {
 }
 
 
-// mod benchmarks {
-//     use super::*;
-//     use rand::{thread_rng, Rng};
-//     use test::Bencher;
+mod benchmarks {
+    use super::*;
+    use rand::{thread_rng, Rng};
+    use test::Bencher;
 
-//     //BENCHMARKS
-//     #[inline]
-//     fn getn(b: &mut Bencher, n: usize) {
-//         let handle = Map::with_capacity(1024);
-//         for key in 0..n {
-//             handle.insert(key, 0);
-//         }
-//         let mut rng = thread_rng();
+    //BENCHMARKS
+    #[inline]
+    fn getn(b: &mut Bencher, n: usize) {
+        let mut handle = Map::with_capacity(1024);
+        for key in 0..n {
+            handle.insert(key, 0);
+        }
+        let mut rng = thread_rng();
 
-//         b.iter(|| {
-//             let key = rng.gen_range(0, n);
-//             handle.get(key);
-//         });
-//     }
+        b.iter(|| {
+            let key = rng.gen_range(0, n);
+            handle.get(key);
+        });
+    }
 
-//     //get
-//     #[bench]
-//     fn get0128(b: &mut Bencher) {
-//         getn(b, 128);
-//     }
+    //get
+    #[bench]
+    fn get0128(b: &mut Bencher) {
+        getn(b, 128);
+    }
 
-//     #[bench]
-//     fn get0256(b: &mut Bencher) {
-//         getn(b, 256);
-//     }
+    #[bench]
+    fn get0256(b: &mut Bencher) {
+        getn(b, 256);
+    }
 
-//     #[bench]
-//     fn get0512(b: &mut Bencher) {
-//         getn(b, 512);
-//     }
+    #[bench]
+    fn get0512(b: &mut Bencher) {
+        getn(b, 512);
+    }
 
-//     #[bench]
-//     fn get1024(b: &mut Bencher) {
-//         getn(b, 1024);
-//     }
+    #[bench]
+    fn get1024(b: &mut Bencher) {
+        getn(b, 1024);
+    }
 
-//     #[bench]
-//     fn get2048(b: &mut Bencher) {
-//         getn(b, 2048);
-//     }
+    #[bench]
+    fn get2048(b: &mut Bencher) {
+        getn(b, 2048);
+    }
 
-//     #[bench]
-//     fn get4096(b: &mut Bencher) {
-//         getn(b, 4096);
-//     }
+    #[bench]
+    fn get4096(b: &mut Bencher) {
+        getn(b, 4096);
+    }
 
-//     #[bench]
-//     fn get8192(b: &mut Bencher) {
-//         getn(b, 8192);
-//     }
+    #[bench]
+    fn get8192(b: &mut Bencher) {
+        getn(b, 8192);
+    }
 
-//     #[inline]
-//     fn updaten(b: &mut Bencher, n: usize) {
-//         let handle = Map::with_capacity(1024);
-//         for key in 0..n {
-//             handle.insert(key, 0);
-//         }
-//         let mut rng = thread_rng();
+    #[inline]
+    fn updaten(b: &mut Bencher, n: usize) {
+        let mut handle = Map::with_capacity(1024);
+        for key in 0..n {
+            handle.insert(key, 0);
+        }
+        let mut rng = thread_rng();
 
-//         b.iter(|| {
-//             let key = rng.gen_range(0, n);
-//             handle.insert(key, 1);
-//         });
-//     }
+        b.iter(|| {
+            let key = rng.gen_range(0, n);
+            handle.insert(key, 1);
+        });
+    }
 
-//     //update
-//     #[bench]
-//     fn update0128(b: &mut Bencher) {
-//         updaten(b, 128);
-//     }
+    //update
+    #[bench]
+    fn update0128(b: &mut Bencher) {
+        updaten(b, 128);
+    }
 
-//     #[bench]
-//     fn update0256(b: &mut Bencher) {
-//         updaten(b, 256);
-//     }
+    #[bench]
+    fn update0256(b: &mut Bencher) {
+        updaten(b, 256);
+    }
 
-//     #[bench]
-//     fn update0512(b: &mut Bencher) {
-//         updaten(b, 512);
-//     }
+    #[bench]
+    fn update0512(b: &mut Bencher) {
+        updaten(b, 512);
+    }
 
-//     #[bench]
-//     fn update1024(b: &mut Bencher) {
-//         updaten(b, 1024);
-//     }
+    #[bench]
+    fn update1024(b: &mut Bencher) {
+        updaten(b, 1024);
+    }
 
-//     #[bench]
-//     fn update2048(b: &mut Bencher) {
-//         updaten(b, 2048);
-//     }
+    #[bench]
+    fn update2048(b: &mut Bencher) {
+        updaten(b, 2048);
+    }
 
-//     #[bench]
-//     fn update4096(b: &mut Bencher) {
-//         updaten(b, 4096);
-//     }
+    #[bench]
+    fn update4096(b: &mut Bencher) {
+        updaten(b, 4096);
+    }
 
-//     #[bench]
-//     fn update8192(b: &mut Bencher) {
-//         updaten(b, 8192);
-//     }
+    #[bench]
+    fn update8192(b: &mut Bencher) {
+        updaten(b, 8192);
+    }
 
-//     fn deleten(b: &mut Bencher, n: usize) {
-//         let handle = Map::with_capacity(1024);
-//         for key in 0..n {
-//             handle.insert(key, 0);
-//         }
-//         let mut rng = thread_rng();
+    fn deleten(b: &mut Bencher, n: usize) {
+        let mut handle = Map::with_capacity(1024);
+        for key in 0..n {
+            handle.insert(key, 0);
+        }
+        let mut rng = thread_rng();
 
-//         b.iter(|| {
-//             let key = rng.gen_range(0, n);
-//             handle.delete(key);
-//             handle.insert(key, 0);
-//         });
-//     }
+        b.iter(|| {
+            let key = rng.gen_range(0, n);
+            handle.delete(key);
+            handle.insert(key, 0);
+        });
+    }
 
-//     //delete
-//     #[bench]
-//     fn delete0128(b: &mut Bencher) {
-//         deleten(b, 128);
-//     }
+    //delete
+    #[bench]
+    fn delete0128(b: &mut Bencher) {
+        deleten(b, 128);
+    }
 
-//     #[bench]
-//     fn delete0256(b: &mut Bencher) {
-//         deleten(b, 256);
-//     }
+    #[bench]
+    fn delete0256(b: &mut Bencher) {
+        deleten(b, 256);
+    }
 
-//     #[bench]
-//     fn delete0512(b: &mut Bencher) {
-//         deleten(b, 512);
-//     }
+    #[bench]
+    fn delete0512(b: &mut Bencher) {
+        deleten(b, 512);
+    }
 
-//     #[bench]
-//     fn delete1024(b: &mut Bencher) {
-//         deleten(b, 1024);
-//     }
+    #[bench]
+    fn delete1024(b: &mut Bencher) {
+        deleten(b, 1024);
+    }
 
-//     #[bench]
-//     fn delete2048(b: &mut Bencher) {
-//         deleten(b, 2048);
-//     }
+    #[bench]
+    fn delete2048(b: &mut Bencher) {
+        deleten(b, 2048);
+    }
 
-//     #[bench]
-//     fn delete4096(b: &mut Bencher) {
-//         deleten(b, 4096);
-//     }
+    #[bench]
+    fn delete4096(b: &mut Bencher) {
+        deleten(b, 4096);
+    }
 
-//     #[bench]
-//     fn delete8192(b: &mut Bencher) {
-//         deleten(b, 8192);
-//     }
+    #[bench]
+    fn delete8192(b: &mut Bencher) {
+        deleten(b, 8192);
+    }
 
-//     #[bench]
-//     fn insert(b: &mut Bencher) {
-//         let handle = Map::with_capacity(1024);
+    #[bench]
+    fn insert(b: &mut Bencher) {
+        let mut handle = Map::with_capacity(1024);
 
-//         b.iter(|| {
-//             handle.insert(1, 0);
-//             handle.delete(1);
-//         })
-//     }
-// }
+        b.iter(|| {
+            handle.insert(1, 0);
+            handle.delete(1);
+        })
+    }
+}

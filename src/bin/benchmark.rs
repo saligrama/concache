@@ -173,7 +173,7 @@ fn main() {
 }
 
 trait Backend {
-    fn b_get(&self, key: usize) -> usize;
+    fn b_get(&mut self, key: usize) -> usize;
     fn b_put(&mut self, key: usize, value: usize);
 }
 
@@ -207,7 +207,7 @@ fn drive<B: Backend>(
 }
 
 impl Backend for sync::Arc<CHashMap<usize, usize>> {
-    fn b_get(&self, key: usize) -> usize {
+    fn b_get(&mut self, key: usize) -> usize {
         self.get(&key).map(|v| *v).unwrap_or(0)
     }
 
@@ -217,7 +217,7 @@ impl Backend for sync::Arc<CHashMap<usize, usize>> {
 }
 
 impl Backend for sync::Arc<sync::RwLock<HashMap<usize, usize>>> {
-    fn b_get(&self, key: usize) -> usize {
+    fn b_get(&mut self, key: usize) -> usize {
         self.read().unwrap().get(&key).cloned().unwrap_or(0)
     }
 
@@ -227,7 +227,7 @@ impl Backend for sync::Arc<sync::RwLock<HashMap<usize, usize>>> {
 }
 
 impl Backend for concache::crossbeam::Map {
-    fn b_get(&self, key: usize) -> usize {
+    fn b_get(&mut self, key: usize) -> usize {
         self.get(key as usize).unwrap_or(0) as usize
     }
 
@@ -237,7 +237,7 @@ impl Backend for concache::crossbeam::Map {
 }
 
 impl Backend for concache::manual::MapHandle {
-    fn b_get(&self, key: usize) -> usize {
+    fn b_get(&mut self, key: usize) -> usize {
         self.get(key as usize).unwrap_or(0) as usize
     }
 

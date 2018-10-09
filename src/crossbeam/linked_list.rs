@@ -1,7 +1,7 @@
 use cx::epoch::{self, Atomic, Owned};
 use std::fmt;
 use std::sync::atomic::Ordering;
-use std::sync::{atomic::AtomicBool, Mutex};
+use std::sync::{atomic::AtomicBool};
 
 struct Node {
     kv: (usize, Atomic<usize>),

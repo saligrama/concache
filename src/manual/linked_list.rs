@@ -123,8 +123,7 @@ impl LinkedList {
             .compare_and_swap(right_node, right_node_next, OSC)
             != right_node
         {
-            // TODO: do we really not need to do anything with right_node here?
-            right_node = self.search(
+            let _ = self.search(
                 unsafe { &*right_node }.key.unwrap(),
                 &mut left_node,
                 remove_nodes,
