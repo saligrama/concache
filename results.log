@@ -1,1298 +1,1848 @@
- 1  1 uniform    std          479800 ops/s write 0
- 1  1 uniform    std          518028 ops/s read 0
- 1  1 uniform    chashmap    1637108 ops/s write 0
- 1  1 uniform    chashmap    1841481 ops/s read 0
- 1  1 uniform    concache::crossbeam  2230848 ops/s write 0
- 1  1 uniform    concache::crossbeam  2962791 ops/s read 0
- 1  1 uniform    concache::manual  1489624 ops/s write 0
- 1  1 uniform    concache::manual  2143725 ops/s read 0
- 2  1 uniform    std          118534 ops/s write 0
- 2  1 uniform    std          366343 ops/s read 0
- 2  1 uniform    std          164342 ops/s read 1
- 2  1 uniform    chashmap     779929 ops/s write 0
- 2  1 uniform    chashmap    1533707 ops/s read 0
- 2  1 uniform    chashmap     695347 ops/s read 1
- 2  1 uniform    concache::crossbeam  1998867 ops/s write 0
- 2  1 uniform    concache::crossbeam  3147574 ops/s read 0
- 2  1 uniform    concache::crossbeam  3132481 ops/s read 1
- 2  1 uniform    concache::manual  1546880 ops/s write 0
- 2  1 uniform    concache::manual  2531495 ops/s read 0
- 2  1 uniform    concache::manual  2528618 ops/s read 1
- 4  1 uniform    std           46127 ops/s write 0
- 4  1 uniform    std          406932 ops/s read 0
- 4  1 uniform    std          399052 ops/s read 1
- 4  1 uniform    std          403036 ops/s read 2
- 4  1 uniform    std          416431 ops/s read 3
- 4  1 uniform    chashmap     409183 ops/s write 0
- 4  1 uniform    chashmap     690235 ops/s read 0
- 4  1 uniform    chashmap     672423 ops/s read 1
- 4  1 uniform    chashmap     327295 ops/s read 2
- 4  1 uniform    chashmap     343783 ops/s read 3
- 4  1 uniform    concache::crossbeam  1944485 ops/s write 0
- 4  1 uniform    concache::crossbeam  3259693 ops/s read 0
- 4  1 uniform    concache::crossbeam  3276586 ops/s read 1
- 4  1 uniform    concache::crossbeam  3271540 ops/s read 2
- 4  1 uniform    concache::crossbeam  3247919 ops/s read 3
- 4  1 uniform    concache::manual  1503782 ops/s write 0
- 4  1 uniform    concache::manual  2180332 ops/s read 0
- 4  1 uniform    concache::manual  2204126 ops/s read 1
- 4  1 uniform    concache::manual  2267927 ops/s read 2
- 4  1 uniform    concache::manual  3076983 ops/s read 3
- 8  1 uniform    std             659 ops/s write 0
- 8  1 uniform    std          200457 ops/s read 0
- 8  1 uniform    std          211314 ops/s read 1
- 8  1 uniform    std          275635 ops/s read 2
- 8  1 uniform    std          196628 ops/s read 3
- 8  1 uniform    std          202853 ops/s read 4
- 8  1 uniform    std          250121 ops/s read 5
- 8  1 uniform    std          218349 ops/s read 6
- 8  1 uniform    std          202956 ops/s read 7
- 8  1 uniform    chashmap     463835 ops/s write 0
- 8  1 uniform    chashmap     231595 ops/s read 0
- 8  1 uniform    chashmap     233295 ops/s read 1
- 8  1 uniform    chashmap     356137 ops/s read 2
- 8  1 uniform    chashmap     341342 ops/s read 3
- 8  1 uniform    chashmap     425068 ops/s read 4
- 8  1 uniform    chashmap     235729 ops/s read 5
- 8  1 uniform    chashmap     241029 ops/s read 6
- 8  1 uniform    chashmap     245278 ops/s read 7
- 8  1 uniform    concache::crossbeam  1940700 ops/s write 0
- 8  1 uniform    concache::crossbeam  3503024 ops/s read 0
- 8  1 uniform    concache::crossbeam  3490211 ops/s read 1
- 8  1 uniform    concache::crossbeam  3471808 ops/s read 2
- 8  1 uniform    concache::crossbeam  3483290 ops/s read 3
- 8  1 uniform    concache::crossbeam  3267034 ops/s read 4
- 8  1 uniform    concache::crossbeam  3293111 ops/s read 5
- 8  1 uniform    concache::crossbeam  3323229 ops/s read 6
- 8  1 uniform    concache::crossbeam  3357829 ops/s read 7
- 8  1 uniform    concache::manual  1917324 ops/s write 0
- 8  1 uniform    concache::manual  2257643 ops/s read 0
- 8  1 uniform    concache::manual  2264697 ops/s read 1
- 8  1 uniform    concache::manual  2382256 ops/s read 2
- 8  1 uniform    concache::manual  2271547 ops/s read 3
- 8  1 uniform    concache::manual  2384846 ops/s read 4
- 8  1 uniform    concache::manual  2312931 ops/s read 5
- 8  1 uniform    concache::manual  2408387 ops/s read 6
- 8  1 uniform    concache::manual  2397248 ops/s read 7
-16  1 uniform    std               1 ops/s write 0
-16  1 uniform    std          114112 ops/s read 0
-16  1 uniform    std          113194 ops/s read 1
-16  1 uniform    std          113355 ops/s read 2
-16  1 uniform    std          110280 ops/s read 3
-16  1 uniform    std          109586 ops/s read 4
-16  1 uniform    std          108879 ops/s read 5
-16  1 uniform    std          112101 ops/s read 6
-16  1 uniform    std          109897 ops/s read 7
-16  1 uniform    std          110027 ops/s read 8
-16  1 uniform    std          177633 ops/s read 9
-16  1 uniform    std          129464 ops/s read 10
-16  1 uniform    std          121644 ops/s read 11
-16  1 uniform    std          103453 ops/s read 12
-16  1 uniform    std          109804 ops/s read 13
-16  1 uniform    std          145757 ops/s read 14
-16  1 uniform    std          110663 ops/s read 15
-16  1 uniform    chashmap     111021 ops/s write 0
-16  1 uniform    chashmap     192676 ops/s read 0
-16  1 uniform    chashmap     126615 ops/s read 1
-16  1 uniform    chashmap     136115 ops/s read 2
-16  1 uniform    chashmap     114845 ops/s read 3
-16  1 uniform    chashmap     152898 ops/s read 4
-16  1 uniform    chashmap     104798 ops/s read 5
-16  1 uniform    chashmap     102840 ops/s read 6
-16  1 uniform    chashmap     100302 ops/s read 7
-16  1 uniform    chashmap     153978 ops/s read 8
-16  1 uniform    chashmap     156716 ops/s read 9
-16  1 uniform    chashmap     154175 ops/s read 10
-16  1 uniform    chashmap     149850 ops/s read 11
-16  1 uniform    chashmap     152343 ops/s read 12
-16  1 uniform    chashmap     145964 ops/s read 13
-16  1 uniform    chashmap     144560 ops/s read 14
-16  1 uniform    chashmap     156111 ops/s read 15
-16  1 uniform    concache::crossbeam  1666617 ops/s write 0
-16  1 uniform    concache::crossbeam  3409953 ops/s read 0
-16  1 uniform    concache::crossbeam  3375363 ops/s read 1
-16  1 uniform    concache::crossbeam  3335325 ops/s read 2
-16  1 uniform    concache::crossbeam  3532408 ops/s read 3
-16  1 uniform    concache::crossbeam  3521277 ops/s read 4
-16  1 uniform    concache::crossbeam  3313135 ops/s read 5
-16  1 uniform    concache::crossbeam  3344091 ops/s read 6
-16  1 uniform    concache::crossbeam  3495618 ops/s read 7
-16  1 uniform    concache::crossbeam  3615923 ops/s read 8
-16  1 uniform    concache::crossbeam  3303232 ops/s read 9
-16  1 uniform    concache::crossbeam  3272921 ops/s read 10
-16  1 uniform    concache::crossbeam  3358885 ops/s read 11
-16  1 uniform    concache::crossbeam  3597125 ops/s read 12
-16  1 uniform    concache::crossbeam  3199551 ops/s read 13
-16  1 uniform    concache::crossbeam  3330630 ops/s read 14
-16  1 uniform    concache::crossbeam  3479118 ops/s read 15
-16  1 uniform    concache::manual  1742907 ops/s write 0
-16  1 uniform    concache::manual  2609376 ops/s read 0
-16  1 uniform    concache::manual  2624152 ops/s read 1
-16  1 uniform    concache::manual  2742249 ops/s read 2
-16  1 uniform    concache::manual  2165636 ops/s read 3
-16  1 uniform    concache::manual  2628629 ops/s read 4
-16  1 uniform    concache::manual  2113501 ops/s read 5
-16  1 uniform    concache::manual  2431934 ops/s read 6
-16  1 uniform    concache::manual  2422671 ops/s read 7
-16  1 uniform    concache::manual  2005786 ops/s read 8
-16  1 uniform    concache::manual  2110527 ops/s read 9
-16  1 uniform    concache::manual  1920620 ops/s read 10
-16  1 uniform    concache::manual  1881967 ops/s read 11
-16  1 uniform    concache::manual  2082203 ops/s read 12
-16  1 uniform    concache::manual  2096654 ops/s read 13
-16  1 uniform    concache::manual  2388234 ops/s read 14
-16  1 uniform    concache::manual  2577878 ops/s read 15
+ 1  1 uniform    std          159368 ops/s write 0
+ 1  1 uniform    std          161708 ops/s read 0
+ 1  1 uniform    chashmap    1645314 ops/s write 0
+ 1  1 uniform    chashmap    1804680 ops/s read 0
+ 1  1 uniform    concache::crossbeam  2541877 ops/s write 0
+ 1  1 uniform    concache::crossbeam  3354084 ops/s read 0
+ 1  1 uniform    concache::manual  1495278 ops/s write 0
+ 1  1 uniform    concache::manual  2114843 ops/s read 0
+ 2  1 uniform    std          129940 ops/s write 0
+ 2  1 uniform    std          300044 ops/s read 0
+ 2  1 uniform    std          326793 ops/s read 1
+ 2  1 uniform    chashmap     874068 ops/s write 0
+ 2  1 uniform    chashmap    1718138 ops/s read 0
+ 2  1 uniform    chashmap     746281 ops/s read 1
+ 2  1 uniform    concache::crossbeam  2629514 ops/s write 0
+ 2  1 uniform    concache::crossbeam  3327380 ops/s read 0
+ 2  1 uniform    concache::crossbeam  3430941 ops/s read 1
+ 2  1 uniform    concache::manual  1891647 ops/s write 0
+ 2  1 uniform    concache::manual  2048645 ops/s read 0
+ 2  1 uniform    concache::manual  2100863 ops/s read 1
+ 4  1 uniform    std           46669 ops/s write 0
+ 4  1 uniform    std          286375 ops/s read 0
+ 4  1 uniform    std          309873 ops/s read 1
+ 4  1 uniform    std          307959 ops/s read 2
+ 4  1 uniform    std          295333 ops/s read 3
+ 4  1 uniform    chashmap     428565 ops/s write 0
+ 4  1 uniform    chashmap     646146 ops/s read 0
+ 4  1 uniform    chashmap     387516 ops/s read 1
+ 4  1 uniform    chashmap     391284 ops/s read 2
+ 4  1 uniform    chashmap     711052 ops/s read 3
+ 4  1 uniform    concache::crossbeam  2569243 ops/s write 0
+ 4  1 uniform    concache::crossbeam  3460383 ops/s read 0
+ 4  1 uniform    concache::crossbeam  3548130 ops/s read 1
+ 4  1 uniform    concache::crossbeam  3478765 ops/s read 2
+ 4  1 uniform    concache::crossbeam  3521484 ops/s read 3
+ 4  1 uniform    concache::manual  1726823 ops/s write 0
+ 4  1 uniform    concache::manual  2042237 ops/s read 0
+ 4  1 uniform    concache::manual  2118438 ops/s read 1
+ 4  1 uniform    concache::manual  2715034 ops/s read 2
+ 4  1 uniform    concache::manual  3018771 ops/s read 3
+ 8  1 uniform    std             504 ops/s write 0
+ 8  1 uniform    std          212051 ops/s read 0
+ 8  1 uniform    std          253008 ops/s read 1
+ 8  1 uniform    std          219797 ops/s read 2
+ 8  1 uniform    std          223708 ops/s read 3
+ 8  1 uniform    std          211618 ops/s read 4
+ 8  1 uniform    std          217045 ops/s read 5
+ 8  1 uniform    std          214566 ops/s read 6
+ 8  1 uniform    std          221364 ops/s read 7
+ 8  1 uniform    chashmap     202131 ops/s write 0
+ 8  1 uniform    chashmap     170856 ops/s read 0
+ 8  1 uniform    chashmap     170989 ops/s read 1
+ 8  1 uniform    chashmap     457918 ops/s read 2
+ 8  1 uniform    chashmap     171773 ops/s read 3
+ 8  1 uniform    chashmap     390209 ops/s read 4
+ 8  1 uniform    chashmap     170453 ops/s read 5
+ 8  1 uniform    chashmap     358613 ops/s read 6
+ 8  1 uniform    chashmap     339002 ops/s read 7
+ 8  1 uniform    concache::crossbeam  2363187 ops/s write 0
+ 8  1 uniform    concache::crossbeam  3562733 ops/s read 0
+ 8  1 uniform    concache::crossbeam  3573497 ops/s read 1
+ 8  1 uniform    concache::crossbeam  3626744 ops/s read 2
+ 8  1 uniform    concache::crossbeam  3621174 ops/s read 3
+ 8  1 uniform    concache::crossbeam  3596607 ops/s read 4
+ 8  1 uniform    concache::crossbeam  3603247 ops/s read 5
+ 8  1 uniform    concache::crossbeam  3610060 ops/s read 6
+ 8  1 uniform    concache::crossbeam  3596681 ops/s read 7
+ 8  1 uniform    concache::manual  1795035 ops/s write 0
+ 8  1 uniform    concache::manual  2363394 ops/s read 0
+ 8  1 uniform    concache::manual  2394021 ops/s read 1
+ 8  1 uniform    concache::manual  2156851 ops/s read 2
+ 8  1 uniform    concache::manual  1984426 ops/s read 3
+ 8  1 uniform    concache::manual  2140275 ops/s read 4
+ 8  1 uniform    concache::manual  2068560 ops/s read 5
+ 8  1 uniform    concache::manual  2625176 ops/s read 6
+ 8  1 uniform    concache::manual  2612476 ops/s read 7
+16  1 uniform    std               0 ops/s write 0
+16  1 uniform    std          111569 ops/s read 0
+16  1 uniform    std          109514 ops/s read 1
+16  1 uniform    std          110632 ops/s read 2
+16  1 uniform    std          110922 ops/s read 3
+16  1 uniform    std          111101 ops/s read 4
+16  1 uniform    std          107171 ops/s read 5
+16  1 uniform    std          108619 ops/s read 6
+16  1 uniform    std          129251 ops/s read 7
+16  1 uniform    std          114129 ops/s read 8
+16  1 uniform    std          111388 ops/s read 9
+16  1 uniform    std          107396 ops/s read 10
+16  1 uniform    std          106183 ops/s read 11
+16  1 uniform    std          122694 ops/s read 12
+16  1 uniform    std          173975 ops/s read 13
+16  1 uniform    std          144675 ops/s read 14
+16  1 uniform    std          100906 ops/s read 15
+16  1 uniform    chashmap     200126 ops/s write 0
+16  1 uniform    chashmap     146833 ops/s read 0
+16  1 uniform    chashmap     138387 ops/s read 1
+16  1 uniform    chashmap     185840 ops/s read 2
+16  1 uniform    chashmap     129964 ops/s read 3
+16  1 uniform    chashmap     160984 ops/s read 4
+16  1 uniform    chashmap     114378 ops/s read 5
+16  1 uniform    chashmap     155725 ops/s read 6
+16  1 uniform    chashmap     108400 ops/s read 7
+16  1 uniform    chashmap     149920 ops/s read 8
+16  1 uniform    chashmap     165799 ops/s read 9
+16  1 uniform    chashmap     160369 ops/s read 10
+16  1 uniform    chashmap     157487 ops/s read 11
+16  1 uniform    chashmap     110404 ops/s read 12
+16  1 uniform    chashmap     109017 ops/s read 13
+16  1 uniform    chashmap     152658 ops/s read 14
+16  1 uniform    chashmap     163845 ops/s read 15
+16  1 uniform    concache::crossbeam  2307843 ops/s write 0
+16  1 uniform    concache::crossbeam  3469272 ops/s read 0
+16  1 uniform    concache::crossbeam  3407265 ops/s read 1
+16  1 uniform    concache::crossbeam  3366128 ops/s read 2
+16  1 uniform    concache::crossbeam  3479872 ops/s read 3
+16  1 uniform    concache::crossbeam  3566248 ops/s read 4
+16  1 uniform    concache::crossbeam  3572724 ops/s read 5
+16  1 uniform    concache::crossbeam  3512341 ops/s read 6
+16  1 uniform    concache::crossbeam  3675251 ops/s read 7
+16  1 uniform    concache::crossbeam  3681463 ops/s read 8
+16  1 uniform    concache::crossbeam  3436926 ops/s read 9
+16  1 uniform    concache::crossbeam  3424848 ops/s read 10
+16  1 uniform    concache::crossbeam  3340034 ops/s read 11
+16  1 uniform    concache::crossbeam  3674750 ops/s read 12
+16  1 uniform    concache::crossbeam  3501565 ops/s read 13
+16  1 uniform    concache::crossbeam  3591840 ops/s read 14
+16  1 uniform    concache::crossbeam  3539714 ops/s read 15
+16  1 uniform    concache::manual  1754738 ops/s write 0
+16  1 uniform    concache::manual  2713164 ops/s read 0
+16  1 uniform    concache::manual  2741301 ops/s read 1
+16  1 uniform    concache::manual  2742368 ops/s read 2
+16  1 uniform    concache::manual  2201210 ops/s read 3
+16  1 uniform    concache::manual  2650964 ops/s read 4
+16  1 uniform    concache::manual  2285402 ops/s read 5
+16  1 uniform    concache::manual  2187320 ops/s read 6
+16  1 uniform    concache::manual  2180067 ops/s read 7
+16  1 uniform    concache::manual  2090024 ops/s read 8
+16  1 uniform    concache::manual  2027908 ops/s read 9
+16  1 uniform    concache::manual  2032128 ops/s read 10
+16  1 uniform    concache::manual  2081680 ops/s read 11
+16  1 uniform    concache::manual  2590844 ops/s read 12
+16  1 uniform    concache::manual  2605736 ops/s read 13
+16  1 uniform    concache::manual  1997733 ops/s read 14
+16  1 uniform    concache::manual  2058226 ops/s read 15
 32  1 uniform    std               0 ops/s write 0
-32  1 uniform    std           86762 ops/s read 0
-32  1 uniform    std           83832 ops/s read 1
-32  1 uniform    std           88961 ops/s read 2
-32  1 uniform    std           86265 ops/s read 3
-32  1 uniform    std           86913 ops/s read 4
-32  1 uniform    std           83360 ops/s read 5
-32  1 uniform    std           86939 ops/s read 6
-32  1 uniform    std           90262 ops/s read 7
-32  1 uniform    std           87677 ops/s read 8
-32  1 uniform    std           88876 ops/s read 9
-32  1 uniform    std           86794 ops/s read 10
-32  1 uniform    std           86895 ops/s read 11
-32  1 uniform    std           89048 ops/s read 12
-32  1 uniform    std           79411 ops/s read 13
-32  1 uniform    std           86998 ops/s read 14
-32  1 uniform    std           83683 ops/s read 15
-32  1 uniform    std           92482 ops/s read 16
-32  1 uniform    std           82051 ops/s read 17
-32  1 uniform    std           88806 ops/s read 18
-32  1 uniform    std           87288 ops/s read 19
-32  1 uniform    std           87648 ops/s read 20
-32  1 uniform    std           86544 ops/s read 21
-32  1 uniform    std           80470 ops/s read 22
-32  1 uniform    std           89789 ops/s read 23
-32  1 uniform    std           85583 ops/s read 24
-32  1 uniform    std           89598 ops/s read 25
-32  1 uniform    std           86317 ops/s read 26
-32  1 uniform    std           83716 ops/s read 27
-32  1 uniform    std           89549 ops/s read 28
-32  1 uniform    std           81291 ops/s read 29
-32  1 uniform    std           86320 ops/s read 30
-32  1 uniform    std           82965 ops/s read 31
-32  1 uniform    chashmap      58641 ops/s write 0
-32  1 uniform    chashmap      55930 ops/s read 0
-32  1 uniform    chashmap      90764 ops/s read 1
-32  1 uniform    chashmap      90130 ops/s read 2
-32  1 uniform    chashmap      59418 ops/s read 3
-32  1 uniform    chashmap      52363 ops/s read 4
-32  1 uniform    chashmap      58015 ops/s read 5
-32  1 uniform    chashmap      88665 ops/s read 6
-32  1 uniform    chashmap      92340 ops/s read 7
-32  1 uniform    chashmap      55823 ops/s read 8
-32  1 uniform    chashmap     124585 ops/s read 9
-32  1 uniform    chashmap      56928 ops/s read 10
-32  1 uniform    chashmap      92630 ops/s read 11
-32  1 uniform    chashmap      54805 ops/s read 12
-32  1 uniform    chashmap      87562 ops/s read 13
-32  1 uniform    chashmap      89914 ops/s read 14
-32  1 uniform    chashmap      88855 ops/s read 15
-32  1 uniform    chashmap     122160 ops/s read 16
-32  1 uniform    chashmap      91222 ops/s read 17
-32  1 uniform    chashmap      62741 ops/s read 18
-32  1 uniform    chashmap     121461 ops/s read 19
-32  1 uniform    chashmap      59584 ops/s read 20
-32  1 uniform    chashmap      89725 ops/s read 21
-32  1 uniform    chashmap      88203 ops/s read 22
-32  1 uniform    chashmap      92925 ops/s read 23
-32  1 uniform    chashmap      88157 ops/s read 24
-32  1 uniform    chashmap      58223 ops/s read 25
-32  1 uniform    chashmap      69592 ops/s read 26
-32  1 uniform    chashmap      57675 ops/s read 27
-32  1 uniform    chashmap      61335 ops/s read 28
-32  1 uniform    chashmap      59011 ops/s read 29
-32  1 uniform    chashmap      60636 ops/s read 30
-32  1 uniform    chashmap      89656 ops/s read 31
-32  1 uniform    concache::crossbeam  1145971 ops/s write 0
-32  1 uniform    concache::crossbeam  3186277 ops/s read 0
-32  1 uniform    concache::crossbeam  2711715 ops/s read 1
-32  1 uniform    concache::crossbeam  2715771 ops/s read 2
-32  1 uniform    concache::crossbeam  2768242 ops/s read 3
-32  1 uniform    concache::crossbeam  2689048 ops/s read 4
-32  1 uniform    concache::crossbeam  2701061 ops/s read 5
-32  1 uniform    concache::crossbeam  2679692 ops/s read 6
-32  1 uniform    concache::crossbeam  2676315 ops/s read 7
-32  1 uniform    concache::crossbeam  3442458 ops/s read 8
-32  1 uniform    concache::crossbeam  3524130 ops/s read 9
-32  1 uniform    concache::crossbeam  2715867 ops/s read 10
-32  1 uniform    concache::crossbeam  2689391 ops/s read 11
-32  1 uniform    concache::crossbeam  2677065 ops/s read 12
-32  1 uniform    concache::crossbeam  3486300 ops/s read 13
-32  1 uniform    concache::crossbeam  2693328 ops/s read 14
-32  1 uniform    concache::crossbeam  2699429 ops/s read 15
-32  1 uniform    concache::crossbeam  2805190 ops/s read 16
-32  1 uniform    concache::crossbeam  2753853 ops/s read 17
-32  1 uniform    concache::crossbeam  2685083 ops/s read 18
-32  1 uniform    concache::crossbeam  3633243 ops/s read 19
-32  1 uniform    concache::crossbeam  2817621 ops/s read 20
-32  1 uniform    concache::crossbeam  3648161 ops/s read 21
-32  1 uniform    concache::crossbeam  2784261 ops/s read 22
-32  1 uniform    concache::crossbeam  2781925 ops/s read 23
-32  1 uniform    concache::crossbeam  2767909 ops/s read 24
-32  1 uniform    concache::crossbeam  2785296 ops/s read 25
-32  1 uniform    concache::crossbeam  2765466 ops/s read 26
-32  1 uniform    concache::crossbeam  2743730 ops/s read 27
-32  1 uniform    concache::crossbeam  2760200 ops/s read 28
-32  1 uniform    concache::crossbeam  3636667 ops/s read 29
-32  1 uniform    concache::crossbeam  2859711 ops/s read 30
-32  1 uniform    concache::crossbeam  3120306 ops/s read 31
-32  1 uniform    concache::manual  1499335 ops/s write 0
-32  1 uniform    concache::manual  1513613 ops/s read 0
-32  1 uniform    concache::manual  1458941 ops/s read 1
-32  1 uniform    concache::manual  1481356 ops/s read 2
-32  1 uniform    concache::manual  1474217 ops/s read 3
-32  1 uniform    concache::manual  1681282 ops/s read 4
-32  1 uniform    concache::manual  1610447 ops/s read 5
-32  1 uniform    concache::manual  1903273 ops/s read 6
-32  1 uniform    concache::manual  1743682 ops/s read 7
-32  1 uniform    concache::manual  2231943 ops/s read 8
-32  1 uniform    concache::manual  2028660 ops/s read 9
-32  1 uniform    concache::manual  1683392 ops/s read 10
-32  1 uniform    concache::manual  1764995 ops/s read 11
-32  1 uniform    concache::manual  1794972 ops/s read 12
-32  1 uniform    concache::manual  1524696 ops/s read 13
-32  1 uniform    concache::manual  1863621 ops/s read 14
-32  1 uniform    concache::manual  2668033 ops/s read 15
-32  1 uniform    concache::manual  2536150 ops/s read 16
-32  1 uniform    concache::manual  2525351 ops/s read 17
-32  1 uniform    concache::manual  1536282 ops/s read 18
-32  1 uniform    concache::manual  1771066 ops/s read 19
-32  1 uniform    concache::manual  2395352 ops/s read 20
-32  1 uniform    concache::manual  1799402 ops/s read 21
-32  1 uniform    concache::manual  1735910 ops/s read 22
-32  1 uniform    concache::manual  1501599 ops/s read 23
-32  1 uniform    concache::manual  2182877 ops/s read 24
-32  1 uniform    concache::manual  2134031 ops/s read 25
-32  1 uniform    concache::manual  2020183 ops/s read 26
-32  1 uniform    concache::manual  1896756 ops/s read 27
-32  1 uniform    concache::manual  1522479 ops/s read 28
-32  1 uniform    concache::manual  1820851 ops/s read 29
-32  1 uniform    concache::manual  1595826 ops/s read 30
-32  1 uniform    concache::manual  1834299 ops/s read 31
- 1  1 skewed     std          184801 ops/s write 0
- 1  1 skewed     std          185661 ops/s read 0
- 1  1 skewed     chashmap    1646239 ops/s write 0
- 1  1 skewed     chashmap    1868924 ops/s read 0
- 1  1 skewed     concache::crossbeam  2329253 ops/s write 0
- 1  1 skewed     concache::crossbeam  2941199 ops/s read 0
- 1  1 skewed     concache::manual  1589239 ops/s write 0
- 1  1 skewed     concache::manual  2326578 ops/s read 0
- 2  1 skewed     std          109380 ops/s write 0
- 2  1 skewed     std          521772 ops/s read 0
- 2  1 skewed     std          176034 ops/s read 1
- 2  1 skewed     chashmap    1672079 ops/s write 0
- 2  1 skewed     chashmap     779408 ops/s read 0
- 2  1 skewed     chashmap     938544 ops/s read 1
- 2  1 skewed     concache::crossbeam  2364354 ops/s write 0
- 2  1 skewed     concache::crossbeam  3288758 ops/s read 0
- 2  1 skewed     concache::crossbeam  2932674 ops/s read 1
- 2  1 skewed     concache::manual  1723709 ops/s write 0
- 2  1 skewed     concache::manual  2237083 ops/s read 0
- 2  1 skewed     concache::manual  2147491 ops/s read 1
- 4  1 skewed     std           48753 ops/s write 0
- 4  1 skewed     std          382661 ops/s read 0
- 4  1 skewed     std          372002 ops/s read 1
- 4  1 skewed     std          434920 ops/s read 2
- 4  1 skewed     std          337579 ops/s read 3
- 4  1 skewed     chashmap     371292 ops/s write 0
- 4  1 skewed     chashmap     682904 ops/s read 0
- 4  1 skewed     chashmap     311602 ops/s read 1
- 4  1 skewed     chashmap     320934 ops/s read 2
- 4  1 skewed     chashmap     744391 ops/s read 3
- 4  1 skewed     concache::crossbeam  2166229 ops/s write 0
- 4  1 skewed     concache::crossbeam  3140312 ops/s read 0
- 4  1 skewed     concache::crossbeam  3416583 ops/s read 1
- 4  1 skewed     concache::crossbeam  3422716 ops/s read 2
- 4  1 skewed     concache::crossbeam  3155761 ops/s read 3
- 4  1 skewed     concache::manual  1314241 ops/s write 0
- 4  1 skewed     concache::manual  1870469 ops/s read 0
- 4  1 skewed     concache::manual  1899298 ops/s read 1
- 4  1 skewed     concache::manual  2066872 ops/s read 2
- 4  1 skewed     concache::manual  3509251 ops/s read 3
- 8  1 skewed     std             429 ops/s write 0
- 8  1 skewed     std          202408 ops/s read 0
- 8  1 skewed     std          235162 ops/s read 1
- 8  1 skewed     std          218309 ops/s read 2
- 8  1 skewed     std          209964 ops/s read 3
- 8  1 skewed     std          201869 ops/s read 4
- 8  1 skewed     std          200124 ops/s read 5
- 8  1 skewed     std          202508 ops/s read 6
- 8  1 skewed     std          204437 ops/s read 7
- 8  1 skewed     chashmap     325413 ops/s write 0
- 8  1 skewed     chashmap     339750 ops/s read 0
- 8  1 skewed     chashmap     173069 ops/s read 1
- 8  1 skewed     chashmap     163519 ops/s read 2
- 8  1 skewed     chashmap     160304 ops/s read 3
- 8  1 skewed     chashmap     450359 ops/s read 4
- 8  1 skewed     chashmap     382532 ops/s read 5
- 8  1 skewed     chashmap     250644 ops/s read 6
- 8  1 skewed     chashmap     165185 ops/s read 7
- 8  1 skewed     concache::crossbeam  1876594 ops/s write 0
- 8  1 skewed     concache::crossbeam  3484752 ops/s read 0
- 8  1 skewed     concache::crossbeam  3456194 ops/s read 1
- 8  1 skewed     concache::crossbeam  3506119 ops/s read 2
- 8  1 skewed     concache::crossbeam  3463284 ops/s read 3
- 8  1 skewed     concache::crossbeam  3544292 ops/s read 4
- 8  1 skewed     concache::crossbeam  3439920 ops/s read 5
- 8  1 skewed     concache::crossbeam  3566090 ops/s read 6
- 8  1 skewed     concache::crossbeam  3440068 ops/s read 7
- 8  1 skewed     concache::manual  1932002 ops/s write 0
- 8  1 skewed     concache::manual  2180219 ops/s read 0
- 8  1 skewed     concache::manual  2190810 ops/s read 1
- 8  1 skewed     concache::manual  1956305 ops/s read 2
- 8  1 skewed     concache::manual  1995953 ops/s read 3
- 8  1 skewed     concache::manual  2282420 ops/s read 4
- 8  1 skewed     concache::manual  2066678 ops/s read 5
- 8  1 skewed     concache::manual  1746770 ops/s read 6
- 8  1 skewed     concache::manual  1786176 ops/s read 7
-16  1 skewed     std               1 ops/s write 0
-16  1 skewed     std          105203 ops/s read 0
-16  1 skewed     std          107855 ops/s read 1
-16  1 skewed     std          106124 ops/s read 2
-16  1 skewed     std          110652 ops/s read 3
-16  1 skewed     std          126328 ops/s read 4
-16  1 skewed     std          104352 ops/s read 5
-16  1 skewed     std          110504 ops/s read 6
-16  1 skewed     std          105316 ops/s read 7
-16  1 skewed     std          102981 ops/s read 8
-16  1 skewed     std          119594 ops/s read 9
-16  1 skewed     std          103970 ops/s read 10
-16  1 skewed     std          104513 ops/s read 11
-16  1 skewed     std          136159 ops/s read 12
-16  1 skewed     std          104826 ops/s read 13
-16  1 skewed     std          112081 ops/s read 14
-16  1 skewed     std          180090 ops/s read 15
-16  1 skewed     chashmap     168833 ops/s write 0
-16  1 skewed     chashmap     184498 ops/s read 0
-16  1 skewed     chashmap     131508 ops/s read 1
-16  1 skewed     chashmap     123195 ops/s read 2
-16  1 skewed     chashmap     153437 ops/s read 3
-16  1 skewed     chashmap     158689 ops/s read 4
-16  1 skewed     chashmap     102232 ops/s read 5
-16  1 skewed     chashmap     100644 ops/s read 6
-16  1 skewed     chashmap     119297 ops/s read 7
-16  1 skewed     chashmap     164928 ops/s read 8
-16  1 skewed     chashmap     160485 ops/s read 9
-16  1 skewed     chashmap     157444 ops/s read 10
-16  1 skewed     chashmap     144273 ops/s read 11
-16  1 skewed     chashmap     115595 ops/s read 12
-16  1 skewed     chashmap     149482 ops/s read 13
-16  1 skewed     chashmap     145652 ops/s read 14
-16  1 skewed     chashmap     163975 ops/s read 15
-16  1 skewed     concache::crossbeam  1691789 ops/s write 0
-16  1 skewed     concache::crossbeam  3446403 ops/s read 0
-16  1 skewed     concache::crossbeam  3501725 ops/s read 1
-16  1 skewed     concache::crossbeam  3470624 ops/s read 2
-16  1 skewed     concache::crossbeam  3683607 ops/s read 3
-16  1 skewed     concache::crossbeam  3654502 ops/s read 4
-16  1 skewed     concache::crossbeam  3436002 ops/s read 5
-16  1 skewed     concache::crossbeam  3466274 ops/s read 6
-16  1 skewed     concache::crossbeam  3736229 ops/s read 7
-16  1 skewed     concache::crossbeam  3542162 ops/s read 8
-16  1 skewed     concache::crossbeam  3548154 ops/s read 9
-16  1 skewed     concache::crossbeam  3371870 ops/s read 10
-16  1 skewed     concache::crossbeam  3317714 ops/s read 11
-16  1 skewed     concache::crossbeam  3738204 ops/s read 12
-16  1 skewed     concache::crossbeam  3448800 ops/s read 13
-16  1 skewed     concache::crossbeam  3449544 ops/s read 14
-16  1 skewed     concache::crossbeam  3626876 ops/s read 15
-16  1 skewed     concache::manual  1819151 ops/s write 0
-16  1 skewed     concache::manual  2627291 ops/s read 0
-16  1 skewed     concache::manual  2642575 ops/s read 1
-16  1 skewed     concache::manual  2278932 ops/s read 2
-16  1 skewed     concache::manual  2277784 ops/s read 3
-16  1 skewed     concache::manual  2208029 ops/s read 4
-16  1 skewed     concache::manual  2073153 ops/s read 5
-16  1 skewed     concache::manual  2462280 ops/s read 6
-16  1 skewed     concache::manual  2458468 ops/s read 7
-16  1 skewed     concache::manual  2773773 ops/s read 8
-16  1 skewed     concache::manual  2736943 ops/s read 9
-16  1 skewed     concache::manual  2951193 ops/s read 10
-16  1 skewed     concache::manual  2865647 ops/s read 11
-16  1 skewed     concache::manual  2193236 ops/s read 12
-16  1 skewed     concache::manual  1996241 ops/s read 13
-16  1 skewed     concache::manual  2428507 ops/s read 14
-16  1 skewed     concache::manual  2431369 ops/s read 15
+32  1 uniform    std           83663 ops/s read 0
+32  1 uniform    std           73867 ops/s read 1
+32  1 uniform    std           81680 ops/s read 2
+32  1 uniform    std           87099 ops/s read 3
+32  1 uniform    std           72929 ops/s read 4
+32  1 uniform    std           73626 ops/s read 5
+32  1 uniform    std           84107 ops/s read 6
+32  1 uniform    std           81948 ops/s read 7
+32  1 uniform    std           84963 ops/s read 8
+32  1 uniform    std           91286 ops/s read 9
+32  1 uniform    std           72243 ops/s read 10
+32  1 uniform    std           73024 ops/s read 11
+32  1 uniform    std           90790 ops/s read 12
+32  1 uniform    std           82530 ops/s read 13
+32  1 uniform    std           89454 ops/s read 14
+32  1 uniform    std           72241 ops/s read 15
+32  1 uniform    std           73769 ops/s read 16
+32  1 uniform    std           84332 ops/s read 17
+32  1 uniform    std           81605 ops/s read 18
+32  1 uniform    std           88749 ops/s read 19
+32  1 uniform    std           69121 ops/s read 20
+32  1 uniform    std           92339 ops/s read 21
+32  1 uniform    std           86585 ops/s read 22
+32  1 uniform    std           79830 ops/s read 23
+32  1 uniform    std           89511 ops/s read 24
+32  1 uniform    std           67506 ops/s read 25
+32  1 uniform    std           69372 ops/s read 26
+32  1 uniform    std           84383 ops/s read 27
+32  1 uniform    std           82228 ops/s read 28
+32  1 uniform    std           85396 ops/s read 29
+32  1 uniform    std           66842 ops/s read 30
+32  1 uniform    std           71295 ops/s read 31
+32  1 uniform    chashmap      87043 ops/s write 0
+32  1 uniform    chashmap     102972 ops/s read 0
+32  1 uniform    chashmap      57005 ops/s read 1
+32  1 uniform    chashmap      70330 ops/s read 2
+32  1 uniform    chashmap      54615 ops/s read 3
+32  1 uniform    chashmap      54827 ops/s read 4
+32  1 uniform    chashmap      54091 ops/s read 5
+32  1 uniform    chashmap      54214 ops/s read 6
+32  1 uniform    chashmap      52111 ops/s read 7
+32  1 uniform    chashmap     126386 ops/s read 8
+32  1 uniform    chashmap      53354 ops/s read 9
+32  1 uniform    chashmap      82534 ops/s read 10
+32  1 uniform    chashmap      90795 ops/s read 11
+32  1 uniform    chashmap      54782 ops/s read 12
+32  1 uniform    chashmap      57039 ops/s read 13
+32  1 uniform    chashmap      54410 ops/s read 14
+32  1 uniform    chashmap      59657 ops/s read 15
+32  1 uniform    chashmap      87665 ops/s read 16
+32  1 uniform    chashmap      90893 ops/s read 17
+32  1 uniform    chashmap      78755 ops/s read 18
+32  1 uniform    chashmap     128867 ops/s read 19
+32  1 uniform    chashmap      71995 ops/s read 20
+32  1 uniform    chashmap      75523 ops/s read 21
+32  1 uniform    chashmap      57097 ops/s read 22
+32  1 uniform    chashmap      49876 ops/s read 23
+32  1 uniform    chashmap      84978 ops/s read 24
+32  1 uniform    chashmap     111261 ops/s read 25
+32  1 uniform    chashmap      78952 ops/s read 26
+32  1 uniform    chashmap     130134 ops/s read 27
+32  1 uniform    chashmap      72493 ops/s read 28
+32  1 uniform    chashmap     100152 ops/s read 29
+32  1 uniform    chashmap      72570 ops/s read 30
+32  1 uniform    chashmap      97924 ops/s read 31
+32  1 uniform    concache::crossbeam  1927992 ops/s write 0
+32  1 uniform    concache::crossbeam  3142751 ops/s read 0
+32  1 uniform    concache::crossbeam  2814678 ops/s read 1
+32  1 uniform    concache::crossbeam  2792322 ops/s read 2
+32  1 uniform    concache::crossbeam  2785474 ops/s read 3
+32  1 uniform    concache::crossbeam  3617245 ops/s read 4
+32  1 uniform    concache::crossbeam  2784610 ops/s read 5
+32  1 uniform    concache::crossbeam  3586905 ops/s read 6
+32  1 uniform    concache::crossbeam  3581898 ops/s read 7
+32  1 uniform    concache::crossbeam  2779301 ops/s read 8
+32  1 uniform    concache::crossbeam  2811437 ops/s read 9
+32  1 uniform    concache::crossbeam  2803854 ops/s read 10
+32  1 uniform    concache::crossbeam  2793210 ops/s read 11
+32  1 uniform    concache::crossbeam  2790028 ops/s read 12
+32  1 uniform    concache::crossbeam  2797395 ops/s read 13
+32  1 uniform    concache::crossbeam  2773948 ops/s read 14
+32  1 uniform    concache::crossbeam  2792324 ops/s read 15
+32  1 uniform    concache::crossbeam  2784980 ops/s read 16
+32  1 uniform    concache::crossbeam  2789889 ops/s read 17
+32  1 uniform    concache::crossbeam  3298095 ops/s read 18
+32  1 uniform    concache::crossbeam  2835784 ops/s read 19
+32  1 uniform    concache::crossbeam  2788779 ops/s read 20
+32  1 uniform    concache::crossbeam  2838997 ops/s read 21
+32  1 uniform    concache::crossbeam  2796512 ops/s read 22
+32  1 uniform    concache::crossbeam  2801185 ops/s read 23
+32  1 uniform    concache::crossbeam  3639665 ops/s read 24
+32  1 uniform    concache::crossbeam  3650929 ops/s read 25
+32  1 uniform    concache::crossbeam  2800831 ops/s read 26
+32  1 uniform    concache::crossbeam  3700359 ops/s read 27
+32  1 uniform    concache::crossbeam  2793009 ops/s read 28
+32  1 uniform    concache::crossbeam  2887150 ops/s read 29
+32  1 uniform    concache::crossbeam  2793040 ops/s read 30
+32  1 uniform    concache::crossbeam  2823774 ops/s read 31
+32  1 uniform    concache::manual  1751214 ops/s write 0
+32  1 uniform    concache::manual  1727078 ops/s read 0
+32  1 uniform    concache::manual  1758173 ops/s read 1
+32  1 uniform    concache::manual  1375466 ops/s read 2
+32  1 uniform    concache::manual  2014006 ops/s read 3
+32  1 uniform    concache::manual  1381765 ops/s read 4
+32  1 uniform    concache::manual  2464804 ops/s read 5
+32  1 uniform    concache::manual  1977977 ops/s read 6
+32  1 uniform    concache::manual  2321623 ops/s read 7
+32  1 uniform    concache::manual  1890266 ops/s read 8
+32  1 uniform    concache::manual  2064660 ops/s read 9
+32  1 uniform    concache::manual  1729228 ops/s read 10
+32  1 uniform    concache::manual  1783631 ops/s read 11
+32  1 uniform    concache::manual  2099457 ops/s read 12
+32  1 uniform    concache::manual  2106916 ops/s read 13
+32  1 uniform    concache::manual  1918209 ops/s read 14
+32  1 uniform    concache::manual  1910779 ops/s read 15
+32  1 uniform    concache::manual  1820879 ops/s read 16
+32  1 uniform    concache::manual  1779882 ops/s read 17
+32  1 uniform    concache::manual  2022939 ops/s read 18
+32  1 uniform    concache::manual  2562176 ops/s read 19
+32  1 uniform    concache::manual  1966413 ops/s read 20
+32  1 uniform    concache::manual  2560265 ops/s read 21
+32  1 uniform    concache::manual  2481067 ops/s read 22
+32  1 uniform    concache::manual  2017993 ops/s read 23
+32  1 uniform    concache::manual  2122070 ops/s read 24
+32  1 uniform    concache::manual  2094589 ops/s read 25
+32  1 uniform    concache::manual  1435809 ops/s read 26
+32  1 uniform    concache::manual  1541943 ops/s read 27
+32  1 uniform    concache::manual  1932444 ops/s read 28
+32  1 uniform    concache::manual  1931945 ops/s read 29
+32  1 uniform    concache::manual  1786725 ops/s read 30
+32  1 uniform    concache::manual  1761344 ops/s read 31
+ 1  1 skewed     std          208250 ops/s write 0
+ 1  1 skewed     std          208869 ops/s read 0
+ 1  1 skewed     chashmap    2035041 ops/s write 0
+ 1  1 skewed     chashmap    1609294 ops/s read 0
+ 1  1 skewed     concache::crossbeam  2649648 ops/s write 0
+ 1  1 skewed     concache::crossbeam  3352886 ops/s read 0
+ 1  1 skewed     concache::manual  1556640 ops/s write 0
+ 1  1 skewed     concache::manual  2270401 ops/s read 0
+ 2  1 skewed     std          132339 ops/s write 0
+ 2  1 skewed     std          329117 ops/s read 0
+ 2  1 skewed     std          305836 ops/s read 1
+ 2  1 skewed     chashmap     922321 ops/s write 0
+ 2  1 skewed     chashmap    1716452 ops/s read 0
+ 2  1 skewed     chashmap     757955 ops/s read 1
+ 2  1 skewed     concache::crossbeam  2731270 ops/s write 0
+ 2  1 skewed     concache::crossbeam  3306118 ops/s read 0
+ 2  1 skewed     concache::crossbeam  3494775 ops/s read 1
+ 2  1 skewed     concache::manual  1659282 ops/s write 0
+ 2  1 skewed     concache::manual  2277765 ops/s read 0
+ 2  1 skewed     concache::manual  2190841 ops/s read 1
+ 4  1 skewed     std           47439 ops/s write 0
+ 4  1 skewed     std          574316 ops/s read 0
+ 4  1 skewed     std          332094 ops/s read 1
+ 4  1 skewed     std          334537 ops/s read 2
+ 4  1 skewed     std          336379 ops/s read 3
+ 4  1 skewed     chashmap     866130 ops/s write 0
+ 4  1 skewed     chashmap     721663 ops/s read 0
+ 4  1 skewed     chashmap     332528 ops/s read 1
+ 4  1 skewed     chashmap     336017 ops/s read 2
+ 4  1 skewed     chashmap     337240 ops/s read 3
+ 4  1 skewed     concache::crossbeam  2608590 ops/s write 0
+ 4  1 skewed     concache::crossbeam  3600090 ops/s read 0
+ 4  1 skewed     concache::crossbeam  3489230 ops/s read 1
+ 4  1 skewed     concache::crossbeam  3511680 ops/s read 2
+ 4  1 skewed     concache::crossbeam  3628870 ops/s read 3
+ 4  1 skewed     concache::manual  1202136 ops/s write 0
+ 4  1 skewed     concache::manual  2153997 ops/s read 0
+ 4  1 skewed     concache::manual  2164019 ops/s read 1
+ 4  1 skewed     concache::manual  1986317 ops/s read 2
+ 4  1 skewed     concache::manual  3586243 ops/s read 3
+ 8  1 skewed     std             482 ops/s write 0
+ 8  1 skewed     std          251489 ops/s read 0
+ 8  1 skewed     std          221311 ops/s read 1
+ 8  1 skewed     std          208475 ops/s read 2
+ 8  1 skewed     std          207119 ops/s read 3
+ 8  1 skewed     std          200730 ops/s read 4
+ 8  1 skewed     std          204262 ops/s read 5
+ 8  1 skewed     std          204789 ops/s read 6
+ 8  1 skewed     std          205016 ops/s read 7
+ 8  1 skewed     chashmap     257362 ops/s write 0
+ 8  1 skewed     chashmap     306893 ops/s read 0
+ 8  1 skewed     chashmap     293717 ops/s read 1
+ 8  1 skewed     chashmap     291982 ops/s read 2
+ 8  1 skewed     chashmap     242043 ops/s read 3
+ 8  1 skewed     chashmap     287598 ops/s read 4
+ 8  1 skewed     chashmap     228139 ops/s read 5
+ 8  1 skewed     chashmap     301784 ops/s read 6
+ 8  1 skewed     chashmap     280020 ops/s read 7
+ 8  1 skewed     concache::crossbeam  2503397 ops/s write 0
+ 8  1 skewed     concache::crossbeam  3611106 ops/s read 0
+ 8  1 skewed     concache::crossbeam  3641976 ops/s read 1
+ 8  1 skewed     concache::crossbeam  3652574 ops/s read 2
+ 8  1 skewed     concache::crossbeam  3670925 ops/s read 3
+ 8  1 skewed     concache::crossbeam  3717797 ops/s read 4
+ 8  1 skewed     concache::crossbeam  3714824 ops/s read 5
+ 8  1 skewed     concache::crossbeam  3695171 ops/s read 6
+ 8  1 skewed     concache::crossbeam  3696881 ops/s read 7
+ 8  1 skewed     concache::manual  1869054 ops/s write 0
+ 8  1 skewed     concache::manual  3134865 ops/s read 0
+ 8  1 skewed     concache::manual  3136148 ops/s read 1
+ 8  1 skewed     concache::manual  2959714 ops/s read 2
+ 8  1 skewed     concache::manual  2290863 ops/s read 3
+ 8  1 skewed     concache::manual  2948624 ops/s read 4
+ 8  1 skewed     concache::manual  2273886 ops/s read 5
+ 8  1 skewed     concache::manual  2252772 ops/s read 6
+ 8  1 skewed     concache::manual  2106641 ops/s read 7
+16  1 skewed     std               0 ops/s write 0
+16  1 skewed     std          114236 ops/s read 0
+16  1 skewed     std          122145 ops/s read 1
+16  1 skewed     std          146773 ops/s read 2
+16  1 skewed     std          103033 ops/s read 3
+16  1 skewed     std          108612 ops/s read 4
+16  1 skewed     std          107981 ops/s read 5
+16  1 skewed     std          124756 ops/s read 6
+16  1 skewed     std          110788 ops/s read 7
+16  1 skewed     std          108263 ops/s read 8
+16  1 skewed     std          113128 ops/s read 9
+16  1 skewed     std          110104 ops/s read 10
+16  1 skewed     std          108547 ops/s read 11
+16  1 skewed     std          114252 ops/s read 12
+16  1 skewed     std          107452 ops/s read 13
+16  1 skewed     std          122548 ops/s read 14
+16  1 skewed     std          180379 ops/s read 15
+16  1 skewed     chashmap     193183 ops/s write 0
+16  1 skewed     chashmap     190607 ops/s read 0
+16  1 skewed     chashmap     149056 ops/s read 1
+16  1 skewed     chashmap     123560 ops/s read 2
+16  1 skewed     chashmap     136209 ops/s read 3
+16  1 skewed     chashmap     156704 ops/s read 4
+16  1 skewed     chashmap     154899 ops/s read 5
+16  1 skewed     chashmap     104595 ops/s read 6
+16  1 skewed     chashmap     108146 ops/s read 7
+16  1 skewed     chashmap     153518 ops/s read 8
+16  1 skewed     chashmap     153707 ops/s read 9
+16  1 skewed     chashmap     156510 ops/s read 10
+16  1 skewed     chashmap     149206 ops/s read 11
+16  1 skewed     chashmap     112381 ops/s read 12
+16  1 skewed     chashmap     147029 ops/s read 13
+16  1 skewed     chashmap     161731 ops/s read 14
+16  1 skewed     chashmap     117873 ops/s read 15
+16  1 skewed     concache::crossbeam  2176240 ops/s write 0
+16  1 skewed     concache::crossbeam  3730441 ops/s read 0
+16  1 skewed     concache::crossbeam  3693402 ops/s read 1
+16  1 skewed     concache::crossbeam  3647010 ops/s read 2
+16  1 skewed     concache::crossbeam  3633026 ops/s read 3
+16  1 skewed     concache::crossbeam  3571621 ops/s read 4
+16  1 skewed     concache::crossbeam  3539276 ops/s read 5
+16  1 skewed     concache::crossbeam  3535171 ops/s read 6
+16  1 skewed     concache::crossbeam  3715441 ops/s read 7
+16  1 skewed     concache::crossbeam  3755771 ops/s read 8
+16  1 skewed     concache::crossbeam  3655813 ops/s read 9
+16  1 skewed     concache::crossbeam  3685192 ops/s read 10
+16  1 skewed     concache::crossbeam  3607932 ops/s read 11
+16  1 skewed     concache::crossbeam  3756043 ops/s read 12
+16  1 skewed     concache::crossbeam  3656309 ops/s read 13
+16  1 skewed     concache::crossbeam  3556236 ops/s read 14
+16  1 skewed     concache::crossbeam  3591489 ops/s read 15
+16  1 skewed     concache::manual  1855881 ops/s write 0
+16  1 skewed     concache::manual  3133514 ops/s read 0
+16  1 skewed     concache::manual  2954382 ops/s read 1
+16  1 skewed     concache::manual  3097783 ops/s read 2
+16  1 skewed     concache::manual  2328655 ops/s read 3
+16  1 skewed     concache::manual  2844490 ops/s read 4
+16  1 skewed     concache::manual  1729611 ops/s read 5
+16  1 skewed     concache::manual  2357672 ops/s read 6
+16  1 skewed     concache::manual  2551316 ops/s read 7
+16  1 skewed     concache::manual  2734491 ops/s read 8
+16  1 skewed     concache::manual  2675834 ops/s read 9
+16  1 skewed     concache::manual  2858091 ops/s read 10
+16  1 skewed     concache::manual  2799533 ops/s read 11
+16  1 skewed     concache::manual  2187316 ops/s read 12
+16  1 skewed     concache::manual  2223592 ops/s read 13
+16  1 skewed     concache::manual  2079452 ops/s read 14
+16  1 skewed     concache::manual  1951853 ops/s read 15
 32  1 skewed     std               0 ops/s write 0
-32  1 skewed     std           83517 ops/s read 0
-32  1 skewed     std           89652 ops/s read 1
-32  1 skewed     std           84996 ops/s read 2
-32  1 skewed     std           79621 ops/s read 3
-32  1 skewed     std           89632 ops/s read 4
-32  1 skewed     std           84099 ops/s read 5
-32  1 skewed     std           86309 ops/s read 6
-32  1 skewed     std           85422 ops/s read 7
-32  1 skewed     std           85441 ops/s read 8
-32  1 skewed     std           82677 ops/s read 9
-32  1 skewed     std           84583 ops/s read 10
-32  1 skewed     std           87855 ops/s read 11
-32  1 skewed     std           83122 ops/s read 12
-32  1 skewed     std           88965 ops/s read 13
-32  1 skewed     std           97693 ops/s read 14
-32  1 skewed     std           89478 ops/s read 15
-32  1 skewed     std           83233 ops/s read 16
-32  1 skewed     std           83498 ops/s read 17
-32  1 skewed     std           83595 ops/s read 18
-32  1 skewed     std           83180 ops/s read 19
-32  1 skewed     std           89126 ops/s read 20
-32  1 skewed     std           98302 ops/s read 21
-32  1 skewed     std           89173 ops/s read 22
-32  1 skewed     std           85715 ops/s read 23
-32  1 skewed     std           82238 ops/s read 24
-32  1 skewed     std           79980 ops/s read 25
-32  1 skewed     std           82079 ops/s read 26
-32  1 skewed     std           87497 ops/s read 27
-32  1 skewed     std           89794 ops/s read 28
-32  1 skewed     std           85194 ops/s read 29
-32  1 skewed     std           82625 ops/s read 30
-32  1 skewed     std           80936 ops/s read 31
-32  1 skewed     chashmap      69890 ops/s write 0
-32  1 skewed     chashmap     126166 ops/s read 0
-32  1 skewed     chashmap      55384 ops/s read 1
-32  1 skewed     chashmap     124156 ops/s read 2
-32  1 skewed     chashmap      51732 ops/s read 3
-32  1 skewed     chashmap      51298 ops/s read 4
-32  1 skewed     chashmap      53732 ops/s read 5
-32  1 skewed     chashmap      87504 ops/s read 6
-32  1 skewed     chashmap      82545 ops/s read 7
-32  1 skewed     chashmap      89716 ops/s read 8
-32  1 skewed     chashmap      88485 ops/s read 9
-32  1 skewed     chashmap      95661 ops/s read 10
-32  1 skewed     chashmap      53404 ops/s read 11
-32  1 skewed     chashmap      89604 ops/s read 12
-32  1 skewed     chashmap      52092 ops/s read 13
-32  1 skewed     chashmap      52623 ops/s read 14
-32  1 skewed     chashmap      53663 ops/s read 15
-32  1 skewed     chashmap      83530 ops/s read 16
-32  1 skewed     chashmap      57598 ops/s read 17
-32  1 skewed     chashmap      89366 ops/s read 18
-32  1 skewed     chashmap      55920 ops/s read 19
-32  1 skewed     chashmap      53361 ops/s read 20
-32  1 skewed     chashmap      88917 ops/s read 21
-32  1 skewed     chashmap     126390 ops/s read 22
-32  1 skewed     chashmap      91268 ops/s read 23
-32  1 skewed     chashmap      52504 ops/s read 24
-32  1 skewed     chashmap      51937 ops/s read 25
-32  1 skewed     chashmap      90547 ops/s read 26
-32  1 skewed     chashmap      85390 ops/s read 27
-32  1 skewed     chashmap      49182 ops/s read 28
-32  1 skewed     chashmap      83332 ops/s read 29
-32  1 skewed     chashmap      54442 ops/s read 30
-32  1 skewed     chashmap      87958 ops/s read 31
-32  1 skewed     concache::crossbeam  1134408 ops/s write 0
-32  1 skewed     concache::crossbeam  2837476 ops/s read 0
-32  1 skewed     concache::crossbeam  2853622 ops/s read 1
-32  1 skewed     concache::crossbeam  3440985 ops/s read 2
-32  1 skewed     concache::crossbeam  2872636 ops/s read 3
-32  1 skewed     concache::crossbeam  3673824 ops/s read 4
-32  1 skewed     concache::crossbeam  2841364 ops/s read 5
-32  1 skewed     concache::crossbeam  2915985 ops/s read 6
-32  1 skewed     concache::crossbeam  3638968 ops/s read 7
-32  1 skewed     concache::crossbeam  2832278 ops/s read 8
-32  1 skewed     concache::crossbeam  2977133 ops/s read 9
-32  1 skewed     concache::crossbeam  2857243 ops/s read 10
-32  1 skewed     concache::crossbeam  2803988 ops/s read 11
-32  1 skewed     concache::crossbeam  2828657 ops/s read 12
-32  1 skewed     concache::crossbeam  2783892 ops/s read 13
-32  1 skewed     concache::crossbeam  2815845 ops/s read 14
-32  1 skewed     concache::crossbeam  2823763 ops/s read 15
-32  1 skewed     concache::crossbeam  2840592 ops/s read 16
-32  1 skewed     concache::crossbeam  3801179 ops/s read 17
-32  1 skewed     concache::crossbeam  3562179 ops/s read 18
-32  1 skewed     concache::crossbeam  2843476 ops/s read 19
-32  1 skewed     concache::crossbeam  3217925 ops/s read 20
-32  1 skewed     concache::crossbeam  2940302 ops/s read 21
-32  1 skewed     concache::crossbeam  2802163 ops/s read 22
-32  1 skewed     concache::crossbeam  2753894 ops/s read 23
-32  1 skewed     concache::crossbeam  2827635 ops/s read 24
-32  1 skewed     concache::crossbeam  3201058 ops/s read 25
-32  1 skewed     concache::crossbeam  2897790 ops/s read 26
-32  1 skewed     concache::crossbeam  2801006 ops/s read 27
-32  1 skewed     concache::crossbeam  2874269 ops/s read 28
-32  1 skewed     concache::crossbeam  2976154 ops/s read 29
-32  1 skewed     concache::crossbeam  2815933 ops/s read 30
-32  1 skewed     concache::crossbeam  3697884 ops/s read 31
-32  1 skewed     concache::manual   996545 ops/s write 0
-32  1 skewed     concache::manual  1036158 ops/s read 0
-32  1 skewed     concache::manual  1255346 ops/s read 1
-32  1 skewed     concache::manual  1534347 ops/s read 2
-32  1 skewed     concache::manual  1559498 ops/s read 3
-32  1 skewed     concache::manual  1125885 ops/s read 4
-32  1 skewed     concache::manual  1922694 ops/s read 5
-32  1 skewed     concache::manual  1057614 ops/s read 6
-32  1 skewed     concache::manual  1381624 ops/s read 7
-32  1 skewed     concache::manual  1186570 ops/s read 8
-32  1 skewed     concache::manual  1144162 ops/s read 9
-32  1 skewed     concache::manual  1488800 ops/s read 10
-32  1 skewed     concache::manual  1629717 ops/s read 11
-32  1 skewed     concache::manual  1551023 ops/s read 12
-32  1 skewed     concache::manual  1490983 ops/s read 13
-32  1 skewed     concache::manual  2046153 ops/s read 14
-32  1 skewed     concache::manual  1470293 ops/s read 15
-32  1 skewed     concache::manual  1714758 ops/s read 16
-32  1 skewed     concache::manual  1580035 ops/s read 17
-32  1 skewed     concache::manual  1745158 ops/s read 18
-32  1 skewed     concache::manual  1594549 ops/s read 19
-32  1 skewed     concache::manual  1343609 ops/s read 20
-32  1 skewed     concache::manual  1263636 ops/s read 21
-32  1 skewed     concache::manual  1177619 ops/s read 22
-32  1 skewed     concache::manual  1526402 ops/s read 23
-32  1 skewed     concache::manual  1381243 ops/s read 24
-32  1 skewed     concache::manual  1383317 ops/s read 25
-32  1 skewed     concache::manual  1624055 ops/s read 26
-32  1 skewed     concache::manual  2092323 ops/s read 27
-32  1 skewed     concache::manual  2098377 ops/s read 28
-32  1 skewed     concache::manual  1528250 ops/s read 29
-32  1 skewed     concache::manual  1211196 ops/s read 30
-32  1 skewed     concache::manual  2040727 ops/s read 31
- 1  2 uniform    std           30030 ops/s write 0
- 1  2 uniform    std          138332 ops/s write 1
- 1  2 uniform    std          256675 ops/s read 0
- 1  2 uniform    chashmap    1282974 ops/s write 0
- 1  2 uniform    chashmap    1000457 ops/s write 1
- 1  2 uniform    chashmap     803445 ops/s read 0
- 1  2 uniform    concache::crossbeam  2352873 ops/s write 0
- 1  2 uniform    concache::crossbeam  2351024 ops/s write 1
- 1  2 uniform    concache::crossbeam  2707484 ops/s read 0
- 1  2 uniform    concache::manual  1980929 ops/s write 0
- 1  2 uniform    concache::manual  1737512 ops/s write 1
- 1  2 uniform    concache::manual  2743011 ops/s read 0
- 2  2 uniform    std           68611 ops/s write 0
- 2  2 uniform    std           95989 ops/s write 1
- 2  2 uniform    std          571734 ops/s read 0
- 2  2 uniform    std          587230 ops/s read 1
- 2  2 uniform    chashmap     856060 ops/s write 0
- 2  2 uniform    chashmap     584593 ops/s write 1
- 2  2 uniform    chashmap     475788 ops/s read 0
- 2  2 uniform    chashmap     699651 ops/s read 1
- 2  2 uniform    concache::crossbeam  2222783 ops/s write 0
- 2  2 uniform    concache::crossbeam  2146326 ops/s write 1
- 2  2 uniform    concache::crossbeam  2914559 ops/s read 0
- 2  2 uniform    concache::crossbeam  2998402 ops/s read 1
- 2  2 uniform    concache::manual  1676336 ops/s write 0
- 2  2 uniform    concache::manual  1792777 ops/s write 1
- 2  2 uniform    concache::manual  2324552 ops/s read 0
- 2  2 uniform    concache::manual  2321428 ops/s read 1
- 4  2 uniform    std           22502 ops/s write 0
- 4  2 uniform    std           22324 ops/s write 1
- 4  2 uniform    std          395208 ops/s read 0
- 4  2 uniform    std          409380 ops/s read 1
- 4  2 uniform    std          579676 ops/s read 2
- 4  2 uniform    std          404929 ops/s read 3
- 4  2 uniform    chashmap     579315 ops/s write 0
- 4  2 uniform    chashmap     370261 ops/s write 1
- 4  2 uniform    chashmap     322997 ops/s read 0
- 4  2 uniform    chashmap     346830 ops/s read 1
- 4  2 uniform    chashmap     547399 ops/s read 2
- 4  2 uniform    chashmap     447438 ops/s read 3
- 4  2 uniform    concache::crossbeam  2096199 ops/s write 0
- 4  2 uniform    concache::crossbeam  2051373 ops/s write 1
- 4  2 uniform    concache::crossbeam  3023490 ops/s read 0
- 4  2 uniform    concache::crossbeam  3112341 ops/s read 1
- 4  2 uniform    concache::crossbeam  3089424 ops/s read 2
- 4  2 uniform    concache::crossbeam  3001351 ops/s read 3
- 4  2 uniform    concache::manual  1533185 ops/s write 0
- 4  2 uniform    concache::manual  1520252 ops/s write 1
- 4  2 uniform    concache::manual  2141771 ops/s read 0
- 4  2 uniform    concache::manual  2157884 ops/s read 1
- 4  2 uniform    concache::manual  2243636 ops/s read 2
- 4  2 uniform    concache::manual  2041884 ops/s read 3
- 8  2 uniform    std             107 ops/s write 0
- 8  2 uniform    std             483 ops/s write 1
- 8  2 uniform    std          223015 ops/s read 0
- 8  2 uniform    std          225766 ops/s read 1
- 8  2 uniform    std          262935 ops/s read 2
- 8  2 uniform    std          226353 ops/s read 3
- 8  2 uniform    std          221540 ops/s read 4
- 8  2 uniform    std          220418 ops/s read 5
- 8  2 uniform    std          214249 ops/s read 6
- 8  2 uniform    std          221781 ops/s read 7
- 8  2 uniform    chashmap     367299 ops/s write 0
- 8  2 uniform    chashmap     341740 ops/s write 1
- 8  2 uniform    chashmap     159634 ops/s read 0
- 8  2 uniform    chashmap     170323 ops/s read 1
- 8  2 uniform    chashmap     384877 ops/s read 2
- 8  2 uniform    chashmap     258789 ops/s read 3
- 8  2 uniform    chashmap     321488 ops/s read 4
- 8  2 uniform    chashmap     166308 ops/s read 5
- 8  2 uniform    chashmap     166214 ops/s read 6
- 8  2 uniform    chashmap     160845 ops/s read 7
- 8  2 uniform    concache::crossbeam  1953384 ops/s write 0
- 8  2 uniform    concache::crossbeam  1939388 ops/s write 1
- 8  2 uniform    concache::crossbeam  3293179 ops/s read 0
- 8  2 uniform    concache::crossbeam  3278367 ops/s read 1
- 8  2 uniform    concache::crossbeam  3258404 ops/s read 2
- 8  2 uniform    concache::crossbeam  3140162 ops/s read 3
- 8  2 uniform    concache::crossbeam  3146954 ops/s read 4
- 8  2 uniform    concache::crossbeam  3227904 ops/s read 5
- 8  2 uniform    concache::crossbeam  3217427 ops/s read 6
- 8  2 uniform    concache::crossbeam  3281870 ops/s read 7
- 8  2 uniform    concache::manual  1767849 ops/s write 0
- 8  2 uniform    concache::manual  1769115 ops/s write 1
- 8  2 uniform    concache::manual  2101758 ops/s read 0
- 8  2 uniform    concache::manual  2108279 ops/s read 1
- 8  2 uniform    concache::manual  2289692 ops/s read 2
- 8  2 uniform    concache::manual  1982908 ops/s read 3
- 8  2 uniform    concache::manual  2309644 ops/s read 4
- 8  2 uniform    concache::manual  2043802 ops/s read 5
- 8  2 uniform    concache::manual  2473471 ops/s read 6
- 8  2 uniform    concache::manual  2478604 ops/s read 7
-16  2 uniform    std               0 ops/s write 0
+32  1 skewed     std           93128 ops/s read 0
+32  1 skewed     std           83749 ops/s read 1
+32  1 skewed     std           95329 ops/s read 2
+32  1 skewed     std           87639 ops/s read 3
+32  1 skewed     std           95068 ops/s read 4
+32  1 skewed     std           94312 ops/s read 5
+32  1 skewed     std           92923 ops/s read 6
+32  1 skewed     std           94079 ops/s read 7
+32  1 skewed     std           85997 ops/s read 8
+32  1 skewed     std           82955 ops/s read 9
+32  1 skewed     std           83255 ops/s read 10
+32  1 skewed     std           81673 ops/s read 11
+32  1 skewed     std           97968 ops/s read 12
+32  1 skewed     std           95783 ops/s read 13
+32  1 skewed     std           83388 ops/s read 14
+32  1 skewed     std           85625 ops/s read 15
+32  1 skewed     std           88474 ops/s read 16
+32  1 skewed     std           83017 ops/s read 17
+32  1 skewed     std           83859 ops/s read 18
+32  1 skewed     std           91451 ops/s read 19
+32  1 skewed     std          105531 ops/s read 20
+32  1 skewed     std           95912 ops/s read 21
+32  1 skewed     std           81075 ops/s read 22
+32  1 skewed     std           90159 ops/s read 23
+32  1 skewed     std           81987 ops/s read 24
+32  1 skewed     std           82060 ops/s read 25
+32  1 skewed     std           96827 ops/s read 26
+32  1 skewed     std           96891 ops/s read 27
+32  1 skewed     std           96113 ops/s read 28
+32  1 skewed     std           81203 ops/s read 29
+32  1 skewed     std           87640 ops/s read 30
+32  1 skewed     std           90325 ops/s read 31
+32  1 skewed     chashmap      55465 ops/s write 0
+32  1 skewed     chashmap      59471 ops/s read 0
+32  1 skewed     chashmap      59199 ops/s read 1
+32  1 skewed     chashmap     122992 ops/s read 2
+32  1 skewed     chashmap      57351 ops/s read 3
+32  1 skewed     chashmap      57288 ops/s read 4
+32  1 skewed     chashmap      59977 ops/s read 5
+32  1 skewed     chashmap      94887 ops/s read 6
+32  1 skewed     chashmap      83679 ops/s read 7
+32  1 skewed     chashmap      60018 ops/s read 8
+32  1 skewed     chashmap      58527 ops/s read 9
+32  1 skewed     chashmap      81859 ops/s read 10
+32  1 skewed     chashmap      58418 ops/s read 11
+32  1 skewed     chashmap      57398 ops/s read 12
+32  1 skewed     chashmap      84185 ops/s read 13
+32  1 skewed     chashmap      96205 ops/s read 14
+32  1 skewed     chashmap      59429 ops/s read 15
+32  1 skewed     chashmap     123864 ops/s read 16
+32  1 skewed     chashmap     123240 ops/s read 17
+32  1 skewed     chashmap      87585 ops/s read 18
+32  1 skewed     chashmap      88588 ops/s read 19
+32  1 skewed     chashmap      95220 ops/s read 20
+32  1 skewed     chashmap      77278 ops/s read 21
+32  1 skewed     chashmap      87985 ops/s read 22
+32  1 skewed     chashmap      57803 ops/s read 23
+32  1 skewed     chashmap      82173 ops/s read 24
+32  1 skewed     chashmap      78923 ops/s read 25
+32  1 skewed     chashmap      89912 ops/s read 26
+32  1 skewed     chashmap     125004 ops/s read 27
+32  1 skewed     chashmap      59663 ops/s read 28
+32  1 skewed     chashmap      56919 ops/s read 29
+32  1 skewed     chashmap      85351 ops/s read 30
+32  1 skewed     chashmap      88945 ops/s read 31
+32  1 skewed     concache::crossbeam  1818000 ops/s write 0
+32  1 skewed     concache::crossbeam  2915275 ops/s read 0
+32  1 skewed     concache::crossbeam  3037403 ops/s read 1
+32  1 skewed     concache::crossbeam  2857942 ops/s read 2
+32  1 skewed     concache::crossbeam  2828599 ops/s read 3
+32  1 skewed     concache::crossbeam  2839745 ops/s read 4
+32  1 skewed     concache::crossbeam  3788356 ops/s read 5
+32  1 skewed     concache::crossbeam  3633212 ops/s read 6
+32  1 skewed     concache::crossbeam  3673682 ops/s read 7
+32  1 skewed     concache::crossbeam  2999843 ops/s read 8
+32  1 skewed     concache::crossbeam  2905381 ops/s read 9
+32  1 skewed     concache::crossbeam  2882301 ops/s read 10
+32  1 skewed     concache::crossbeam  2943371 ops/s read 11
+32  1 skewed     concache::crossbeam  2947388 ops/s read 12
+32  1 skewed     concache::crossbeam  3708906 ops/s read 13
+32  1 skewed     concache::crossbeam  3227779 ops/s read 14
+32  1 skewed     concache::crossbeam  3369327 ops/s read 15
+32  1 skewed     concache::crossbeam  2897841 ops/s read 16
+32  1 skewed     concache::crossbeam  2927810 ops/s read 17
+32  1 skewed     concache::crossbeam  2905455 ops/s read 18
+32  1 skewed     concache::crossbeam  2918377 ops/s read 19
+32  1 skewed     concache::crossbeam  3668643 ops/s read 20
+32  1 skewed     concache::crossbeam  2865106 ops/s read 21
+32  1 skewed     concache::crossbeam  2867968 ops/s read 22
+32  1 skewed     concache::crossbeam  2868012 ops/s read 23
+32  1 skewed     concache::crossbeam  2876114 ops/s read 24
+32  1 skewed     concache::crossbeam  3727454 ops/s read 25
+32  1 skewed     concache::crossbeam  2966959 ops/s read 26
+32  1 skewed     concache::crossbeam  2839644 ops/s read 27
+32  1 skewed     concache::crossbeam  2856494 ops/s read 28
+32  1 skewed     concache::crossbeam  2845721 ops/s read 29
+32  1 skewed     concache::crossbeam  2834959 ops/s read 30
+32  1 skewed     concache::crossbeam  2879984 ops/s read 31
+32  1 skewed     concache::manual  1267632 ops/s write 0
+32  1 skewed     concache::manual  1940538 ops/s read 0
+32  1 skewed     concache::manual  1441354 ops/s read 1
+32  1 skewed     concache::manual  2094928 ops/s read 2
+32  1 skewed     concache::manual  1588185 ops/s read 3
+32  1 skewed     concache::manual  1453810 ops/s read 4
+32  1 skewed     concache::manual  1541451 ops/s read 5
+32  1 skewed     concache::manual  1626508 ops/s read 6
+32  1 skewed     concache::manual  1622193 ops/s read 7
+32  1 skewed     concache::manual  2278456 ops/s read 8
+32  1 skewed     concache::manual  1549481 ops/s read 9
+32  1 skewed     concache::manual  1662460 ops/s read 10
+32  1 skewed     concache::manual  1644134 ops/s read 11
+32  1 skewed     concache::manual  1526377 ops/s read 12
+32  1 skewed     concache::manual  1471464 ops/s read 13
+32  1 skewed     concache::manual  1368627 ops/s read 14
+32  1 skewed     concache::manual  1495272 ops/s read 15
+32  1 skewed     concache::manual  1375189 ops/s read 16
+32  1 skewed     concache::manual  1337210 ops/s read 17
+32  1 skewed     concache::manual  1570606 ops/s read 18
+32  1 skewed     concache::manual  1582306 ops/s read 19
+32  1 skewed     concache::manual  3258840 ops/s read 20
+32  1 skewed     concache::manual  3225345 ops/s read 21
+32  1 skewed     concache::manual  2071995 ops/s read 22
+32  1 skewed     concache::manual  2128694 ops/s read 23
+32  1 skewed     concache::manual  3181551 ops/s read 24
+32  1 skewed     concache::manual  3176378 ops/s read 25
+32  1 skewed     concache::manual  2350686 ops/s read 26
+32  1 skewed     concache::manual  2356920 ops/s read 27
+32  1 skewed     concache::manual  2427621 ops/s read 28
+32  1 skewed     concache::manual  2059184 ops/s read 29
+32  1 skewed     concache::manual  2324386 ops/s read 30
+32  1 skewed     concache::manual  2338611 ops/s read 31
+ 1  2 uniform    std          125930 ops/s write 0
+ 1  2 uniform    std           12490 ops/s write 1
+ 1  2 uniform    std          166614 ops/s read 0
+ 1  2 uniform    chashmap     876687 ops/s write 0
+ 1  2 uniform    chashmap    1620887 ops/s write 1
+ 1  2 uniform    chashmap     731835 ops/s read 0
+ 1  2 uniform    concache::crossbeam  2603112 ops/s write 0
+ 1  2 uniform    concache::crossbeam  2876989 ops/s write 1
+ 1  2 uniform    concache::crossbeam  3321137 ops/s read 0
+ 1  2 uniform    concache::manual  1475100 ops/s write 0
+ 1  2 uniform    concache::manual  2030483 ops/s write 1
+ 1  2 uniform    concache::manual  2007795 ops/s read 0
+ 2  2 uniform    std           96991 ops/s write 0
+ 2  2 uniform    std           64016 ops/s write 1
+ 2  2 uniform    std          563878 ops/s read 0
+ 2  2 uniform    std          581526 ops/s read 1
+ 2  2 uniform    chashmap     867073 ops/s write 0
+ 2  2 uniform    chashmap     609749 ops/s write 1
+ 2  2 uniform    chashmap     740323 ops/s read 0
+ 2  2 uniform    chashmap     497103 ops/s read 1
+ 2  2 uniform    concache::crossbeam  2663717 ops/s write 0
+ 2  2 uniform    concache::crossbeam  2589279 ops/s write 1
+ 2  2 uniform    concache::crossbeam  3219015 ops/s read 0
+ 2  2 uniform    concache::crossbeam  3226112 ops/s read 1
+ 2  2 uniform    concache::manual  1725142 ops/s write 0
+ 2  2 uniform    concache::manual  1856087 ops/s write 1
+ 2  2 uniform    concache::manual  2287032 ops/s read 0
+ 2  2 uniform    concache::manual  2303399 ops/s read 1
+ 4  2 uniform    std           21642 ops/s write 0
+ 4  2 uniform    std           21304 ops/s write 1
+ 4  2 uniform    std          328178 ops/s read 0
+ 4  2 uniform    std          323481 ops/s read 1
+ 4  2 uniform    std          332556 ops/s read 2
+ 4  2 uniform    std          323271 ops/s read 3
+ 4  2 uniform    chashmap     583691 ops/s write 0
+ 4  2 uniform    chashmap     559371 ops/s write 1
+ 4  2 uniform    chashmap     367937 ops/s read 0
+ 4  2 uniform    chashmap     373019 ops/s read 1
+ 4  2 uniform    chashmap     517724 ops/s read 2
+ 4  2 uniform    chashmap     359965 ops/s read 3
+ 4  2 uniform    concache::crossbeam  2535244 ops/s write 0
+ 4  2 uniform    concache::crossbeam  2533814 ops/s write 1
+ 4  2 uniform    concache::crossbeam  3360853 ops/s read 0
+ 4  2 uniform    concache::crossbeam  3375728 ops/s read 1
+ 4  2 uniform    concache::crossbeam  3347964 ops/s read 2
+ 4  2 uniform    concache::crossbeam  3392327 ops/s read 3
+ 4  2 uniform    concache::manual  1548280 ops/s write 0
+ 4  2 uniform    concache::manual  1584342 ops/s write 1
+ 4  2 uniform    concache::manual  2105554 ops/s read 0
+ 4  2 uniform    concache::manual  2149962 ops/s read 1
+ 4  2 uniform    concache::manual  2347313 ops/s read 2
+ 4  2 uniform    concache::manual  2298152 ops/s read 3
+ 8  2 uniform    std             131 ops/s write 0
+ 8  2 uniform    std             558 ops/s write 1
+ 8  2 uniform    std          257987 ops/s read 0
+ 8  2 uniform    std          234092 ops/s read 1
+ 8  2 uniform    std          203662 ops/s read 2
+ 8  2 uniform    std          206159 ops/s read 3
+ 8  2 uniform    std          212080 ops/s read 4
+ 8  2 uniform    std          223299 ops/s read 5
+ 8  2 uniform    std          217912 ops/s read 6
+ 8  2 uniform    std          210467 ops/s read 7
+ 8  2 uniform    chashmap     236935 ops/s write 0
+ 8  2 uniform    chashmap     440096 ops/s write 1
+ 8  2 uniform    chashmap     225169 ops/s read 0
+ 8  2 uniform    chashmap     305648 ops/s read 1
+ 8  2 uniform    chashmap     286544 ops/s read 2
+ 8  2 uniform    chashmap     271156 ops/s read 3
+ 8  2 uniform    chashmap     229448 ops/s read 4
+ 8  2 uniform    chashmap     265397 ops/s read 5
+ 8  2 uniform    chashmap     217561 ops/s read 6
+ 8  2 uniform    chashmap     216515 ops/s read 7
+ 8  2 uniform    concache::crossbeam  2582835 ops/s write 0
+ 8  2 uniform    concache::crossbeam  2452279 ops/s write 1
+ 8  2 uniform    concache::crossbeam  3468261 ops/s read 0
+ 8  2 uniform    concache::crossbeam  3478206 ops/s read 1
+ 8  2 uniform    concache::crossbeam  3530598 ops/s read 2
+ 8  2 uniform    concache::crossbeam  3529117 ops/s read 3
+ 8  2 uniform    concache::crossbeam  3462778 ops/s read 4
+ 8  2 uniform    concache::crossbeam  3476200 ops/s read 5
+ 8  2 uniform    concache::crossbeam  3508528 ops/s read 6
+ 8  2 uniform    concache::crossbeam  3532872 ops/s read 7
+ 8  2 uniform    concache::manual  1682839 ops/s write 0
+ 8  2 uniform    concache::manual  1665672 ops/s write 1
+ 8  2 uniform    concache::manual  2512739 ops/s read 0
+ 8  2 uniform    concache::manual  2497120 ops/s read 1
+ 8  2 uniform    concache::manual  1979149 ops/s read 2
+ 8  2 uniform    concache::manual  2248500 ops/s read 3
+ 8  2 uniform    concache::manual  1959977 ops/s read 4
+ 8  2 uniform    concache::manual  2285565 ops/s read 5
+ 8  2 uniform    concache::manual  2146014 ops/s read 6
+ 8  2 uniform    concache::manual  2160973 ops/s read 7
+16  2 uniform    std               1 ops/s write 0
 16  2 uniform    std               0 ops/s write 1
-16  2 uniform    std          115274 ops/s read 0
-16  2 uniform    std          113701 ops/s read 1
-16  2 uniform    std          109689 ops/s read 2
-16  2 uniform    std          136922 ops/s read 3
-16  2 uniform    std          127510 ops/s read 4
-16  2 uniform    std          114412 ops/s read 5
-16  2 uniform    std          103662 ops/s read 6
-16  2 uniform    std          107793 ops/s read 7
-16  2 uniform    std          110413 ops/s read 8
-16  2 uniform    std          173304 ops/s read 9
-16  2 uniform    std          102890 ops/s read 10
-16  2 uniform    std          104594 ops/s read 11
-16  2 uniform    std          103896 ops/s read 12
-16  2 uniform    std          103525 ops/s read 13
-16  2 uniform    std          105399 ops/s read 14
-16  2 uniform    std          125053 ops/s read 15
-16  2 uniform    chashmap     174558 ops/s write 0
-16  2 uniform    chashmap     170362 ops/s write 1
-16  2 uniform    chashmap     117324 ops/s read 0
-16  2 uniform    chashmap     154411 ops/s read 1
-16  2 uniform    chashmap     121280 ops/s read 2
-16  2 uniform    chashmap     175975 ops/s read 3
-16  2 uniform    chashmap     156765 ops/s read 4
-16  2 uniform    chashmap      94471 ops/s read 5
-16  2 uniform    chashmap     153237 ops/s read 6
-16  2 uniform    chashmap     103594 ops/s read 7
-16  2 uniform    chashmap     163735 ops/s read 8
-16  2 uniform    chashmap     156158 ops/s read 9
-16  2 uniform    chashmap     114278 ops/s read 10
-16  2 uniform    chashmap     154437 ops/s read 11
-16  2 uniform    chashmap     106000 ops/s read 12
-16  2 uniform    chashmap      96186 ops/s read 13
-16  2 uniform    chashmap     118797 ops/s read 14
-16  2 uniform    chashmap     163787 ops/s read 15
-16  2 uniform    concache::crossbeam  1653964 ops/s write 0
-16  2 uniform    concache::crossbeam  1653609 ops/s write 1
-16  2 uniform    concache::crossbeam  3134760 ops/s read 0
-16  2 uniform    concache::crossbeam  3205449 ops/s read 1
-16  2 uniform    concache::crossbeam  3343256 ops/s read 2
-16  2 uniform    concache::crossbeam  3251397 ops/s read 3
-16  2 uniform    concache::crossbeam  3215176 ops/s read 4
-16  2 uniform    concache::crossbeam  3206383 ops/s read 5
-16  2 uniform    concache::crossbeam  3186832 ops/s read 6
-16  2 uniform    concache::crossbeam  3128795 ops/s read 7
-16  2 uniform    concache::crossbeam  3346981 ops/s read 8
-16  2 uniform    concache::crossbeam  3145151 ops/s read 9
-16  2 uniform    concache::crossbeam  3132223 ops/s read 10
-16  2 uniform    concache::crossbeam  3340650 ops/s read 11
-16  2 uniform    concache::crossbeam  3393753 ops/s read 12
-16  2 uniform    concache::crossbeam  3194343 ops/s read 13
-16  2 uniform    concache::crossbeam  3269606 ops/s read 14
-16  2 uniform    concache::crossbeam  3288561 ops/s read 15
+16  2 uniform    std          114824 ops/s read 0
+16  2 uniform    std          116818 ops/s read 1
+16  2 uniform    std          121962 ops/s read 2
+16  2 uniform    std          117446 ops/s read 3
+16  2 uniform    std          114913 ops/s read 4
+16  2 uniform    std          109069 ops/s read 5
+16  2 uniform    std          111532 ops/s read 6
+16  2 uniform    std          179145 ops/s read 7
+16  2 uniform    std          133396 ops/s read 8
+16  2 uniform    std          110830 ops/s read 9
+16  2 uniform    std          110442 ops/s read 10
+16  2 uniform    std          112021 ops/s read 11
+16  2 uniform    std          141010 ops/s read 12
+16  2 uniform    std          111651 ops/s read 13
+16  2 uniform    std          109301 ops/s read 14
+16  2 uniform    std          109407 ops/s read 15
+16  2 uniform    chashmap     198450 ops/s write 0
+16  2 uniform    chashmap     198156 ops/s write 1
+16  2 uniform    chashmap     180501 ops/s read 0
+16  2 uniform    chashmap     111951 ops/s read 1
+16  2 uniform    chashmap     138017 ops/s read 2
+16  2 uniform    chashmap     101981 ops/s read 3
+16  2 uniform    chashmap     127715 ops/s read 4
+16  2 uniform    chashmap     154962 ops/s read 5
+16  2 uniform    chashmap     142738 ops/s read 6
+16  2 uniform    chashmap     148899 ops/s read 7
+16  2 uniform    chashmap     105334 ops/s read 8
+16  2 uniform    chashmap     158130 ops/s read 9
+16  2 uniform    chashmap     105957 ops/s read 10
+16  2 uniform    chashmap     155033 ops/s read 11
+16  2 uniform    chashmap     142302 ops/s read 12
+16  2 uniform    chashmap      99118 ops/s read 13
+16  2 uniform    chashmap      96596 ops/s read 14
+16  2 uniform    chashmap     154512 ops/s read 15
+16  2 uniform    concache::crossbeam  2426326 ops/s write 0
+16  2 uniform    concache::crossbeam  2425125 ops/s write 1
+16  2 uniform    concache::crossbeam  3481335 ops/s read 0
+16  2 uniform    concache::crossbeam  3502798 ops/s read 1
+16  2 uniform    concache::crossbeam  3461200 ops/s read 2
+16  2 uniform    concache::crossbeam  3388944 ops/s read 3
+16  2 uniform    concache::crossbeam  3361201 ops/s read 4
+16  2 uniform    concache::crossbeam  3297893 ops/s read 5
+16  2 uniform    concache::crossbeam  3448409 ops/s read 6
+16  2 uniform    concache::crossbeam  3486947 ops/s read 7
+16  2 uniform    concache::crossbeam  3569189 ops/s read 8
+16  2 uniform    concache::crossbeam  3524006 ops/s read 9
+16  2 uniform    concache::crossbeam  3418953 ops/s read 10
+16  2 uniform    concache::crossbeam  3491620 ops/s read 11
+16  2 uniform    concache::crossbeam  3546108 ops/s read 12
+16  2 uniform    concache::crossbeam  3449458 ops/s read 13
+16  2 uniform    concache::crossbeam  3358974 ops/s read 14
+16  2 uniform    concache::crossbeam  3292885 ops/s read 15
+16  2 uniform    concache::manual  1509900 ops/s write 0
+16  2 uniform    concache::manual  1438854 ops/s write 1
+16  2 uniform    concache::manual  2257493 ops/s read 0
+16  2 uniform    concache::manual  2388825 ops/s read 1
+16  2 uniform    concache::manual  2443662 ops/s read 2
+16  2 uniform    concache::manual  1995842 ops/s read 3
+16  2 uniform    concache::manual  2589658 ops/s read 4
+16  2 uniform    concache::manual  2006236 ops/s read 5
+16  2 uniform    concache::manual  2234102 ops/s read 6
+16  2 uniform    concache::manual  2330508 ops/s read 7
+16  2 uniform    concache::manual  2129274 ops/s read 8
+16  2 uniform    concache::manual  2071289 ops/s read 9
+16  2 uniform    concache::manual  2012455 ops/s read 10
+16  2 uniform    concache::manual  1990752 ops/s read 11
+16  2 uniform    concache::manual  1933571 ops/s read 12
+16  2 uniform    concache::manual  1989532 ops/s read 13
+16  2 uniform    concache::manual  2380125 ops/s read 14
+16  2 uniform    concache::manual  2400898 ops/s read 15
 32  2 uniform    std               0 ops/s write 0
 32  2 uniform    std               0 ops/s write 1
-32  2 uniform    std           87033 ops/s read 0
-32  2 uniform    std           90282 ops/s read 1
-32  2 uniform    std           88905 ops/s read 2
-32  2 uniform    std           89641 ops/s read 3
-32  2 uniform    std           86185 ops/s read 4
-32  2 uniform    std           80878 ops/s read 5
-32  2 uniform    std           77850 ops/s read 6
-32  2 uniform    std           90651 ops/s read 7
-32  2 uniform    std           89910 ops/s read 8
-32  2 uniform    std           91589 ops/s read 9
-32  2 uniform    std           85764 ops/s read 10
-32  2 uniform    std           85010 ops/s read 11
-32  2 uniform    std           84857 ops/s read 12
-32  2 uniform    std           80895 ops/s read 13
-32  2 uniform    std           86177 ops/s read 14
-32  2 uniform    std           89795 ops/s read 15
-32  2 uniform    std           87047 ops/s read 16
-32  2 uniform    std           90054 ops/s read 17
-32  2 uniform    std           85879 ops/s read 18
-32  2 uniform    std           86518 ops/s read 19
-32  2 uniform    std          132638 ops/s read 20
-32  2 uniform    std           86596 ops/s read 21
-32  2 uniform    std           88668 ops/s read 22
-32  2 uniform    std           85248 ops/s read 23
-32  2 uniform    std           90666 ops/s read 24
-32  2 uniform    std           80208 ops/s read 25
-32  2 uniform    std           86457 ops/s read 26
-32  2 uniform    std           84724 ops/s read 27
-32  2 uniform    std           78509 ops/s read 28
-32  2 uniform    std           84771 ops/s read 29
-32  2 uniform    std           77954 ops/s read 30
-32  2 uniform    std           83440 ops/s read 31
-32  2 uniform    chashmap      52131 ops/s write 0
-32  2 uniform    chashmap      54117 ops/s write 1
-32  2 uniform    chashmap      90976 ops/s read 0
-32  2 uniform    chashmap     129378 ops/s read 1
-32  2 uniform    chashmap     126126 ops/s read 2
-32  2 uniform    chashmap      93682 ops/s read 3
-32  2 uniform    chashmap      51766 ops/s read 4
-32  2 uniform    chashmap      91788 ops/s read 5
-32  2 uniform    chashmap      90193 ops/s read 6
-32  2 uniform    chashmap      91296 ops/s read 7
-32  2 uniform    chashmap      48884 ops/s read 8
-32  2 uniform    chashmap      52625 ops/s read 9
-32  2 uniform    chashmap      52867 ops/s read 10
-32  2 uniform    chashmap      90887 ops/s read 11
-32  2 uniform    chashmap      91818 ops/s read 12
-32  2 uniform    chashmap     125632 ops/s read 13
-32  2 uniform    chashmap      90500 ops/s read 14
-32  2 uniform    chashmap      89679 ops/s read 15
-32  2 uniform    chashmap      54077 ops/s read 16
-32  2 uniform    chashmap      89565 ops/s read 17
-32  2 uniform    chashmap      59395 ops/s read 18
-32  2 uniform    chashmap      91336 ops/s read 19
-32  2 uniform    chashmap      53853 ops/s read 20
-32  2 uniform    chashmap      51776 ops/s read 21
-32  2 uniform    chashmap      51975 ops/s read 22
-32  2 uniform    chashmap      54835 ops/s read 23
-32  2 uniform    chashmap      53535 ops/s read 24
-32  2 uniform    chashmap      91854 ops/s read 25
-32  2 uniform    chashmap      90748 ops/s read 26
-32  2 uniform    chashmap      53255 ops/s read 27
-32  2 uniform    chashmap      55182 ops/s read 28
-32  2 uniform    chashmap      52248 ops/s read 29
-32  2 uniform    chashmap      88254 ops/s read 30
-32  2 uniform    chashmap      55296 ops/s read 31
- 1  2 skewed     std          112272 ops/s write 0
- 1  2 skewed     std           87571 ops/s write 1
- 1  2 skewed     std          352597 ops/s read 0
- 1  2 skewed     chashmap    1427806 ops/s write 0
- 1  2 skewed     chashmap    1243365 ops/s write 1
- 1  2 skewed     chashmap     782255 ops/s read 0
- 2  2 skewed     std           56422 ops/s write 0
- 2  2 skewed     std           56883 ops/s write 1
- 2  2 skewed     std          552921 ops/s read 0
- 2  2 skewed     std          209649 ops/s read 1
- 2  2 skewed     chashmap     782803 ops/s write 0
- 2  2 skewed     chashmap     645003 ops/s write 1
- 2  2 skewed     chashmap     496521 ops/s read 0
- 2  2 skewed     chashmap     661818 ops/s read 1
- 4  2 skewed     std           23118 ops/s write 0
- 4  2 skewed     std           22948 ops/s write 1
- 4  2 skewed     std          391528 ops/s read 0
- 4  2 skewed     std          324988 ops/s read 1
- 4  2 skewed     std          384042 ops/s read 2
- 4  2 skewed     std          329513 ops/s read 3
- 4  2 skewed     chashmap     591526 ops/s write 0
- 4  2 skewed     chashmap     594545 ops/s write 1
- 4  2 skewed     chashmap     467340 ops/s read 0
- 4  2 skewed     chashmap     363406 ops/s read 1
- 4  2 skewed     chashmap     346901 ops/s read 2
- 4  2 skewed     chashmap     338859 ops/s read 3
- 8  2 skewed     std             289 ops/s write 0
- 8  2 skewed     std             132 ops/s write 1
- 8  2 skewed     std          253871 ops/s read 0
- 8  2 skewed     std          254532 ops/s read 1
- 8  2 skewed     std          244740 ops/s read 2
- 8  2 skewed     std          256396 ops/s read 3
- 8  2 skewed     std          294748 ops/s read 4
- 8  2 skewed     std          250516 ops/s read 5
- 8  2 skewed     std          253808 ops/s read 6
- 8  2 skewed     std          274303 ops/s read 7
- 8  2 skewed     chashmap     190033 ops/s write 0
- 8  2 skewed     chashmap     252299 ops/s write 1
- 8  2 skewed     chashmap     220537 ops/s read 0
- 8  2 skewed     chashmap     179287 ops/s read 1
- 8  2 skewed     chashmap     188248 ops/s read 2
- 8  2 skewed     chashmap     386913 ops/s read 3
- 8  2 skewed     chashmap     170582 ops/s read 4
- 8  2 skewed     chashmap     319271 ops/s read 5
- 8  2 skewed     chashmap     294562 ops/s read 6
- 8  2 skewed     chashmap     281436 ops/s read 7
+32  2 uniform    std           87713 ops/s read 0
+32  2 uniform    std           84619 ops/s read 1
+32  2 uniform    std           80562 ops/s read 2
+32  2 uniform    std           87165 ops/s read 3
+32  2 uniform    std           80652 ops/s read 4
+32  2 uniform    std           87188 ops/s read 5
+32  2 uniform    std           80349 ops/s read 6
+32  2 uniform    std           84986 ops/s read 7
+32  2 uniform    std           79393 ops/s read 8
+32  2 uniform    std           90177 ops/s read 9
+32  2 uniform    std           88783 ops/s read 10
+32  2 uniform    std           80857 ops/s read 11
+32  2 uniform    std           85229 ops/s read 12
+32  2 uniform    std           80360 ops/s read 13
+32  2 uniform    std           85124 ops/s read 14
+32  2 uniform    std           86813 ops/s read 15
+32  2 uniform    std           85725 ops/s read 16
+32  2 uniform    std           94599 ops/s read 17
+32  2 uniform    std           92676 ops/s read 18
+32  2 uniform    std           83904 ops/s read 19
+32  2 uniform    std           89193 ops/s read 20
+32  2 uniform    std           81903 ops/s read 21
+32  2 uniform    std           84687 ops/s read 22
+32  2 uniform    std           80209 ops/s read 23
+32  2 uniform    std           86810 ops/s read 24
+32  2 uniform    std           74392 ops/s read 25
+32  2 uniform    std           82335 ops/s read 26
+32  2 uniform    std           82564 ops/s read 27
+32  2 uniform    std           82550 ops/s read 28
+32  2 uniform    std           82386 ops/s read 29
+32  2 uniform    std           83705 ops/s read 30
+32  2 uniform    std           85655 ops/s read 31
+32  2 uniform    chashmap      51158 ops/s write 0
+32  2 uniform    chashmap      51860 ops/s write 1
+32  2 uniform    chashmap      94699 ops/s read 0
+32  2 uniform    chashmap      87522 ops/s read 1
+32  2 uniform    chashmap      88498 ops/s read 2
+32  2 uniform    chashmap      91711 ops/s read 3
+32  2 uniform    chashmap      91797 ops/s read 4
+32  2 uniform    chashmap      91208 ops/s read 5
+32  2 uniform    chashmap      92299 ops/s read 6
+32  2 uniform    chashmap      55261 ops/s read 7
+32  2 uniform    chashmap      54720 ops/s read 8
+32  2 uniform    chashmap      93774 ops/s read 9
+32  2 uniform    chashmap      87415 ops/s read 10
+32  2 uniform    chashmap      92177 ops/s read 11
+32  2 uniform    chashmap      87174 ops/s read 12
+32  2 uniform    chashmap      91749 ops/s read 13
+32  2 uniform    chashmap      90849 ops/s read 14
+32  2 uniform    chashmap      91759 ops/s read 15
+32  2 uniform    chashmap     132547 ops/s read 16
+32  2 uniform    chashmap     130920 ops/s read 17
+32  2 uniform    chashmap      56501 ops/s read 18
+32  2 uniform    chashmap     129568 ops/s read 19
+32  2 uniform    chashmap      51507 ops/s read 20
+32  2 uniform    chashmap      49269 ops/s read 21
+32  2 uniform    chashmap      52435 ops/s read 22
+32  2 uniform    chashmap      53557 ops/s read 23
+32  2 uniform    chashmap      55266 ops/s read 24
+32  2 uniform    chashmap      52376 ops/s read 25
+32  2 uniform    chashmap      51842 ops/s read 26
+32  2 uniform    chashmap      51892 ops/s read 27
+32  2 uniform    chashmap      49571 ops/s read 28
+32  2 uniform    chashmap      50795 ops/s read 29
+32  2 uniform    chashmap      51707 ops/s read 30
+32  2 uniform    chashmap      55033 ops/s read 31
+32  2 uniform    concache::crossbeam  1885592 ops/s write 0
+32  2 uniform    concache::crossbeam  1867557 ops/s write 1
+32  2 uniform    concache::crossbeam  2796879 ops/s read 0
+32  2 uniform    concache::crossbeam  2886012 ops/s read 1
+32  2 uniform    concache::crossbeam  2723711 ops/s read 2
+32  2 uniform    concache::crossbeam  2781768 ops/s read 3
+32  2 uniform    concache::crossbeam  2718589 ops/s read 4
+32  2 uniform    concache::crossbeam  2789981 ops/s read 5
+32  2 uniform    concache::crossbeam  2830985 ops/s read 6
+32  2 uniform    concache::crossbeam  3490434 ops/s read 7
+32  2 uniform    concache::crossbeam  2907054 ops/s read 8
+32  2 uniform    concache::crossbeam  2809957 ops/s read 9
+32  2 uniform    concache::crossbeam  2788321 ops/s read 10
+32  2 uniform    concache::crossbeam  2783044 ops/s read 11
+32  2 uniform    concache::crossbeam  2733142 ops/s read 12
+32  2 uniform    concache::crossbeam  2787264 ops/s read 13
+32  2 uniform    concache::crossbeam  2772683 ops/s read 14
+32  2 uniform    concache::crossbeam  3577541 ops/s read 15
+32  2 uniform    concache::crossbeam  2777346 ops/s read 16
+32  2 uniform    concache::crossbeam  3087600 ops/s read 17
+32  2 uniform    concache::crossbeam  2756680 ops/s read 18
+32  2 uniform    concache::crossbeam  2776723 ops/s read 19
+32  2 uniform    concache::crossbeam  2770895 ops/s read 20
+32  2 uniform    concache::crossbeam  2769465 ops/s read 21
+32  2 uniform    concache::crossbeam  2778081 ops/s read 22
+32  2 uniform    concache::crossbeam  3634434 ops/s read 23
+32  2 uniform    concache::crossbeam  2802580 ops/s read 24
+32  2 uniform    concache::crossbeam  2798231 ops/s read 25
+32  2 uniform    concache::crossbeam  2774085 ops/s read 26
+32  2 uniform    concache::crossbeam  3417730 ops/s read 27
+32  2 uniform    concache::crossbeam  3197571 ops/s read 28
+32  2 uniform    concache::crossbeam  3645716 ops/s read 29
+32  2 uniform    concache::crossbeam  2795795 ops/s read 30
+32  2 uniform    concache::crossbeam  2783591 ops/s read 31
+32  2 uniform    concache::manual  1014092 ops/s write 0
+32  2 uniform    concache::manual  1024464 ops/s write 1
+32  2 uniform    concache::manual  1816177 ops/s read 0
+32  2 uniform    concache::manual  1687077 ops/s read 1
+32  2 uniform    concache::manual  2008968 ops/s read 2
+32  2 uniform    concache::manual  1561588 ops/s read 3
+32  2 uniform    concache::manual  1881573 ops/s read 4
+32  2 uniform    concache::manual  1675371 ops/s read 5
+32  2 uniform    concache::manual  1600423 ops/s read 6
+32  2 uniform    concache::manual  1951878 ops/s read 7
+32  2 uniform    concache::manual  1761689 ops/s read 8
+32  2 uniform    concache::manual  1556177 ops/s read 9
+32  2 uniform    concache::manual  1577633 ops/s read 10
+32  2 uniform    concache::manual  1723918 ops/s read 11
+32  2 uniform    concache::manual  1754380 ops/s read 12
+32  2 uniform    concache::manual  1618716 ops/s read 13
+32  2 uniform    concache::manual  1901605 ops/s read 14
+32  2 uniform    concache::manual  2432738 ops/s read 15
+32  2 uniform    concache::manual  2164192 ops/s read 16
+32  2 uniform    concache::manual  2202932 ops/s read 17
+32  2 uniform    concache::manual  2154610 ops/s read 18
+32  2 uniform    concache::manual  2012367 ops/s read 19
+32  2 uniform    concache::manual  1719410 ops/s read 20
+32  2 uniform    concache::manual  1714245 ops/s read 21
+32  2 uniform    concache::manual  1784354 ops/s read 22
+32  2 uniform    concache::manual  1947324 ops/s read 23
+32  2 uniform    concache::manual  1618026 ops/s read 24
+32  2 uniform    concache::manual  1878611 ops/s read 25
+32  2 uniform    concache::manual  2001779 ops/s read 26
+32  2 uniform    concache::manual  2130008 ops/s read 27
+32  2 uniform    concache::manual  2452744 ops/s read 28
+32  2 uniform    concache::manual  2458661 ops/s read 29
+32  2 uniform    concache::manual  1564519 ops/s read 30
+32  2 uniform    concache::manual  1615504 ops/s read 31
+ 1  2 skewed     std           76655 ops/s write 0
+ 1  2 skewed     std           75027 ops/s write 1
+ 1  2 skewed     std          191976 ops/s read 0
+ 1  2 skewed     chashmap    1187698 ops/s write 0
+ 1  2 skewed     chashmap     971684 ops/s write 1
+ 1  2 skewed     chashmap     792933 ops/s read 0
+ 1  2 skewed     concache::crossbeam  2745610 ops/s write 0
+ 1  2 skewed     concache::crossbeam  2749855 ops/s write 1
+ 1  2 skewed     concache::crossbeam  3045908 ops/s read 0
+ 1  2 skewed     concache::manual  1498391 ops/s write 0
+ 1  2 skewed     concache::manual  1802176 ops/s write 1
+ 1  2 skewed     concache::manual  2085380 ops/s read 0
+ 2  2 skewed     std           74122 ops/s write 0
+ 2  2 skewed     std           63855 ops/s write 1
+ 2  2 skewed     std          630260 ops/s read 0
+ 2  2 skewed     std          358706 ops/s read 1
+ 2  2 skewed     chashmap     531870 ops/s write 0
+ 2  2 skewed     chashmap     559438 ops/s write 1
+ 2  2 skewed     chashmap     746810 ops/s read 0
+ 2  2 skewed     chashmap     693582 ops/s read 1
+ 2  2 skewed     concache::crossbeam  2650229 ops/s write 0
+ 2  2 skewed     concache::crossbeam  2689573 ops/s write 1
+ 2  2 skewed     concache::crossbeam  3189370 ops/s read 0
+ 2  2 skewed     concache::crossbeam  3221424 ops/s read 1
+ 2  2 skewed     concache::manual  1665714 ops/s write 0
+ 2  2 skewed     concache::manual  1927956 ops/s write 1
+ 2  2 skewed     concache::manual  2213602 ops/s read 0
+ 2  2 skewed     concache::manual  2244498 ops/s read 1
+ 4  2 skewed     std            2507 ops/s write 0
+ 4  2 skewed     std           64005 ops/s write 1
+ 4  2 skewed     std          480244 ops/s read 0
+ 4  2 skewed     std          536372 ops/s read 1
+ 4  2 skewed     std          512286 ops/s read 2
+ 4  2 skewed     std          460543 ops/s read 3
+ 4  2 skewed     chashmap     368960 ops/s write 0
+ 4  2 skewed     chashmap     576636 ops/s write 1
+ 4  2 skewed     chashmap     534227 ops/s read 0
+ 4  2 skewed     chashmap     445918 ops/s read 1
+ 4  2 skewed     chashmap     313986 ops/s read 2
+ 4  2 skewed     chashmap     315346 ops/s read 3
+ 4  2 skewed     concache::crossbeam  2550374 ops/s write 0
+ 4  2 skewed     concache::crossbeam  2552631 ops/s write 1
+ 4  2 skewed     concache::crossbeam  3289950 ops/s read 0
+ 4  2 skewed     concache::crossbeam  3323532 ops/s read 1
+ 4  2 skewed     concache::crossbeam  3340419 ops/s read 2
+ 4  2 skewed     concache::crossbeam  3337398 ops/s read 3
+ 4  2 skewed     concache::manual  1371315 ops/s write 0
+ 4  2 skewed     concache::manual  1772972 ops/s write 1
+ 4  2 skewed     concache::manual  1911654 ops/s read 0
+ 4  2 skewed     concache::manual  2109953 ops/s read 1
+ 4  2 skewed     concache::manual  2126934 ops/s read 2
+ 4  2 skewed     concache::manual  2852283 ops/s read 3
+ 8  2 skewed     std             157 ops/s write 0
+ 8  2 skewed     std             325 ops/s write 1
+ 8  2 skewed     std          216239 ops/s read 0
+ 8  2 skewed     std          202132 ops/s read 1
+ 8  2 skewed     std          204708 ops/s read 2
+ 8  2 skewed     std          200852 ops/s read 3
+ 8  2 skewed     std          199069 ops/s read 4
+ 8  2 skewed     std          202217 ops/s read 5
+ 8  2 skewed     std          245839 ops/s read 6
+ 8  2 skewed     std          199883 ops/s read 7
+ 8  2 skewed     chashmap     221564 ops/s write 0
+ 8  2 skewed     chashmap     339990 ops/s write 1
+ 8  2 skewed     chashmap     185358 ops/s read 0
+ 8  2 skewed     chashmap     277025 ops/s read 1
+ 8  2 skewed     chashmap     185659 ops/s read 2
+ 8  2 skewed     chashmap     271934 ops/s read 3
+ 8  2 skewed     chashmap     274281 ops/s read 4
+ 8  2 skewed     chashmap     184624 ops/s read 5
+ 8  2 skewed     chashmap     282231 ops/s read 6
+ 8  2 skewed     chashmap     234508 ops/s read 7
+ 8  2 skewed     concache::crossbeam  2476686 ops/s write 0
+ 8  2 skewed     concache::crossbeam  2444872 ops/s write 1
+ 8  2 skewed     concache::crossbeam  3511611 ops/s read 0
+ 8  2 skewed     concache::crossbeam  3502433 ops/s read 1
+ 8  2 skewed     concache::crossbeam  3496963 ops/s read 2
+ 8  2 skewed     concache::crossbeam  3478799 ops/s read 3
+ 8  2 skewed     concache::crossbeam  3440328 ops/s read 4
+ 8  2 skewed     concache::crossbeam  3486114 ops/s read 5
+ 8  2 skewed     concache::crossbeam  3483384 ops/s read 6
+ 8  2 skewed     concache::crossbeam  3478749 ops/s read 7
+ 8  2 skewed     concache::manual  1672950 ops/s write 0
+ 8  2 skewed     concache::manual  1658199 ops/s write 1
+ 8  2 skewed     concache::manual  2194941 ops/s read 0
+ 8  2 skewed     concache::manual  2174847 ops/s read 1
+ 8  2 skewed     concache::manual  2257316 ops/s read 2
+ 8  2 skewed     concache::manual  1869414 ops/s read 3
+ 8  2 skewed     concache::manual  2254928 ops/s read 4
+ 8  2 skewed     concache::manual  1908228 ops/s read 5
+ 8  2 skewed     concache::manual  1982926 ops/s read 6
+ 8  2 skewed     concache::manual  2000630 ops/s read 7
 16  2 skewed     std               1 ops/s write 0
 16  2 skewed     std               0 ops/s write 1
-16  2 skewed     std          110402 ops/s read 0
-16  2 skewed     std          108122 ops/s read 1
-16  2 skewed     std          106854 ops/s read 2
-16  2 skewed     std          121641 ops/s read 3
-16  2 skewed     std          114112 ops/s read 4
-16  2 skewed     std          109398 ops/s read 5
-16  2 skewed     std          108783 ops/s read 6
-16  2 skewed     std          109095 ops/s read 7
-16  2 skewed     std          105954 ops/s read 8
-16  2 skewed     std          130136 ops/s read 9
-16  2 skewed     std          105163 ops/s read 10
-16  2 skewed     std          103935 ops/s read 11
-16  2 skewed     std          212205 ops/s read 12
-16  2 skewed     std          105654 ops/s read 13
-16  2 skewed     std          142024 ops/s read 14
-16  2 skewed     std          105251 ops/s read 15
-16  2 skewed     chashmap     185310 ops/s write 0
-16  2 skewed     chashmap     169522 ops/s write 1
-16  2 skewed     chashmap     119405 ops/s read 0
-16  2 skewed     chashmap     128919 ops/s read 1
-16  2 skewed     chashmap     117336 ops/s read 2
-16  2 skewed     chashmap     191908 ops/s read 3
-16  2 skewed     chashmap     147920 ops/s read 4
-16  2 skewed     chashmap     147997 ops/s read 5
-16  2 skewed     chashmap     104202 ops/s read 6
-16  2 skewed     chashmap     144706 ops/s read 7
-16  2 skewed     chashmap     125748 ops/s read 8
-16  2 skewed     chashmap     116683 ops/s read 9
-16  2 skewed     chashmap     110322 ops/s read 10
-16  2 skewed     chashmap     133552 ops/s read 11
-16  2 skewed     chashmap      93717 ops/s read 12
-16  2 skewed     chashmap     128721 ops/s read 13
-16  2 skewed     chashmap     148369 ops/s read 14
-16  2 skewed     chashmap     138029 ops/s read 15
+16  2 skewed     std          115119 ops/s read 0
+16  2 skewed     std          114279 ops/s read 1
+16  2 skewed     std          112730 ops/s read 2
+16  2 skewed     std          129588 ops/s read 3
+16  2 skewed     std          123375 ops/s read 4
+16  2 skewed     std          119880 ops/s read 5
+16  2 skewed     std          116231 ops/s read 6
+16  2 skewed     std          113705 ops/s read 7
+16  2 skewed     std          186951 ops/s read 8
+16  2 skewed     std          144142 ops/s read 9
+16  2 skewed     std          110122 ops/s read 10
+16  2 skewed     std          110428 ops/s read 11
+16  2 skewed     std          109620 ops/s read 12
+16  2 skewed     std          109457 ops/s read 13
+16  2 skewed     std          111075 ops/s read 14
+16  2 skewed     std          114409 ops/s read 15
+16  2 skewed     chashmap     165460 ops/s write 0
+16  2 skewed     chashmap     183220 ops/s write 1
+16  2 skewed     chashmap     171867 ops/s read 0
+16  2 skewed     chashmap     145437 ops/s read 1
+16  2 skewed     chashmap     113031 ops/s read 2
+16  2 skewed     chashmap     102706 ops/s read 3
+16  2 skewed     chashmap     111667 ops/s read 4
+16  2 skewed     chashmap      94000 ops/s read 5
+16  2 skewed     chashmap      90779 ops/s read 6
+16  2 skewed     chashmap     151443 ops/s read 7
+16  2 skewed     chashmap     140369 ops/s read 8
+16  2 skewed     chashmap     157974 ops/s read 9
+16  2 skewed     chashmap     153803 ops/s read 10
+16  2 skewed     chashmap     148853 ops/s read 11
+16  2 skewed     chashmap      90201 ops/s read 12
+16  2 skewed     chashmap     135206 ops/s read 13
+16  2 skewed     chashmap     145012 ops/s read 14
+16  2 skewed     chashmap     114440 ops/s read 15
+16  2 skewed     concache::crossbeam  2288583 ops/s write 0
+16  2 skewed     concache::crossbeam  2223727 ops/s write 1
+16  2 skewed     concache::crossbeam  3503300 ops/s read 0
+16  2 skewed     concache::crossbeam  3302421 ops/s read 1
+16  2 skewed     concache::crossbeam  3458936 ops/s read 2
+16  2 skewed     concache::crossbeam  3384376 ops/s read 3
+16  2 skewed     concache::crossbeam  3353813 ops/s read 4
+16  2 skewed     concache::crossbeam  3466004 ops/s read 5
+16  2 skewed     concache::crossbeam  3439318 ops/s read 6
+16  2 skewed     concache::crossbeam  3324573 ops/s read 7
+16  2 skewed     concache::crossbeam  3553916 ops/s read 8
+16  2 skewed     concache::crossbeam  3605663 ops/s read 9
+16  2 skewed     concache::crossbeam  3465117 ops/s read 10
+16  2 skewed     concache::crossbeam  3338693 ops/s read 11
+16  2 skewed     concache::crossbeam  3557913 ops/s read 12
+16  2 skewed     concache::crossbeam  3426573 ops/s read 13
+16  2 skewed     concache::crossbeam  3366504 ops/s read 14
+16  2 skewed     concache::crossbeam  3316331 ops/s read 15
+16  2 skewed     concache::manual  1701447 ops/s write 0
+16  2 skewed     concache::manual  1710200 ops/s write 1
+16  2 skewed     concache::manual  1861418 ops/s read 0
+16  2 skewed     concache::manual  2220671 ops/s read 1
+16  2 skewed     concache::manual  2391440 ops/s read 2
+16  2 skewed     concache::manual  2183407 ops/s read 3
+16  2 skewed     concache::manual  2353408 ops/s read 4
+16  2 skewed     concache::manual  2046572 ops/s read 5
+16  2 skewed     concache::manual  1634072 ops/s read 6
+16  2 skewed     concache::manual  1968083 ops/s read 7
+16  2 skewed     concache::manual  2359764 ops/s read 8
+16  2 skewed     concache::manual  2380043 ops/s read 9
+16  2 skewed     concache::manual  1851799 ops/s read 10
+16  2 skewed     concache::manual  2146627 ops/s read 11
+16  2 skewed     concache::manual  2110614 ops/s read 12
+16  2 skewed     concache::manual  2170030 ops/s read 13
+16  2 skewed     concache::manual  1982930 ops/s read 14
+16  2 skewed     concache::manual  2065294 ops/s read 15
 32  2 skewed     std               0 ops/s write 0
 32  2 skewed     std               0 ops/s write 1
-32  2 skewed     std           79028 ops/s read 0
-32  2 skewed     std           85860 ops/s read 1
-32  2 skewed     std           85893 ops/s read 2
-32  2 skewed     std           78005 ops/s read 3
-32  2 skewed     std           78218 ops/s read 4
-32  2 skewed     std           78467 ops/s read 5
-32  2 skewed     std           78164 ops/s read 6
-32  2 skewed     std           94845 ops/s read 7
-32  2 skewed     std           78943 ops/s read 8
-32  2 skewed     std           94198 ops/s read 9
-32  2 skewed     std           78110 ops/s read 10
-32  2 skewed     std           86890 ops/s read 11
-32  2 skewed     std           78897 ops/s read 12
-32  2 skewed     std           78033 ops/s read 13
-32  2 skewed     std           77877 ops/s read 14
-32  2 skewed     std           78273 ops/s read 15
-32  2 skewed     std           93155 ops/s read 16
-32  2 skewed     std           78894 ops/s read 17
-32  2 skewed     std           94964 ops/s read 18
-32  2 skewed     std           97321 ops/s read 19
-32  2 skewed     std           99271 ops/s read 20
-32  2 skewed     std           99452 ops/s read 21
-32  2 skewed     std           96989 ops/s read 22
-32  2 skewed     std           96949 ops/s read 23
-32  2 skewed     std           98914 ops/s read 24
-32  2 skewed     std           85230 ops/s read 25
-32  2 skewed     std           96957 ops/s read 26
-32  2 skewed     std           98915 ops/s read 27
-32  2 skewed     std           94924 ops/s read 28
-32  2 skewed     std           95110 ops/s read 29
-32  2 skewed     std           96911 ops/s read 30
-32  2 skewed     std           97258 ops/s read 31
-32  2 skewed     chashmap      85605 ops/s write 0
-32  2 skewed     chashmap      56353 ops/s write 1
-32  2 skewed     chashmap      79441 ops/s read 0
-32  2 skewed     chashmap      96638 ops/s read 1
-32  2 skewed     chashmap      58716 ops/s read 2
-32  2 skewed     chashmap      58384 ops/s read 3
-32  2 skewed     chashmap      80904 ops/s read 4
-32  2 skewed     chashmap      58415 ops/s read 5
-32  2 skewed     chashmap      99029 ops/s read 6
-32  2 skewed     chashmap      82373 ops/s read 7
-32  2 skewed     chashmap      79405 ops/s read 8
-32  2 skewed     chashmap     123067 ops/s read 9
-32  2 skewed     chashmap      58642 ops/s read 10
-32  2 skewed     chashmap      57261 ops/s read 11
-32  2 skewed     chashmap      87065 ops/s read 12
-32  2 skewed     chashmap      59097 ops/s read 13
-32  2 skewed     chashmap      57062 ops/s read 14
-32  2 skewed     chashmap      85335 ops/s read 15
-32  2 skewed     chashmap      79843 ops/s read 16
-32  2 skewed     chashmap      56740 ops/s read 17
-32  2 skewed     chashmap      81941 ops/s read 18
-32  2 skewed     chashmap      83564 ops/s read 19
-32  2 skewed     chashmap      80646 ops/s read 20
-32  2 skewed     chashmap     123785 ops/s read 21
-32  2 skewed     chashmap     126461 ops/s read 22
-32  2 skewed     chashmap      80383 ops/s read 23
-32  2 skewed     chashmap      78114 ops/s read 24
-32  2 skewed     chashmap      58310 ops/s read 25
-32  2 skewed     chashmap      56147 ops/s read 26
-32  2 skewed     chashmap      56921 ops/s read 27
-32  2 skewed     chashmap      81396 ops/s read 28
-32  2 skewed     chashmap      56838 ops/s read 29
-32  2 skewed     chashmap      82660 ops/s read 30
-32  2 skewed     chashmap      60974 ops/s read 31
- 1  4 uniform    std           38531 ops/s write 0
- 1  4 uniform    std           50042 ops/s write 1
- 1  4 uniform    std           36084 ops/s write 2
- 1  4 uniform    std           52536 ops/s write 3
- 1  4 uniform    std          249496 ops/s read 0
- 1  4 uniform    chashmap     515449 ops/s write 0
- 1  4 uniform    chashmap     532687 ops/s write 1
- 1  4 uniform    chashmap     533743 ops/s write 2
- 1  4 uniform    chashmap     544627 ops/s write 3
- 1  4 uniform    chashmap     449999 ops/s read 0
- 2  4 uniform    std           18486 ops/s write 0
- 2  4 uniform    std           18203 ops/s write 1
- 2  4 uniform    std           79984 ops/s write 2
- 2  4 uniform    std           17401 ops/s write 3
- 2  4 uniform    std          366642 ops/s read 0
- 2  4 uniform    std          327241 ops/s read 1
- 2  4 uniform    chashmap     511233 ops/s write 0
- 2  4 uniform    chashmap     359127 ops/s write 1
- 2  4 uniform    chashmap     323890 ops/s write 2
- 2  4 uniform    chashmap     316807 ops/s write 3
- 2  4 uniform    chashmap     403241 ops/s read 0
- 2  4 uniform    chashmap     397551 ops/s read 1
- 2  4 uniform    concache::crossbeam  2107270 ops/s write 0
- 2  4 uniform    concache::crossbeam  2123456 ops/s write 1
- 2  4 uniform    concache::crossbeam  2144565 ops/s write 2
- 2  4 uniform    concache::crossbeam  2196343 ops/s write 3
- 2  4 uniform    concache::crossbeam  2897873 ops/s read 0
- 2  4 uniform    concache::crossbeam  2869765 ops/s read 1
- 4  4 uniform    std           10468 ops/s write 0
- 4  4 uniform    std           10116 ops/s write 1
- 4  4 uniform    std           10727 ops/s write 2
- 4  4 uniform    std           10707 ops/s write 3
- 4  4 uniform    std          340736 ops/s read 0
- 4  4 uniform    std          307332 ops/s read 1
- 4  4 uniform    std          341899 ops/s read 2
- 4  4 uniform    std          310431 ops/s read 3
- 4  4 uniform    chashmap     407402 ops/s write 0
- 4  4 uniform    chashmap     246231 ops/s write 1
- 4  4 uniform    chashmap     447573 ops/s write 2
- 4  4 uniform    chashmap     239307 ops/s write 3
- 4  4 uniform    chashmap     229423 ops/s read 0
- 4  4 uniform    chashmap     233513 ops/s read 1
- 4  4 uniform    chashmap     335616 ops/s read 2
- 4  4 uniform    chashmap     421123 ops/s read 3
- 4  4 uniform    concache::crossbeam  2094123 ops/s write 0
- 4  4 uniform    concache::crossbeam  2035358 ops/s write 1
- 4  4 uniform    concache::crossbeam  2093046 ops/s write 2
- 4  4 uniform    concache::crossbeam  2061712 ops/s write 3
- 4  4 uniform    concache::crossbeam  2848257 ops/s read 0
- 4  4 uniform    concache::crossbeam  2838485 ops/s read 1
- 4  4 uniform    concache::crossbeam  2882467 ops/s read 2
- 4  4 uniform    concache::crossbeam  2725817 ops/s read 3
- 8  4 uniform    std              21 ops/s write 0
- 8  4 uniform    std             229 ops/s write 1
- 8  4 uniform    std             201 ops/s write 2
- 8  4 uniform    std              32 ops/s write 3
- 8  4 uniform    std          208866 ops/s read 0
- 8  4 uniform    std          203473 ops/s read 1
- 8  4 uniform    std          211841 ops/s read 2
- 8  4 uniform    std          213590 ops/s read 3
- 8  4 uniform    std          211291 ops/s read 4
- 8  4 uniform    std          204738 ops/s read 5
- 8  4 uniform    std          262248 ops/s read 6
- 8  4 uniform    std          206112 ops/s read 7
- 8  4 uniform    chashmap     196021 ops/s write 0
- 8  4 uniform    chashmap     322524 ops/s write 1
- 8  4 uniform    chashmap     150167 ops/s write 2
- 8  4 uniform    chashmap     243784 ops/s write 3
- 8  4 uniform    chashmap     131695 ops/s read 0
- 8  4 uniform    chashmap     196885 ops/s read 1
- 8  4 uniform    chashmap     125021 ops/s read 2
- 8  4 uniform    chashmap     332248 ops/s read 3
- 8  4 uniform    chashmap     205368 ops/s read 4
- 8  4 uniform    chashmap     217894 ops/s read 5
- 8  4 uniform    chashmap     130359 ops/s read 6
- 8  4 uniform    chashmap     133499 ops/s read 7
+32  2 skewed     std           81489 ops/s read 0
+32  2 skewed     std           87307 ops/s read 1
+32  2 skewed     std           86754 ops/s read 2
+32  2 skewed     std           88429 ops/s read 3
+32  2 skewed     std           88122 ops/s read 4
+32  2 skewed     std           88051 ops/s read 5
+32  2 skewed     std           82736 ops/s read 6
+32  2 skewed     std           82317 ops/s read 7
+32  2 skewed     std           90270 ops/s read 8
+32  2 skewed     std           89631 ops/s read 9
+32  2 skewed     std           88359 ops/s read 10
+32  2 skewed     std           87983 ops/s read 11
+32  2 skewed     std           88048 ops/s read 12
+32  2 skewed     std           87529 ops/s read 13
+32  2 skewed     std           90368 ops/s read 14
+32  2 skewed     std           86585 ops/s read 15
+32  2 skewed     std           82458 ops/s read 16
+32  2 skewed     std           90413 ops/s read 17
+32  2 skewed     std           89320 ops/s read 18
+32  2 skewed     std           85302 ops/s read 19
+32  2 skewed     std           81514 ops/s read 20
+32  2 skewed     std           80930 ops/s read 21
+32  2 skewed     std           81671 ops/s read 22
+32  2 skewed     std           88512 ops/s read 23
+32  2 skewed     std           80842 ops/s read 24
+32  2 skewed     std           80100 ops/s read 25
+32  2 skewed     std           82043 ops/s read 26
+32  2 skewed     std           84851 ops/s read 27
+32  2 skewed     std           79674 ops/s read 28
+32  2 skewed     std           82058 ops/s read 29
+32  2 skewed     std           88413 ops/s read 30
+32  2 skewed     std           87940 ops/s read 31
+32  2 skewed     chashmap      89549 ops/s write 0
+32  2 skewed     chashmap      92584 ops/s write 1
+32  2 skewed     chashmap     125527 ops/s read 0
+32  2 skewed     chashmap      52185 ops/s read 1
+32  2 skewed     chashmap      86519 ops/s read 2
+32  2 skewed     chashmap      51646 ops/s read 3
+32  2 skewed     chashmap      60163 ops/s read 4
+32  2 skewed     chashmap      82270 ops/s read 5
+32  2 skewed     chashmap      51980 ops/s read 6
+32  2 skewed     chashmap      54704 ops/s read 7
+32  2 skewed     chashmap      86625 ops/s read 8
+32  2 skewed     chashmap      87465 ops/s read 9
+32  2 skewed     chashmap      51205 ops/s read 10
+32  2 skewed     chashmap      51804 ops/s read 11
+32  2 skewed     chashmap      55169 ops/s read 12
+32  2 skewed     chashmap      50936 ops/s read 13
+32  2 skewed     chashmap     106403 ops/s read 14
+32  2 skewed     chashmap      86812 ops/s read 15
+32  2 skewed     chashmap      56320 ops/s read 16
+32  2 skewed     chashmap      87361 ops/s read 17
+32  2 skewed     chashmap      87329 ops/s read 18
+32  2 skewed     chashmap      52326 ops/s read 19
+32  2 skewed     chashmap      51968 ops/s read 20
+32  2 skewed     chashmap      53293 ops/s read 21
+32  2 skewed     chashmap      86244 ops/s read 22
+32  2 skewed     chashmap      85691 ops/s read 23
+32  2 skewed     chashmap     127025 ops/s read 24
+32  2 skewed     chashmap      49532 ops/s read 25
+32  2 skewed     chashmap      51209 ops/s read 26
+32  2 skewed     chashmap     104101 ops/s read 27
+32  2 skewed     chashmap      80786 ops/s read 28
+32  2 skewed     chashmap      51475 ops/s read 29
+32  2 skewed     chashmap      54019 ops/s read 30
+32  2 skewed     chashmap     130474 ops/s read 31
+32  2 skewed     concache::crossbeam  2102225 ops/s write 0
+32  2 skewed     concache::crossbeam  1855814 ops/s write 1
+32  2 skewed     concache::crossbeam  3612296 ops/s read 0
+32  2 skewed     concache::crossbeam  2826137 ops/s read 1
+32  2 skewed     concache::crossbeam  2830597 ops/s read 2
+32  2 skewed     concache::crossbeam  2812607 ops/s read 3
+32  2 skewed     concache::crossbeam  3485772 ops/s read 4
+32  2 skewed     concache::crossbeam  3033430 ops/s read 5
+32  2 skewed     concache::crossbeam  3256491 ops/s read 6
+32  2 skewed     concache::crossbeam  2827158 ops/s read 7
+32  2 skewed     concache::crossbeam  2829735 ops/s read 8
+32  2 skewed     concache::crossbeam  2826414 ops/s read 9
+32  2 skewed     concache::crossbeam  2836507 ops/s read 10
+32  2 skewed     concache::crossbeam  3156331 ops/s read 11
+32  2 skewed     concache::crossbeam  2808991 ops/s read 12
+32  2 skewed     concache::crossbeam  2804851 ops/s read 13
+32  2 skewed     concache::crossbeam  2924736 ops/s read 14
+32  2 skewed     concache::crossbeam  2818579 ops/s read 15
+32  2 skewed     concache::crossbeam  2819788 ops/s read 16
+32  2 skewed     concache::crossbeam  2823330 ops/s read 17
+32  2 skewed     concache::crossbeam  2810323 ops/s read 18
+32  2 skewed     concache::crossbeam  2827379 ops/s read 19
+32  2 skewed     concache::crossbeam  2829855 ops/s read 20
+32  2 skewed     concache::crossbeam  2966966 ops/s read 21
+32  2 skewed     concache::crossbeam  2888444 ops/s read 22
+32  2 skewed     concache::crossbeam  2892388 ops/s read 23
+32  2 skewed     concache::crossbeam  2838181 ops/s read 24
+32  2 skewed     concache::crossbeam  2829565 ops/s read 25
+32  2 skewed     concache::crossbeam  2821361 ops/s read 26
+32  2 skewed     concache::crossbeam  2838430 ops/s read 27
+32  2 skewed     concache::crossbeam  3616611 ops/s read 28
+32  2 skewed     concache::crossbeam  3309812 ops/s read 29
+32  2 skewed     concache::crossbeam  3239772 ops/s read 30
+32  2 skewed     concache::crossbeam  2832437 ops/s read 31
+32  2 skewed     concache::manual  1257117 ops/s write 0
+32  2 skewed     concache::manual  1033888 ops/s write 1
+32  2 skewed     concache::manual   875185 ops/s read 0
+32  2 skewed     concache::manual  1068028 ops/s read 1
+32  2 skewed     concache::manual  1064939 ops/s read 2
+32  2 skewed     concache::manual  1377663 ops/s read 3
+32  2 skewed     concache::manual  1070558 ops/s read 4
+32  2 skewed     concache::manual  1145609 ops/s read 5
+32  2 skewed     concache::manual  1433916 ops/s read 6
+32  2 skewed     concache::manual  1440900 ops/s read 7
+32  2 skewed     concache::manual  1613390 ops/s read 8
+32  2 skewed     concache::manual  2188599 ops/s read 9
+32  2 skewed     concache::manual  1161507 ops/s read 10
+32  2 skewed     concache::manual  1817577 ops/s read 11
+32  2 skewed     concache::manual  1192720 ops/s read 12
+32  2 skewed     concache::manual  1422114 ops/s read 13
+32  2 skewed     concache::manual  1155307 ops/s read 14
+32  2 skewed     concache::manual  1434685 ops/s read 15
+32  2 skewed     concache::manual  1373027 ops/s read 16
+32  2 skewed     concache::manual  1825143 ops/s read 17
+32  2 skewed     concache::manual  1328467 ops/s read 18
+32  2 skewed     concache::manual  1581409 ops/s read 19
+32  2 skewed     concache::manual  2334212 ops/s read 20
+32  2 skewed     concache::manual  2966624 ops/s read 21
+32  2 skewed     concache::manual  2080155 ops/s read 22
+32  2 skewed     concache::manual  2755883 ops/s read 23
+32  2 skewed     concache::manual  2215553 ops/s read 24
+32  2 skewed     concache::manual  2240356 ops/s read 25
+32  2 skewed     concache::manual  2937616 ops/s read 26
+32  2 skewed     concache::manual  2262665 ops/s read 27
+32  2 skewed     concache::manual  1976625 ops/s read 28
+32  2 skewed     concache::manual  2114335 ops/s read 29
+32  2 skewed     concache::manual  2234795 ops/s read 30
+32  2 skewed     concache::manual  2224176 ops/s read 31
+ 1  4 uniform    std           26770 ops/s write 0
+ 1  4 uniform    std           27307 ops/s write 1
+ 1  4 uniform    std          121344 ops/s write 2
+ 1  4 uniform    std           27214 ops/s write 3
+ 1  4 uniform    std          281239 ops/s read 0
+ 1  4 uniform    chashmap     361560 ops/s write 0
+ 1  4 uniform    chashmap     835216 ops/s write 1
+ 1  4 uniform    chashmap     730389 ops/s write 2
+ 1  4 uniform    chashmap     365855 ops/s write 3
+ 1  4 uniform    chashmap     304484 ops/s read 0
+ 1  4 uniform    concache::crossbeam  2731224 ops/s write 0
+ 1  4 uniform    concache::crossbeam  2719764 ops/s write 1
+ 1  4 uniform    concache::crossbeam  2719237 ops/s write 2
+ 1  4 uniform    concache::crossbeam  2706652 ops/s write 3
+ 1  4 uniform    concache::crossbeam  3021600 ops/s read 0
+ 1  4 uniform    concache::manual  1549609 ops/s write 0
+ 1  4 uniform    concache::manual  1861228 ops/s write 1
+ 1  4 uniform    concache::manual  1890844 ops/s write 2
+ 1  4 uniform    concache::manual  1857368 ops/s write 3
+ 1  4 uniform    concache::manual  2000410 ops/s read 0
+ 2  4 uniform    std           10113 ops/s write 0
+ 2  4 uniform    std            9925 ops/s write 1
+ 2  4 uniform    std           96729 ops/s write 2
+ 2  4 uniform    std            9779 ops/s write 3
+ 2  4 uniform    std          293002 ops/s read 0
+ 2  4 uniform    std          285586 ops/s read 1
+ 2  4 uniform    chashmap     529934 ops/s write 0
+ 2  4 uniform    chashmap     354919 ops/s write 1
+ 2  4 uniform    chashmap     357796 ops/s write 2
+ 2  4 uniform    chashmap     504954 ops/s write 3
+ 2  4 uniform    chashmap     330943 ops/s read 0
+ 2  4 uniform    chashmap     478401 ops/s read 1
+ 2  4 uniform    concache::crossbeam  2633152 ops/s write 0
+ 2  4 uniform    concache::crossbeam  2655826 ops/s write 1
+ 2  4 uniform    concache::crossbeam  2700248 ops/s write 2
+ 2  4 uniform    concache::crossbeam  2624941 ops/s write 3
+ 2  4 uniform    concache::crossbeam  3141936 ops/s read 0
+ 2  4 uniform    concache::crossbeam  3166507 ops/s read 1
+ 2  4 uniform    concache::manual  1522593 ops/s write 0
+ 2  4 uniform    concache::manual  1551550 ops/s write 1
+ 2  4 uniform    concache::manual  1520113 ops/s write 2
+ 2  4 uniform    concache::manual  1573588 ops/s write 3
+ 2  4 uniform    concache::manual  1946383 ops/s read 0
+ 2  4 uniform    concache::manual  1963440 ops/s read 1
+ 4  4 uniform    std           10696 ops/s write 0
+ 4  4 uniform    std           10316 ops/s write 1
+ 4  4 uniform    std           11392 ops/s write 2
+ 4  4 uniform    std           10823 ops/s write 3
+ 4  4 uniform    std          334734 ops/s read 0
+ 4  4 uniform    std          319702 ops/s read 1
+ 4  4 uniform    std          398058 ops/s read 2
+ 4  4 uniform    std          390698 ops/s read 3
+ 4  4 uniform    chashmap     258423 ops/s write 0
+ 4  4 uniform    chashmap     416483 ops/s write 1
+ 4  4 uniform    chashmap     244776 ops/s write 2
+ 4  4 uniform    chashmap     415451 ops/s write 3
+ 4  4 uniform    chashmap     263223 ops/s read 0
+ 4  4 uniform    chashmap     224097 ops/s read 1
+ 4  4 uniform    chashmap     336943 ops/s read 2
+ 4  4 uniform    chashmap     335477 ops/s read 3
+ 4  4 uniform    concache::crossbeam  2608511 ops/s write 0
+ 4  4 uniform    concache::crossbeam  2651116 ops/s write 1
+ 4  4 uniform    concache::crossbeam  2644452 ops/s write 2
+ 4  4 uniform    concache::crossbeam  2641774 ops/s write 3
+ 4  4 uniform    concache::crossbeam  3170909 ops/s read 0
+ 4  4 uniform    concache::crossbeam  3196326 ops/s read 1
+ 4  4 uniform    concache::crossbeam  3256445 ops/s read 2
+ 4  4 uniform    concache::crossbeam  3208095 ops/s read 3
+ 4  4 uniform    concache::manual  1363093 ops/s write 0
+ 4  4 uniform    concache::manual  1434181 ops/s write 1
+ 4  4 uniform    concache::manual  1662095 ops/s write 2
+ 4  4 uniform    concache::manual  1658967 ops/s write 3
+ 4  4 uniform    concache::manual  2453348 ops/s read 0
+ 4  4 uniform    concache::manual  2454888 ops/s read 1
+ 4  4 uniform    concache::manual  1934277 ops/s read 2
+ 4  4 uniform    concache::manual  2160810 ops/s read 3
+ 8  4 uniform    std              65 ops/s write 0
+ 8  4 uniform    std              76 ops/s write 1
+ 8  4 uniform    std             219 ops/s write 2
+ 8  4 uniform    std             147 ops/s write 3
+ 8  4 uniform    std          206062 ops/s read 0
+ 8  4 uniform    std          205507 ops/s read 1
+ 8  4 uniform    std          223230 ops/s read 2
+ 8  4 uniform    std          211206 ops/s read 3
+ 8  4 uniform    std          210130 ops/s read 4
+ 8  4 uniform    std          203696 ops/s read 5
+ 8  4 uniform    std          205167 ops/s read 6
+ 8  4 uniform    std          251322 ops/s read 7
+ 8  4 uniform    chashmap     210680 ops/s write 0
+ 8  4 uniform    chashmap     275328 ops/s write 1
+ 8  4 uniform    chashmap     181211 ops/s write 2
+ 8  4 uniform    chashmap     144274 ops/s write 3
+ 8  4 uniform    chashmap     220069 ops/s read 0
+ 8  4 uniform    chashmap     218127 ops/s read 1
+ 8  4 uniform    chashmap     218248 ops/s read 2
+ 8  4 uniform    chashmap     222083 ops/s read 3
+ 8  4 uniform    chashmap     138405 ops/s read 4
+ 8  4 uniform    chashmap     222517 ops/s read 5
+ 8  4 uniform    chashmap     140427 ops/s read 6
+ 8  4 uniform    chashmap     139614 ops/s read 7
+ 8  4 uniform    concache::crossbeam  2370300 ops/s write 0
+ 8  4 uniform    concache::crossbeam  2404230 ops/s write 1
+ 8  4 uniform    concache::crossbeam  2389662 ops/s write 2
+ 8  4 uniform    concache::crossbeam  2451715 ops/s write 3
+ 8  4 uniform    concache::crossbeam  3416878 ops/s read 0
+ 8  4 uniform    concache::crossbeam  3348656 ops/s read 1
+ 8  4 uniform    concache::crossbeam  3357907 ops/s read 2
+ 8  4 uniform    concache::crossbeam  3352228 ops/s read 3
+ 8  4 uniform    concache::crossbeam  3410215 ops/s read 4
+ 8  4 uniform    concache::crossbeam  3396942 ops/s read 5
+ 8  4 uniform    concache::crossbeam  3389319 ops/s read 6
+ 8  4 uniform    concache::crossbeam  3394750 ops/s read 7
+ 8  4 uniform    concache::manual  1678650 ops/s write 0
+ 8  4 uniform    concache::manual  1578720 ops/s write 1
+ 8  4 uniform    concache::manual  1557552 ops/s write 2
+ 8  4 uniform    concache::manual  1564880 ops/s write 3
+ 8  4 uniform    concache::manual  2515330 ops/s read 0
+ 8  4 uniform    concache::manual  2528193 ops/s read 1
+ 8  4 uniform    concache::manual  2604182 ops/s read 2
+ 8  4 uniform    concache::manual  2102186 ops/s read 3
+ 8  4 uniform    concache::manual  2586769 ops/s read 4
+ 8  4 uniform    concache::manual  2068799 ops/s read 5
+ 8  4 uniform    concache::manual  2087473 ops/s read 6
+ 8  4 uniform    concache::manual  2070626 ops/s read 7
 16  4 uniform    std               1 ops/s write 0
 16  4 uniform    std               0 ops/s write 1
 16  4 uniform    std               0 ops/s write 2
 16  4 uniform    std               0 ops/s write 3
-16  4 uniform    std          116007 ops/s read 0
-16  4 uniform    std          235595 ops/s read 1
-16  4 uniform    std          151865 ops/s read 2
-16  4 uniform    std          107212 ops/s read 3
-16  4 uniform    std          109506 ops/s read 4
-16  4 uniform    std          117333 ops/s read 5
-16  4 uniform    std          110173 ops/s read 6
-16  4 uniform    std          108257 ops/s read 7
-16  4 uniform    std          108372 ops/s read 8
-16  4 uniform    std          112604 ops/s read 9
-16  4 uniform    std          129647 ops/s read 10
-16  4 uniform    std          119597 ops/s read 11
-16  4 uniform    std          108894 ops/s read 12
-16  4 uniform    std          120665 ops/s read 13
-16  4 uniform    std          113535 ops/s read 14
-16  4 uniform    std          109909 ops/s read 15
-16  4 uniform    chashmap     164414 ops/s write 0
-16  4 uniform    chashmap     158477 ops/s write 1
-16  4 uniform    chashmap     117030 ops/s write 2
-16  4 uniform    chashmap     156090 ops/s write 3
-16  4 uniform    chashmap      86217 ops/s read 0
-16  4 uniform    chashmap      90636 ops/s read 1
-16  4 uniform    chashmap      81825 ops/s read 2
-16  4 uniform    chashmap      81986 ops/s read 3
-16  4 uniform    chashmap      83430 ops/s read 4
-16  4 uniform    chashmap     122002 ops/s read 5
-16  4 uniform    chashmap     121302 ops/s read 6
-16  4 uniform    chashmap     138300 ops/s read 7
-16  4 uniform    chashmap      97381 ops/s read 8
-16  4 uniform    chashmap     128619 ops/s read 9
-16  4 uniform    chashmap     123761 ops/s read 10
-16  4 uniform    chashmap     123865 ops/s read 11
-16  4 uniform    chashmap      82744 ops/s read 12
-16  4 uniform    chashmap     122023 ops/s read 13
-16  4 uniform    chashmap     132956 ops/s read 14
-16  4 uniform    chashmap      92858 ops/s read 15
-16  4 uniform    concache::crossbeam  1703783 ops/s write 0
-16  4 uniform    concache::crossbeam  1724974 ops/s write 1
-16  4 uniform    concache::crossbeam  1728494 ops/s write 2
-16  4 uniform    concache::crossbeam  1709557 ops/s write 3
-16  4 uniform    concache::crossbeam  3097665 ops/s read 0
-16  4 uniform    concache::crossbeam  3094974 ops/s read 1
-16  4 uniform    concache::crossbeam  3107212 ops/s read 2
-16  4 uniform    concache::crossbeam  3101387 ops/s read 3
-16  4 uniform    concache::crossbeam  3044800 ops/s read 4
-16  4 uniform    concache::crossbeam  2973385 ops/s read 5
-16  4 uniform    concache::crossbeam  3046236 ops/s read 6
-16  4 uniform    concache::crossbeam  2927951 ops/s read 7
-16  4 uniform    concache::crossbeam  2894987 ops/s read 8
-16  4 uniform    concache::crossbeam  3004473 ops/s read 9
-16  4 uniform    concache::crossbeam  3085898 ops/s read 10
-16  4 uniform    concache::crossbeam  2985966 ops/s read 11
-16  4 uniform    concache::crossbeam  3040865 ops/s read 12
-16  4 uniform    concache::crossbeam  2909458 ops/s read 13
-16  4 uniform    concache::crossbeam  2879277 ops/s read 14
-16  4 uniform    concache::crossbeam  2911511 ops/s read 15
+16  4 uniform    std          148093 ops/s read 0
+16  4 uniform    std          134231 ops/s read 1
+16  4 uniform    std          120786 ops/s read 2
+16  4 uniform    std          127303 ops/s read 3
+16  4 uniform    std          123046 ops/s read 4
+16  4 uniform    std          110487 ops/s read 5
+16  4 uniform    std          111997 ops/s read 6
+16  4 uniform    std          113794 ops/s read 7
+16  4 uniform    std          118842 ops/s read 8
+16  4 uniform    std          112329 ops/s read 9
+16  4 uniform    std          112270 ops/s read 10
+16  4 uniform    std          104484 ops/s read 11
+16  4 uniform    std          111069 ops/s read 12
+16  4 uniform    std          173916 ops/s read 13
+16  4 uniform    std          112218 ops/s read 14
+16  4 uniform    std          112138 ops/s read 15
+16  4 uniform    chashmap     174257 ops/s write 0
+16  4 uniform    chashmap     168328 ops/s write 1
+16  4 uniform    chashmap     134918 ops/s write 2
+16  4 uniform    chashmap     170971 ops/s write 3
+16  4 uniform    chashmap     134459 ops/s read 0
+16  4 uniform    chashmap     133165 ops/s read 1
+16  4 uniform    chashmap     128935 ops/s read 2
+16  4 uniform    chashmap      78528 ops/s read 3
+16  4 uniform    chashmap     124431 ops/s read 4
+16  4 uniform    chashmap      96618 ops/s read 5
+16  4 uniform    chashmap     122461 ops/s read 6
+16  4 uniform    chashmap     138271 ops/s read 7
+16  4 uniform    chashmap      97089 ops/s read 8
+16  4 uniform    chashmap      86474 ops/s read 9
+16  4 uniform    chashmap      83785 ops/s read 10
+16  4 uniform    chashmap     106667 ops/s read 11
+16  4 uniform    chashmap      81821 ops/s read 12
+16  4 uniform    chashmap     127605 ops/s read 13
+16  4 uniform    chashmap     142874 ops/s read 14
+16  4 uniform    chashmap      82553 ops/s read 15
+16  4 uniform    concache::crossbeam  2478067 ops/s write 0
+16  4 uniform    concache::crossbeam  2550004 ops/s write 1
+16  4 uniform    concache::crossbeam  2447002 ops/s write 2
+16  4 uniform    concache::crossbeam  2434059 ops/s write 3
+16  4 uniform    concache::crossbeam  3319745 ops/s read 0
+16  4 uniform    concache::crossbeam  3240149 ops/s read 1
+16  4 uniform    concache::crossbeam  3199411 ops/s read 2
+16  4 uniform    concache::crossbeam  3194878 ops/s read 3
+16  4 uniform    concache::crossbeam  3298145 ops/s read 4
+16  4 uniform    concache::crossbeam  3249770 ops/s read 5
+16  4 uniform    concache::crossbeam  3355691 ops/s read 6
+16  4 uniform    concache::crossbeam  3363017 ops/s read 7
+16  4 uniform    concache::crossbeam  3359561 ops/s read 8
+16  4 uniform    concache::crossbeam  3343532 ops/s read 9
+16  4 uniform    concache::crossbeam  3218224 ops/s read 10
+16  4 uniform    concache::crossbeam  3224148 ops/s read 11
+16  4 uniform    concache::crossbeam  3170875 ops/s read 12
+16  4 uniform    concache::crossbeam  3305298 ops/s read 13
+16  4 uniform    concache::crossbeam  3234183 ops/s read 14
+16  4 uniform    concache::crossbeam  3370513 ops/s read 15
+16  4 uniform    concache::manual  1492844 ops/s write 0
+16  4 uniform    concache::manual  1473776 ops/s write 1
+16  4 uniform    concache::manual  1568220 ops/s write 2
+16  4 uniform    concache::manual  1576559 ops/s write 3
+16  4 uniform    concache::manual  2228759 ops/s read 0
+16  4 uniform    concache::manual  2478993 ops/s read 1
+16  4 uniform    concache::manual  2416904 ops/s read 2
+16  4 uniform    concache::manual  2526084 ops/s read 3
+16  4 uniform    concache::manual  2400926 ops/s read 4
+16  4 uniform    concache::manual  2526165 ops/s read 5
+16  4 uniform    concache::manual  2442793 ops/s read 6
+16  4 uniform    concache::manual  2412989 ops/s read 7
+16  4 uniform    concache::manual  1977908 ops/s read 8
+16  4 uniform    concache::manual  1963032 ops/s read 9
+16  4 uniform    concache::manual  2238344 ops/s read 10
+16  4 uniform    concache::manual  2335507 ops/s read 11
+16  4 uniform    concache::manual  1940072 ops/s read 12
+16  4 uniform    concache::manual  1988393 ops/s read 13
+16  4 uniform    concache::manual  2461929 ops/s read 14
+16  4 uniform    concache::manual  2477438 ops/s read 15
 32  4 uniform    std               0 ops/s write 0
 32  4 uniform    std               0 ops/s write 1
 32  4 uniform    std               0 ops/s write 2
 32  4 uniform    std               0 ops/s write 3
-32  4 uniform    std           84568 ops/s read 0
-32  4 uniform    std           83008 ops/s read 1
-32  4 uniform    std           97641 ops/s read 2
-32  4 uniform    std           92453 ops/s read 3
-32  4 uniform    std           88618 ops/s read 4
-32  4 uniform    std          125025 ops/s read 5
-32  4 uniform    std           87555 ops/s read 6
-32  4 uniform    std          100248 ops/s read 7
-32  4 uniform    std           88072 ops/s read 8
-32  4 uniform    std           96584 ops/s read 9
-32  4 uniform    std           88249 ops/s read 10
-32  4 uniform    std           98051 ops/s read 11
-32  4 uniform    std           92624 ops/s read 12
-32  4 uniform    std          111213 ops/s read 13
-32  4 uniform    std           84337 ops/s read 14
-32  4 uniform    std           82932 ops/s read 15
-32  4 uniform    std           86480 ops/s read 16
-32  4 uniform    std          102407 ops/s read 17
-32  4 uniform    std          105041 ops/s read 18
-32  4 uniform    std           88638 ops/s read 19
-32  4 uniform    std           79246 ops/s read 20
-32  4 uniform    std           84919 ops/s read 21
-32  4 uniform    std           86811 ops/s read 22
-32  4 uniform    std           75905 ops/s read 23
-32  4 uniform    std           75516 ops/s read 24
-32  4 uniform    std           93000 ops/s read 25
-32  4 uniform    std           89365 ops/s read 26
-32  4 uniform    std           85264 ops/s read 27
-32  4 uniform    std           80908 ops/s read 28
-32  4 uniform    std           88915 ops/s read 29
-32  4 uniform    std           82204 ops/s read 30
-32  4 uniform    std           80356 ops/s read 31
-32  4 uniform    chashmap     100885 ops/s write 0
-32  4 uniform    chashmap     158647 ops/s write 1
-32  4 uniform    chashmap      55793 ops/s write 2
-32  4 uniform    chashmap     106267 ops/s write 3
-32  4 uniform    chashmap      50731 ops/s read 0
-32  4 uniform    chashmap      53326 ops/s read 1
-32  4 uniform    chashmap      55025 ops/s read 2
-32  4 uniform    chashmap      51703 ops/s read 3
-32  4 uniform    chashmap      64732 ops/s read 4
-32  4 uniform    chashmap      94939 ops/s read 5
-32  4 uniform    chashmap      58619 ops/s read 6
-32  4 uniform    chashmap      94374 ops/s read 7
-32  4 uniform    chashmap      78871 ops/s read 8
-32  4 uniform    chashmap      84123 ops/s read 9
-32  4 uniform    chashmap      53505 ops/s read 10
-32  4 uniform    chashmap      88262 ops/s read 11
-32  4 uniform    chashmap      50703 ops/s read 12
-32  4 uniform    chashmap      54975 ops/s read 13
-32  4 uniform    chashmap      57224 ops/s read 14
-32  4 uniform    chashmap      89613 ops/s read 15
-32  4 uniform    chashmap      57038 ops/s read 16
-32  4 uniform    chashmap      89564 ops/s read 17
-32  4 uniform    chashmap     102966 ops/s read 18
-32  4 uniform    chashmap      56204 ops/s read 19
-32  4 uniform    chashmap      59449 ops/s read 20
-32  4 uniform    chashmap      97318 ops/s read 21
-32  4 uniform    chashmap      89267 ops/s read 22
-32  4 uniform    chashmap      97153 ops/s read 23
-32  4 uniform    chashmap      51140 ops/s read 24
-32  4 uniform    chashmap      55627 ops/s read 25
-32  4 uniform    chashmap      56921 ops/s read 26
-32  4 uniform    chashmap      92629 ops/s read 27
-32  4 uniform    chashmap      94778 ops/s read 28
-32  4 uniform    chashmap      97581 ops/s read 29
-32  4 uniform    chashmap      59870 ops/s read 30
-32  4 uniform    chashmap     139465 ops/s read 31
- 1  4 skewed     std          112236 ops/s write 0
- 1  4 skewed     std          133121 ops/s write 1
- 1  4 skewed     std          114596 ops/s write 2
- 1  4 skewed     std          108736 ops/s write 3
- 1  4 skewed     std          804013 ops/s read 0
- 1  4 skewed     chashmap     798086 ops/s write 0
- 1  4 skewed     chashmap     354670 ops/s write 1
- 1  4 skewed     chashmap     745213 ops/s write 2
- 1  4 skewed     chashmap     349789 ops/s write 3
- 1  4 skewed     chashmap     301556 ops/s read 0
- 2  4 skewed     std           31863 ops/s write 0
- 2  4 skewed     std           21282 ops/s write 1
- 2  4 skewed     std           29339 ops/s write 2
- 2  4 skewed     std           29501 ops/s write 3
- 2  4 skewed     std          225853 ops/s read 0
- 2  4 skewed     std          533328 ops/s read 1
- 2  4 skewed     chashmap     321794 ops/s write 0
- 2  4 skewed     chashmap     547304 ops/s write 1
- 2  4 skewed     chashmap     343902 ops/s write 2
- 2  4 skewed     chashmap     492553 ops/s write 3
- 2  4 skewed     chashmap     396033 ops/s read 0
- 2  4 skewed     chashmap     298501 ops/s read 1
- 4  4 skewed     std           15832 ops/s write 0
- 4  4 skewed     std           10897 ops/s write 1
- 4  4 skewed     std            5191 ops/s write 2
- 4  4 skewed     std           11653 ops/s write 3
- 4  4 skewed     std          335855 ops/s read 0
- 4  4 skewed     std          368305 ops/s read 1
- 4  4 skewed     std          368713 ops/s read 2
- 4  4 skewed     std          544120 ops/s read 3
- 4  4 skewed     chashmap     208005 ops/s write 0
- 4  4 skewed     chashmap     235772 ops/s write 1
- 4  4 skewed     chashmap     525510 ops/s write 2
- 4  4 skewed     chashmap     222976 ops/s write 3
- 4  4 skewed     chashmap     358375 ops/s read 0
- 4  4 skewed     chashmap     338173 ops/s read 1
- 4  4 skewed     chashmap     324063 ops/s read 2
- 4  4 skewed     chashmap     222443 ops/s read 3
- 8  4 skewed     std             102 ops/s write 0
- 8  4 skewed     std              20 ops/s write 1
- 8  4 skewed     std              22 ops/s write 2
- 8  4 skewed     std             300 ops/s write 3
- 8  4 skewed     std          204808 ops/s read 0
- 8  4 skewed     std          195955 ops/s read 1
- 8  4 skewed     std          201545 ops/s read 2
- 8  4 skewed     std          191550 ops/s read 3
- 8  4 skewed     std          197560 ops/s read 4
- 8  4 skewed     std          277306 ops/s read 5
- 8  4 skewed     std          201090 ops/s read 6
- 8  4 skewed     std          208907 ops/s read 7
- 8  4 skewed     chashmap     278709 ops/s write 0
- 8  4 skewed     chashmap     262863 ops/s write 1
- 8  4 skewed     chashmap     386373 ops/s write 2
- 8  4 skewed     chashmap     146126 ops/s write 3
- 8  4 skewed     chashmap     144356 ops/s read 0
- 8  4 skewed     chashmap     149353 ops/s read 1
- 8  4 skewed     chashmap     153796 ops/s read 2
- 8  4 skewed     chashmap     208340 ops/s read 3
- 8  4 skewed     chashmap     260881 ops/s read 4
- 8  4 skewed     chashmap     135071 ops/s read 5
- 8  4 skewed     chashmap     241823 ops/s read 6
- 8  4 skewed     chashmap     139509 ops/s read 7
-16  4 skewed     std               3 ops/s write 0
-16  4 skewed     std               0 ops/s write 1
+32  4 uniform    std           84056 ops/s read 0
+32  4 uniform    std           79298 ops/s read 1
+32  4 uniform    std           94133 ops/s read 2
+32  4 uniform    std           80072 ops/s read 3
+32  4 uniform    std           95129 ops/s read 4
+32  4 uniform    std           90446 ops/s read 5
+32  4 uniform    std           86008 ops/s read 6
+32  4 uniform    std           90175 ops/s read 7
+32  4 uniform    std           91480 ops/s read 8
+32  4 uniform    std           84396 ops/s read 9
+32  4 uniform    std           79204 ops/s read 10
+32  4 uniform    std           78418 ops/s read 11
+32  4 uniform    std           90435 ops/s read 12
+32  4 uniform    std           91859 ops/s read 13
+32  4 uniform    std           78848 ops/s read 14
+32  4 uniform    std           84543 ops/s read 15
+32  4 uniform    std           88940 ops/s read 16
+32  4 uniform    std           80116 ops/s read 17
+32  4 uniform    std           78898 ops/s read 18
+32  4 uniform    std           79149 ops/s read 19
+32  4 uniform    std           92625 ops/s read 20
+32  4 uniform    std           91645 ops/s read 21
+32  4 uniform    std           91051 ops/s read 22
+32  4 uniform    std           92516 ops/s read 23
+32  4 uniform    std           77726 ops/s read 24
+32  4 uniform    std           93661 ops/s read 25
+32  4 uniform    std           79065 ops/s read 26
+32  4 uniform    std           91119 ops/s read 27
+32  4 uniform    std           83358 ops/s read 28
+32  4 uniform    std           88534 ops/s read 29
+32  4 uniform    std           84686 ops/s read 30
+32  4 uniform    std           77548 ops/s read 31
+32  4 uniform    chashmap     145275 ops/s write 0
+32  4 uniform    chashmap      77632 ops/s write 1
+32  4 uniform    chashmap      55781 ops/s write 2
+32  4 uniform    chashmap      81762 ops/s write 3
+32  4 uniform    chashmap      61621 ops/s read 0
+32  4 uniform    chashmap      90893 ops/s read 1
+32  4 uniform    chashmap      84365 ops/s read 2
+32  4 uniform    chashmap      58967 ops/s read 3
+32  4 uniform    chashmap      89921 ops/s read 4
+32  4 uniform    chashmap      62822 ops/s read 5
+32  4 uniform    chashmap      57075 ops/s read 6
+32  4 uniform    chashmap      97474 ops/s read 7
+32  4 uniform    chashmap      86065 ops/s read 8
+32  4 uniform    chashmap      61776 ops/s read 9
+32  4 uniform    chashmap      59909 ops/s read 10
+32  4 uniform    chashmap      96387 ops/s read 11
+32  4 uniform    chashmap      58528 ops/s read 12
+32  4 uniform    chashmap      81027 ops/s read 13
+32  4 uniform    chashmap      62385 ops/s read 14
+32  4 uniform    chashmap      82579 ops/s read 15
+32  4 uniform    chashmap      82231 ops/s read 16
+32  4 uniform    chashmap      96427 ops/s read 17
+32  4 uniform    chashmap      56881 ops/s read 18
+32  4 uniform    chashmap      61593 ops/s read 19
+32  4 uniform    chashmap      61495 ops/s read 20
+32  4 uniform    chashmap     101736 ops/s read 21
+32  4 uniform    chashmap      82471 ops/s read 22
+32  4 uniform    chashmap     111889 ops/s read 23
+32  4 uniform    chashmap      61548 ops/s read 24
+32  4 uniform    chashmap     122290 ops/s read 25
+32  4 uniform    chashmap      58415 ops/s read 26
+32  4 uniform    chashmap      84726 ops/s read 27
+32  4 uniform    chashmap      58396 ops/s read 28
+32  4 uniform    chashmap      90809 ops/s read 29
+32  4 uniform    chashmap     106205 ops/s read 30
+32  4 uniform    chashmap      58241 ops/s read 31
+32  4 uniform    concache::crossbeam  1893640 ops/s write 0
+32  4 uniform    concache::crossbeam  1906642 ops/s write 1
+32  4 uniform    concache::crossbeam  1891286 ops/s write 2
+32  4 uniform    concache::crossbeam  1879066 ops/s write 3
+32  4 uniform    concache::crossbeam  2759415 ops/s read 0
+32  4 uniform    concache::crossbeam  2822377 ops/s read 1
+32  4 uniform    concache::crossbeam  3434011 ops/s read 2
+32  4 uniform    concache::crossbeam  2687196 ops/s read 3
+32  4 uniform    concache::crossbeam  2869329 ops/s read 4
+32  4 uniform    concache::crossbeam  2711594 ops/s read 5
+32  4 uniform    concache::crossbeam  2724988 ops/s read 6
+32  4 uniform    concache::crossbeam  2721548 ops/s read 7
+32  4 uniform    concache::crossbeam  2691605 ops/s read 8
+32  4 uniform    concache::crossbeam  2711552 ops/s read 9
+32  4 uniform    concache::crossbeam  2816723 ops/s read 10
+32  4 uniform    concache::crossbeam  2701341 ops/s read 11
+32  4 uniform    concache::crossbeam  3334733 ops/s read 12
+32  4 uniform    concache::crossbeam  2743211 ops/s read 13
+32  4 uniform    concache::crossbeam  2751114 ops/s read 14
+32  4 uniform    concache::crossbeam  2735776 ops/s read 15
+32  4 uniform    concache::crossbeam  2737022 ops/s read 16
+32  4 uniform    concache::crossbeam  2760718 ops/s read 17
+32  4 uniform    concache::crossbeam  2771512 ops/s read 18
+32  4 uniform    concache::crossbeam  2721706 ops/s read 19
+32  4 uniform    concache::crossbeam  2720546 ops/s read 20
+32  4 uniform    concache::crossbeam  2703275 ops/s read 21
+32  4 uniform    concache::crossbeam  2692422 ops/s read 22
+32  4 uniform    concache::crossbeam  3530588 ops/s read 23
+32  4 uniform    concache::crossbeam  2725702 ops/s read 24
+32  4 uniform    concache::crossbeam  2691284 ops/s read 25
+32  4 uniform    concache::crossbeam  3528797 ops/s read 26
+32  4 uniform    concache::crossbeam  2712805 ops/s read 27
+32  4 uniform    concache::crossbeam  2717129 ops/s read 28
+32  4 uniform    concache::crossbeam  2701949 ops/s read 29
+32  4 uniform    concache::crossbeam  2715430 ops/s read 30
+32  4 uniform    concache::crossbeam  2724432 ops/s read 31
+32  4 uniform    concache::manual  1164147 ops/s write 0
+32  4 uniform    concache::manual  1174117 ops/s write 1
+32  4 uniform    concache::manual  1146842 ops/s write 2
+32  4 uniform    concache::manual  1129966 ops/s write 3
+32  4 uniform    concache::manual  2120536 ops/s read 0
+32  4 uniform    concache::manual  1672820 ops/s read 1
+32  4 uniform    concache::manual  1830492 ops/s read 2
+32  4 uniform    concache::manual  1861429 ops/s read 3
+32  4 uniform    concache::manual  1904018 ops/s read 4
+32  4 uniform    concache::manual  1876097 ops/s read 5
+32  4 uniform    concache::manual  1935827 ops/s read 6
+32  4 uniform    concache::manual  1941273 ops/s read 7
+32  4 uniform    concache::manual  1914694 ops/s read 8
+32  4 uniform    concache::manual  1842305 ops/s read 9
+32  4 uniform    concache::manual  1866697 ops/s read 10
+32  4 uniform    concache::manual  1883444 ops/s read 11
+32  4 uniform    concache::manual  1518435 ops/s read 12
+32  4 uniform    concache::manual  1663933 ops/s read 13
+32  4 uniform    concache::manual  1880329 ops/s read 14
+32  4 uniform    concache::manual  1860371 ops/s read 15
+32  4 uniform    concache::manual  1852207 ops/s read 16
+32  4 uniform    concache::manual  2450168 ops/s read 17
+32  4 uniform    concache::manual  2096872 ops/s read 18
+32  4 uniform    concache::manual  1650062 ops/s read 19
+32  4 uniform    concache::manual  1924996 ops/s read 20
+32  4 uniform    concache::manual  1960856 ops/s read 21
+32  4 uniform    concache::manual  2079867 ops/s read 22
+32  4 uniform    concache::manual  1634709 ops/s read 23
+32  4 uniform    concache::manual  2079857 ops/s read 24
+32  4 uniform    concache::manual  2227033 ops/s read 25
+32  4 uniform    concache::manual  2175137 ops/s read 26
+32  4 uniform    concache::manual  2099789 ops/s read 27
+32  4 uniform    concache::manual  2130007 ops/s read 28
+32  4 uniform    concache::manual  2091391 ops/s read 29
+32  4 uniform    concache::manual  2119426 ops/s read 30
+32  4 uniform    concache::manual  2163181 ops/s read 31
+ 1  4 skewed     std           30864 ops/s write 0
+ 1  4 skewed     std           36121 ops/s write 1
+ 1  4 skewed     std          116018 ops/s write 2
+ 1  4 skewed     std           33972 ops/s write 3
+ 1  4 skewed     std          321587 ops/s read 0
+ 1  4 skewed     chashmap     761016 ops/s write 0
+ 1  4 skewed     chashmap     337217 ops/s write 1
+ 1  4 skewed     chashmap     337226 ops/s write 2
+ 1  4 skewed     chashmap     333647 ops/s write 3
+ 1  4 skewed     chashmap     684903 ops/s read 0
+ 1  4 skewed     concache::crossbeam  2707670 ops/s write 0
+ 1  4 skewed     concache::crossbeam  2723989 ops/s write 1
+ 1  4 skewed     concache::crossbeam  2919527 ops/s write 2
+ 1  4 skewed     concache::crossbeam  2917670 ops/s write 3
+ 1  4 skewed     concache::crossbeam  3111711 ops/s read 0
+ 1  4 skewed     concache::manual  1601712 ops/s write 0
+ 1  4 skewed     concache::manual  1565658 ops/s write 1
+ 1  4 skewed     concache::manual  1973367 ops/s write 2
+ 1  4 skewed     concache::manual  1560481 ops/s write 3
+ 1  4 skewed     concache::manual  2031087 ops/s read 0
+ 2  4 skewed     std           28935 ops/s write 0
+ 2  4 skewed     std           31665 ops/s write 1
+ 2  4 skewed     std           70774 ops/s write 2
+ 2  4 skewed     std           28917 ops/s write 3
+ 2  4 skewed     std          553955 ops/s read 0
+ 2  4 skewed     std          561434 ops/s read 1
+ 2  4 skewed     chashmap     329228 ops/s write 0
+ 2  4 skewed     chashmap     545108 ops/s write 1
+ 2  4 skewed     chashmap     447973 ops/s write 2
+ 2  4 skewed     chashmap     347238 ops/s write 3
+ 2  4 skewed     chashmap     508066 ops/s read 0
+ 2  4 skewed     chashmap     339429 ops/s read 1
+ 2  4 skewed     concache::crossbeam  2758780 ops/s write 0
+ 2  4 skewed     concache::crossbeam  2654163 ops/s write 1
+ 2  4 skewed     concache::crossbeam  2655372 ops/s write 2
+ 2  4 skewed     concache::crossbeam  2655698 ops/s write 3
+ 2  4 skewed     concache::crossbeam  3030986 ops/s read 0
+ 2  4 skewed     concache::crossbeam  3060354 ops/s read 1
+ 2  4 skewed     concache::manual  1528860 ops/s write 0
+ 2  4 skewed     concache::manual  1926858 ops/s write 1
+ 2  4 skewed     concache::manual  1535540 ops/s write 2
+ 2  4 skewed     concache::manual  1922664 ops/s write 3
+ 2  4 skewed     concache::manual  1968349 ops/s read 0
+ 2  4 skewed     concache::manual  1838832 ops/s read 1
+ 4  4 skewed     std            8375 ops/s write 0
+ 4  4 skewed     std            7672 ops/s write 1
+ 4  4 skewed     std           23023 ops/s write 2
+ 4  4 skewed     std            8120 ops/s write 3
+ 4  4 skewed     std          379647 ops/s read 0
+ 4  4 skewed     std          375437 ops/s read 1
+ 4  4 skewed     std          526823 ops/s read 2
+ 4  4 skewed     std          385972 ops/s read 3
+ 4  4 skewed     chashmap     514150 ops/s write 0
+ 4  4 skewed     chashmap     243839 ops/s write 1
+ 4  4 skewed     chashmap     243532 ops/s write 2
+ 4  4 skewed     chashmap     441185 ops/s write 3
+ 4  4 skewed     chashmap     333024 ops/s read 0
+ 4  4 skewed     chashmap     323751 ops/s read 1
+ 4  4 skewed     chashmap     233267 ops/s read 2
+ 4  4 skewed     chashmap     205809 ops/s read 3
+ 4  4 skewed     concache::crossbeam  2611779 ops/s write 0
+ 4  4 skewed     concache::crossbeam  2590120 ops/s write 1
+ 4  4 skewed     concache::crossbeam  2634014 ops/s write 2
+ 4  4 skewed     concache::crossbeam  2562696 ops/s write 3
+ 4  4 skewed     concache::crossbeam  3100103 ops/s read 0
+ 4  4 skewed     concache::crossbeam  3092537 ops/s read 1
+ 4  4 skewed     concache::crossbeam  3127705 ops/s read 2
+ 4  4 skewed     concache::crossbeam  3144316 ops/s read 3
+ 4  4 skewed     concache::manual  1318598 ops/s write 0
+ 4  4 skewed     concache::manual  1474981 ops/s write 1
+ 4  4 skewed     concache::manual  1430404 ops/s write 2
+ 4  4 skewed     concache::manual  1513113 ops/s write 3
+ 4  4 skewed     concache::manual  2177334 ops/s read 0
+ 4  4 skewed     concache::manual  2192073 ops/s read 1
+ 4  4 skewed     concache::manual  1984806 ops/s read 2
+ 4  4 skewed     concache::manual  2192213 ops/s read 3
+ 8  4 skewed     std              40 ops/s write 0
+ 8  4 skewed     std              71 ops/s write 1
+ 8  4 skewed     std             418 ops/s write 2
+ 8  4 skewed     std              69 ops/s write 3
+ 8  4 skewed     std          226993 ops/s read 0
+ 8  4 skewed     std          211542 ops/s read 1
+ 8  4 skewed     std          212366 ops/s read 2
+ 8  4 skewed     std          214439 ops/s read 3
+ 8  4 skewed     std          261373 ops/s read 4
+ 8  4 skewed     std          209628 ops/s read 5
+ 8  4 skewed     std          210442 ops/s read 6
+ 8  4 skewed     std          208369 ops/s read 7
+ 8  4 skewed     chashmap     251332 ops/s write 0
+ 8  4 skewed     chashmap     222059 ops/s write 1
+ 8  4 skewed     chashmap     179000 ops/s write 2
+ 8  4 skewed     chashmap     246853 ops/s write 3
+ 8  4 skewed     chashmap     209449 ops/s read 0
+ 8  4 skewed     chashmap     207711 ops/s read 1
+ 8  4 skewed     chashmap     152805 ops/s read 2
+ 8  4 skewed     chashmap     150927 ops/s read 3
+ 8  4 skewed     chashmap     208700 ops/s read 4
+ 8  4 skewed     chashmap     206951 ops/s read 5
+ 8  4 skewed     chashmap     147393 ops/s read 6
+ 8  4 skewed     chashmap     145342 ops/s read 7
+ 8  4 skewed     concache::crossbeam  2594677 ops/s write 0
+ 8  4 skewed     concache::crossbeam  2481867 ops/s write 1
+ 8  4 skewed     concache::crossbeam  2487579 ops/s write 2
+ 8  4 skewed     concache::crossbeam  2452251 ops/s write 3
+ 8  4 skewed     concache::crossbeam  3256506 ops/s read 0
+ 8  4 skewed     concache::crossbeam  3144241 ops/s read 1
+ 8  4 skewed     concache::crossbeam  3207196 ops/s read 2
+ 8  4 skewed     concache::crossbeam  3273495 ops/s read 3
+ 8  4 skewed     concache::crossbeam  3281668 ops/s read 4
+ 8  4 skewed     concache::crossbeam  3261536 ops/s read 5
+ 8  4 skewed     concache::crossbeam  3265564 ops/s read 6
+ 8  4 skewed     concache::crossbeam  3262518 ops/s read 7
+ 8  4 skewed     concache::manual  1661034 ops/s write 0
+ 8  4 skewed     concache::manual  1638822 ops/s write 1
+ 8  4 skewed     concache::manual  1627997 ops/s write 2
+ 8  4 skewed     concache::manual  1645420 ops/s write 3
+ 8  4 skewed     concache::manual  2231273 ops/s read 0
+ 8  4 skewed     concache::manual  2037979 ops/s read 1
+ 8  4 skewed     concache::manual  2106399 ops/s read 2
+ 8  4 skewed     concache::manual  2092098 ops/s read 3
+ 8  4 skewed     concache::manual  2109720 ops/s read 4
+ 8  4 skewed     concache::manual  2085540 ops/s read 5
+ 8  4 skewed     concache::manual  1922253 ops/s read 6
+ 8  4 skewed     concache::manual  2138453 ops/s read 7
+16  4 skewed     std               0 ops/s write 0
+16  4 skewed     std               1 ops/s write 1
 16  4 skewed     std               0 ops/s write 2
 16  4 skewed     std               0 ops/s write 3
-16  4 skewed     std          108614 ops/s read 0
-16  4 skewed     std          165281 ops/s read 1
-16  4 skewed     std          113821 ops/s read 2
-16  4 skewed     std          115019 ops/s read 3
-16  4 skewed     std          140256 ops/s read 4
-16  4 skewed     std          108856 ops/s read 5
-16  4 skewed     std          109583 ops/s read 6
-16  4 skewed     std          109669 ops/s read 7
-16  4 skewed     std          108996 ops/s read 8
-16  4 skewed     std          111966 ops/s read 9
-16  4 skewed     std          123290 ops/s read 10
-16  4 skewed     std          119990 ops/s read 11
-16  4 skewed     std          116341 ops/s read 12
-16  4 skewed     std          114004 ops/s read 13
-16  4 skewed     std          108988 ops/s read 14
-16  4 skewed     std          128719 ops/s read 15
-16  4 skewed     chashmap     145654 ops/s write 0
-16  4 skewed     chashmap     140144 ops/s write 1
-16  4 skewed     chashmap     128305 ops/s write 2
-16  4 skewed     chashmap     182322 ops/s write 3
-16  4 skewed     chashmap     104190 ops/s read 0
-16  4 skewed     chashmap      88610 ops/s read 1
-16  4 skewed     chashmap      86030 ops/s read 2
-16  4 skewed     chashmap      98126 ops/s read 3
-16  4 skewed     chashmap      88099 ops/s read 4
-16  4 skewed     chashmap      86349 ops/s read 5
-16  4 skewed     chashmap      96401 ops/s read 6
-16  4 skewed     chashmap     135504 ops/s read 7
-16  4 skewed     chashmap     133549 ops/s read 8
-16  4 skewed     chashmap     141247 ops/s read 9
-16  4 skewed     chashmap     135773 ops/s read 10
-16  4 skewed     chashmap     133646 ops/s read 11
-16  4 skewed     chashmap      92736 ops/s read 12
-16  4 skewed     chashmap     132926 ops/s read 13
-16  4 skewed     chashmap     147728 ops/s read 14
-16  4 skewed     chashmap     128751 ops/s read 15
+16  4 skewed     std          117659 ops/s read 0
+16  4 skewed     std          112801 ops/s read 1
+16  4 skewed     std          122538 ops/s read 2
+16  4 skewed     std          114484 ops/s read 3
+16  4 skewed     std          119018 ops/s read 4
+16  4 skewed     std          108839 ops/s read 5
+16  4 skewed     std          110041 ops/s read 6
+16  4 skewed     std          181735 ops/s read 7
+16  4 skewed     std          149989 ops/s read 8
+16  4 skewed     std          110432 ops/s read 9
+16  4 skewed     std          108428 ops/s read 10
+16  4 skewed     std          108909 ops/s read 11
+16  4 skewed     std          112462 ops/s read 12
+16  4 skewed     std          133089 ops/s read 13
+16  4 skewed     std          111623 ops/s read 14
+16  4 skewed     std          108240 ops/s read 15
+16  4 skewed     chashmap     140860 ops/s write 0
+16  4 skewed     chashmap      85573 ops/s write 1
+16  4 skewed     chashmap     161226 ops/s write 2
+16  4 skewed     chashmap     186535 ops/s write 3
+16  4 skewed     chashmap     130478 ops/s read 0
+16  4 skewed     chashmap     138210 ops/s read 1
+16  4 skewed     chashmap      83811 ops/s read 2
+16  4 skewed     chashmap     135219 ops/s read 3
+16  4 skewed     chashmap     126845 ops/s read 4
+16  4 skewed     chashmap      97843 ops/s read 5
+16  4 skewed     chashmap     112223 ops/s read 6
+16  4 skewed     chashmap     117738 ops/s read 7
+16  4 skewed     chashmap     131517 ops/s read 8
+16  4 skewed     chashmap      84759 ops/s read 9
+16  4 skewed     chashmap     105214 ops/s read 10
+16  4 skewed     chashmap     128507 ops/s read 11
+16  4 skewed     chashmap      98882 ops/s read 12
+16  4 skewed     chashmap      83202 ops/s read 13
+16  4 skewed     chashmap     106924 ops/s read 14
+16  4 skewed     chashmap     121338 ops/s read 15
+16  4 skewed     concache::crossbeam  2323182 ops/s write 0
+16  4 skewed     concache::crossbeam  2385530 ops/s write 1
+16  4 skewed     concache::crossbeam  2305337 ops/s write 2
+16  4 skewed     concache::crossbeam  2341340 ops/s write 3
+16  4 skewed     concache::crossbeam  3191391 ops/s read 0
+16  4 skewed     concache::crossbeam  3207966 ops/s read 1
+16  4 skewed     concache::crossbeam  3095941 ops/s read 2
+16  4 skewed     concache::crossbeam  3066747 ops/s read 3
+16  4 skewed     concache::crossbeam  3232292 ops/s read 4
+16  4 skewed     concache::crossbeam  3308959 ops/s read 5
+16  4 skewed     concache::crossbeam  3235556 ops/s read 6
+16  4 skewed     concache::crossbeam  3270464 ops/s read 7
+16  4 skewed     concache::crossbeam  3251877 ops/s read 8
+16  4 skewed     concache::crossbeam  3179839 ops/s read 9
+16  4 skewed     concache::crossbeam  3119539 ops/s read 10
+16  4 skewed     concache::crossbeam  3206275 ops/s read 11
+16  4 skewed     concache::crossbeam  3084714 ops/s read 12
+16  4 skewed     concache::crossbeam  3076182 ops/s read 13
+16  4 skewed     concache::crossbeam  3352804 ops/s read 14
+16  4 skewed     concache::crossbeam  3137132 ops/s read 15
+16  4 skewed     concache::manual  1326357 ops/s write 0
+16  4 skewed     concache::manual  1247574 ops/s write 1
+16  4 skewed     concache::manual  1297577 ops/s write 2
+16  4 skewed     concache::manual  1413631 ops/s write 3
+16  4 skewed     concache::manual  2024939 ops/s read 0
+16  4 skewed     concache::manual  2025267 ops/s read 1
+16  4 skewed     concache::manual  2026727 ops/s read 2
+16  4 skewed     concache::manual  2074178 ops/s read 3
+16  4 skewed     concache::manual  1932035 ops/s read 4
+16  4 skewed     concache::manual  1977028 ops/s read 5
+16  4 skewed     concache::manual  2160169 ops/s read 6
+16  4 skewed     concache::manual  2073734 ops/s read 7
+16  4 skewed     concache::manual  2699763 ops/s read 8
+16  4 skewed     concache::manual  2602169 ops/s read 9
+16  4 skewed     concache::manual  2485483 ops/s read 10
+16  4 skewed     concache::manual  2494129 ops/s read 11
+16  4 skewed     concache::manual  2601993 ops/s read 12
+16  4 skewed     concache::manual  2712410 ops/s read 13
+16  4 skewed     concache::manual  2625752 ops/s read 14
+16  4 skewed     concache::manual  2627841 ops/s read 15
 32  4 skewed     std               0 ops/s write 0
 32  4 skewed     std               0 ops/s write 1
 32  4 skewed     std               0 ops/s write 2
 32  4 skewed     std               0 ops/s write 3
-32  4 skewed     std           82526 ops/s read 0
-32  4 skewed     std           83181 ops/s read 1
-32  4 skewed     std           77076 ops/s read 2
-32  4 skewed     std           89198 ops/s read 3
-32  4 skewed     std           83332 ops/s read 4
-32  4 skewed     std           85575 ops/s read 5
-32  4 skewed     std           76346 ops/s read 6
-32  4 skewed     std           75664 ops/s read 7
-32  4 skewed     std           75992 ops/s read 8
-32  4 skewed     std           82311 ops/s read 9
-32  4 skewed     std           81533 ops/s read 10
-32  4 skewed     std           82757 ops/s read 11
-32  4 skewed     std           75699 ops/s read 12
-32  4 skewed     std           75742 ops/s read 13
-32  4 skewed     std           85133 ops/s read 14
-32  4 skewed     std           76997 ops/s read 15
-32  4 skewed     std           76729 ops/s read 16
-32  4 skewed     std           76508 ops/s read 17
-32  4 skewed     std           82740 ops/s read 18
-32  4 skewed     std           75531 ops/s read 19
-32  4 skewed     std           93409 ops/s read 20
-32  4 skewed     std           90140 ops/s read 21
-32  4 skewed     std           92474 ops/s read 22
-32  4 skewed     std           91460 ops/s read 23
-32  4 skewed     std           95119 ops/s read 24
-32  4 skewed     std           91753 ops/s read 25
-32  4 skewed     std           91072 ops/s read 26
-32  4 skewed     std           91601 ops/s read 27
-32  4 skewed     std           95328 ops/s read 28
-32  4 skewed     std           92353 ops/s read 29
-32  4 skewed     std           91433 ops/s read 30
-32  4 skewed     std           90102 ops/s read 31
-32  4 skewed     chashmap      48123 ops/s write 0
-32  4 skewed     chashmap      92693 ops/s write 1
-32  4 skewed     chashmap      82106 ops/s write 2
-32  4 skewed     chashmap      48285 ops/s write 3
-32  4 skewed     chashmap      87610 ops/s read 0
-32  4 skewed     chashmap      46700 ops/s read 1
-32  4 skewed     chashmap     128725 ops/s read 2
-32  4 skewed     chashmap      51715 ops/s read 3
-32  4 skewed     chashmap     100702 ops/s read 4
-32  4 skewed     chashmap      84507 ops/s read 5
-32  4 skewed     chashmap      90610 ops/s read 6
-32  4 skewed     chashmap      86843 ops/s read 7
-32  4 skewed     chashmap      50634 ops/s read 8
-32  4 skewed     chashmap     119298 ops/s read 9
-32  4 skewed     chashmap      86341 ops/s read 10
-32  4 skewed     chashmap      50789 ops/s read 11
-32  4 skewed     chashmap      87168 ops/s read 12
-32  4 skewed     chashmap      49987 ops/s read 13
-32  4 skewed     chashmap      50169 ops/s read 14
-32  4 skewed     chashmap     129266 ops/s read 15
-32  4 skewed     chashmap      51432 ops/s read 16
-32  4 skewed     chashmap      50342 ops/s read 17
-32  4 skewed     chashmap      88338 ops/s read 18
-32  4 skewed     chashmap      45566 ops/s read 19
-32  4 skewed     chashmap      80548 ops/s read 20
-32  4 skewed     chashmap      88220 ops/s read 21
-32  4 skewed     chashmap      49960 ops/s read 22
-32  4 skewed     chashmap      92544 ops/s read 23
-32  4 skewed     chashmap      50038 ops/s read 24
-32  4 skewed     chashmap      48282 ops/s read 25
-32  4 skewed     chashmap      80724 ops/s read 26
-32  4 skewed     chashmap      54710 ops/s read 27
-32  4 skewed     chashmap      50197 ops/s read 28
-32  4 skewed     chashmap      49457 ops/s read 29
-32  4 skewed     chashmap      84738 ops/s read 30
-32  4 skewed     chashmap      45071 ops/s read 31
+32  4 skewed     std           79560 ops/s read 0
+32  4 skewed     std           92112 ops/s read 1
+32  4 skewed     std           90600 ops/s read 2
+32  4 skewed     std           80048 ops/s read 3
+32  4 skewed     std           92810 ops/s read 4
+32  4 skewed     std           79125 ops/s read 5
+32  4 skewed     std           91693 ops/s read 6
+32  4 skewed     std           94764 ops/s read 7
+32  4 skewed     std           87898 ops/s read 8
+32  4 skewed     std           85782 ops/s read 9
+32  4 skewed     std           79805 ops/s read 10
+32  4 skewed     std           95131 ops/s read 11
+32  4 skewed     std           83997 ops/s read 12
+32  4 skewed     std           97388 ops/s read 13
+32  4 skewed     std           79267 ops/s read 14
+32  4 skewed     std           92308 ops/s read 15
+32  4 skewed     std           75145 ops/s read 16
+32  4 skewed     std           93519 ops/s read 17
+32  4 skewed     std           78981 ops/s read 18
+32  4 skewed     std          101050 ops/s read 19
+32  4 skewed     std           85640 ops/s read 20
+32  4 skewed     std           94908 ops/s read 21
+32  4 skewed     std           91138 ops/s read 22
+32  4 skewed     std           75018 ops/s read 23
+32  4 skewed     std           87225 ops/s read 24
+32  4 skewed     std           91721 ops/s read 25
+32  4 skewed     std           82005 ops/s read 26
+32  4 skewed     std           74262 ops/s read 27
+32  4 skewed     std           74459 ops/s read 28
+32  4 skewed     std           92487 ops/s read 29
+32  4 skewed     std           83313 ops/s read 30
+32  4 skewed     std           74692 ops/s read 31
+32  4 skewed     chashmap      48289 ops/s write 0
+32  4 skewed     chashmap      79593 ops/s write 1
+32  4 skewed     chashmap      48308 ops/s write 2
+32  4 skewed     chashmap      81543 ops/s write 3
+32  4 skewed     chashmap      47986 ops/s read 0
+32  4 skewed     chashmap      53394 ops/s read 1
+32  4 skewed     chashmap      84534 ops/s read 2
+32  4 skewed     chashmap      49107 ops/s read 3
+32  4 skewed     chashmap      83751 ops/s read 4
+32  4 skewed     chashmap      99010 ops/s read 5
+32  4 skewed     chashmap      50541 ops/s read 6
+32  4 skewed     chashmap      49884 ops/s read 7
+32  4 skewed     chashmap      50294 ops/s read 8
+32  4 skewed     chashmap      50623 ops/s read 9
+32  4 skewed     chashmap      82971 ops/s read 10
+32  4 skewed     chashmap      51058 ops/s read 11
+32  4 skewed     chashmap      82779 ops/s read 12
+32  4 skewed     chashmap      48763 ops/s read 13
+32  4 skewed     chashmap      50074 ops/s read 14
+32  4 skewed     chashmap      83428 ops/s read 15
+32  4 skewed     chashmap      82257 ops/s read 16
+32  4 skewed     chashmap      45050 ops/s read 17
+32  4 skewed     chashmap      85708 ops/s read 18
+32  4 skewed     chashmap      82995 ops/s read 19
+32  4 skewed     chashmap      83273 ops/s read 20
+32  4 skewed     chashmap     110871 ops/s read 21
+32  4 skewed     chashmap     128500 ops/s read 22
+32  4 skewed     chashmap      79367 ops/s read 23
+32  4 skewed     chashmap     126378 ops/s read 24
+32  4 skewed     chashmap      47498 ops/s read 25
+32  4 skewed     chashmap      50186 ops/s read 26
+32  4 skewed     chashmap      48134 ops/s read 27
+32  4 skewed     chashmap      49145 ops/s read 28
+32  4 skewed     chashmap     100655 ops/s read 29
+32  4 skewed     chashmap      83539 ops/s read 30
+32  4 skewed     chashmap      49387 ops/s read 31
+32  4 skewed     concache::crossbeam  1857957 ops/s write 0
+32  4 skewed     concache::crossbeam  1859598 ops/s write 1
+32  4 skewed     concache::crossbeam  1856458 ops/s write 2
+32  4 skewed     concache::crossbeam  1855024 ops/s write 3
+32  4 skewed     concache::crossbeam  2769081 ops/s read 0
+32  4 skewed     concache::crossbeam  3275345 ops/s read 1
+32  4 skewed     concache::crossbeam  2745426 ops/s read 2
+32  4 skewed     concache::crossbeam  2734922 ops/s read 3
+32  4 skewed     concache::crossbeam  2736012 ops/s read 4
+32  4 skewed     concache::crossbeam  2727079 ops/s read 5
+32  4 skewed     concache::crossbeam  2735330 ops/s read 6
+32  4 skewed     concache::crossbeam  2734301 ops/s read 7
+32  4 skewed     concache::crossbeam  2725958 ops/s read 8
+32  4 skewed     concache::crossbeam  3374050 ops/s read 9
+32  4 skewed     concache::crossbeam  2733661 ops/s read 10
+32  4 skewed     concache::crossbeam  2759355 ops/s read 11
+32  4 skewed     concache::crossbeam  2749612 ops/s read 12
+32  4 skewed     concache::crossbeam  2742888 ops/s read 13
+32  4 skewed     concache::crossbeam  2731920 ops/s read 14
+32  4 skewed     concache::crossbeam  2726701 ops/s read 15
+32  4 skewed     concache::crossbeam  2746768 ops/s read 16
+32  4 skewed     concache::crossbeam  2836508 ops/s read 17
+32  4 skewed     concache::crossbeam  2732320 ops/s read 18
+32  4 skewed     concache::crossbeam  2733524 ops/s read 19
+32  4 skewed     concache::crossbeam  2811377 ops/s read 20
+32  4 skewed     concache::crossbeam  3411406 ops/s read 21
+32  4 skewed     concache::crossbeam  3468815 ops/s read 22
+32  4 skewed     concache::crossbeam  2824850 ops/s read 23
+32  4 skewed     concache::crossbeam  2968951 ops/s read 24
+32  4 skewed     concache::crossbeam  2731920 ops/s read 25
+32  4 skewed     concache::crossbeam  2838539 ops/s read 26
+32  4 skewed     concache::crossbeam  2773254 ops/s read 27
+32  4 skewed     concache::crossbeam  2736637 ops/s read 28
+32  4 skewed     concache::crossbeam  2921746 ops/s read 29
+32  4 skewed     concache::crossbeam  2749427 ops/s read 30
+32  4 skewed     concache::crossbeam  2743743 ops/s read 31
+32  4 skewed     concache::manual  1101102 ops/s write 0
+32  4 skewed     concache::manual  1124891 ops/s write 1
+32  4 skewed     concache::manual  1110942 ops/s write 2
+32  4 skewed     concache::manual  1071083 ops/s write 3
+32  4 skewed     concache::manual  1019535 ops/s read 0
+32  4 skewed     concache::manual   951815 ops/s read 1
+32  4 skewed     concache::manual  1272213 ops/s read 2
+32  4 skewed     concache::manual  1400323 ops/s read 3
+32  4 skewed     concache::manual  1211806 ops/s read 4
+32  4 skewed     concache::manual  1822096 ops/s read 5
+32  4 skewed     concache::manual  1010131 ops/s read 6
+32  4 skewed     concache::manual  1088335 ops/s read 7
+32  4 skewed     concache::manual  1761099 ops/s read 8
+32  4 skewed     concache::manual  1606106 ops/s read 9
+32  4 skewed     concache::manual  1558683 ops/s read 10
+32  4 skewed     concache::manual  2064328 ops/s read 11
+32  4 skewed     concache::manual  1389132 ops/s read 12
+32  4 skewed     concache::manual  1312811 ops/s read 13
+32  4 skewed     concache::manual  1307361 ops/s read 14
+32  4 skewed     concache::manual  1550249 ops/s read 15
+32  4 skewed     concache::manual  1236535 ops/s read 16
+32  4 skewed     concache::manual  1414715 ops/s read 17
+32  4 skewed     concache::manual  1461481 ops/s read 18
+32  4 skewed     concache::manual  1384223 ops/s read 19
+32  4 skewed     concache::manual  1610081 ops/s read 20
+32  4 skewed     concache::manual  1147583 ops/s read 21
+32  4 skewed     concache::manual  1567726 ops/s read 22
+32  4 skewed     concache::manual  1832345 ops/s read 23
+32  4 skewed     concache::manual  2377686 ops/s read 24
+32  4 skewed     concache::manual  2344492 ops/s read 25
+32  4 skewed     concache::manual  2840800 ops/s read 26
+32  4 skewed     concache::manual  1863595 ops/s read 27
+32  4 skewed     concache::manual  1306714 ops/s read 28
+32  4 skewed     concache::manual  1591234 ops/s read 29
+32  4 skewed     concache::manual  1466210 ops/s read 30
+32  4 skewed     concache::manual  1443076 ops/s read 31
