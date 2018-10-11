@@ -90,7 +90,6 @@ unsafe impl Send for MapHandle {}
 
 impl MapHandle {
     pub fn cleanup(&mut self) {
-        // println!("Cleaning");
         //epoch set up, load all of the values
         let mut started = Vec::new();
         let handles_map = self.map.handles.read().unwrap();
