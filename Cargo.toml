@@ -1,7 +1,21 @@
 [package]
 name = "concache"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Aditya Saligrama <saligrama427@gmail.com>", "Andrew Shen <shenandrew95@gmail.com>", "Jon Gjengset <jon@thesquareplanet.com>"]
+
+description = "A fast, concurrent, shared hash map."
+readme = "README.md"
+
+homepage = "https://github.com/saligrama/concache"
+repository = "https://github.com/saligrama/concache.git"
+
+keywords = ["map","lock-free"]
+categories = ["concurrency", "data-structures"]
+
+license = "MIT/Apache-2.0"
+
+[badges]
+travis-ci = { repository = "saligrama/concache" }
 
 [features]
 bench = ["clap", "zipf", "chashmap", "rand"]
