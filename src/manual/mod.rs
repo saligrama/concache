@@ -10,14 +10,13 @@ use self::linked_list::{LinkedList, Node};
 const OSC: Ordering = Ordering::SeqCst;
 const REFRESH_RATE: usize = 100;
 
-
-struct Table {
+struct Table<K, V> {
     nbuckets: usize,
-    map: Vec<LinkedList>,
+    map: Vec<LinkedList<K, V>>,
     nitems: AtomicUsize,
 }
 
-impl Table {
+impl<K, V> Table<K, V> {
     fn new(num_of_buckets: usize) -> Self {
         let mut t = Table {
             nbuckets: num_of_buckets,
@@ -26,18 +25,19 @@ impl Table {
         };
 
         for _ in 0..num_of_buckets {
-            t.map.push(LinkedList::new());
+            t.map.push(LinkedList::default());
         }
 
         t
     }
+}
 
-    fn insert(
-        &self,
-        key: usize,
-        value: usize,
-        remove_nodes: &mut Vec<*mut Node>,
-    ) -> Option<*mut usize> {
+impl<K, V> Table<K, V>
+where
+    K: Hash + Ord,
+    V: Copy,
+{
+    fn insert(&self, key: K, value: V, remove_nodes: &mut Vec<*mut Node<K, V>>) -> Option<*mut V> {
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
@@ -52,7 +52,7 @@ impl Table {
         ret
     }
 
-    fn get(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
+    fn get(&self, key: &K, remove_nodes: &mut Vec<*mut Node<K, V>>) -> Option<V> {
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
@@ -61,7 +61,7 @@ impl Table {
         self.map[index].get(key, remove_nodes)
     }
 
-    fn delete(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
+    fn delete(&self, key: &K, remove_nodes: &mut Vec<*mut Node<K, V>>) -> Option<V> {
         let mut hasher = DefaultHasher::new();
         key.hash(&mut hasher);
         let hash: usize = hasher.finish() as usize;
@@ -77,18 +77,22 @@ impl Table {
     }
 }
 
-pub struct MapHandle {
-    map: Arc<Map>,
+pub struct MapHandle<K, V> {
+    map: Arc<Map<K, V>>,
     epoch_counter: Arc<AtomicUsize>,
-    remove_nodes: Vec<*mut Node>,
-    remove_val: Vec<*mut usize>,
-    refresh: usize, 
+    remove_nodes: Vec<*mut Node<K, V>>,
+    remove_val: Vec<*mut V>,
+    refresh: usize,
 }
 
-unsafe impl Send for MapHandle {}
+unsafe impl<K, V> Send for MapHandle<K, V>
+where
+    K: Send + Sync,
+    V: Send,
+{
+}
 
-
-impl MapHandle {
+impl<K, V> MapHandle<K, V> {
     pub fn cleanup(&mut self) {
         //epoch set up, load all of the values
         let mut started = Vec::new();
@@ -133,8 +137,14 @@ impl MapHandle {
         self.remove_nodes = Vec::new();
         self.remove_val = Vec::new();
     }
+}
 
-    pub fn insert(&mut self, key: usize, value: usize) -> Option<usize> {
+impl<K, V> MapHandle<K, V>
+where
+    K: Hash + Ord,
+    V: Copy,
+{
+    pub fn insert(&mut self, key: K, value: V) -> Option<V> {
         self.refresh += 1;
 
         self.epoch_counter.fetch_add(1, OSC);
@@ -156,7 +166,7 @@ impl MapHandle {
         ret
     }
 
-    pub fn get(&mut self, key: usize) -> Option<usize> {
+    pub fn get(&mut self, key: &K) -> Option<V> {
         self.refresh = (self.refresh + 1) % REFRESH_RATE;
 
         self.epoch_counter.fetch_add(1, OSC);
@@ -171,7 +181,7 @@ impl MapHandle {
         ret
     }
 
-    pub fn delete(&mut self, key: usize) -> Option<usize> {
+    pub fn delete(&mut self, key: &K) -> Option<V> {
         self.refresh = (self.refresh + 1) % REFRESH_RATE;
 
         self.epoch_counter.fetch_add(1, OSC);
@@ -187,7 +197,7 @@ impl MapHandle {
     }
 }
 
-impl Clone for MapHandle {
+impl<K, V> Clone for MapHandle<K, V> {
     fn clone(&self) -> Self {
         let ret = Self {
             map: Arc::clone(&self.map),
@@ -204,13 +214,13 @@ impl Clone for MapHandle {
     }
 }
 
-pub struct Map {
-    table: Table,
+pub struct Map<K, V> {
+    table: Table<K, V>,
     handles: RwLock<Vec<Arc<AtomicUsize>>>, //(started, finished)
 }
 
-impl Map {
-    pub fn with_capacity(num_items: usize) -> MapHandle {
+impl<K, V> Map<K, V> {
+    pub fn with_capacity(num_items: usize) -> MapHandle<K, V> {
         let new_hashmap = Map {
             table: Table::new(num_items),
             handles: RwLock::new(Vec::new()),
@@ -229,21 +239,22 @@ impl Map {
         handles_vec.push(Arc::clone(&ret.epoch_counter));
         ret
     }
+}
 
-    fn insert(
-        &self,
-        key: usize,
-        value: usize,
-        remove_nodes: &mut Vec<*mut Node>,
-    ) -> Option<*mut usize> {
+impl<K, V> Map<K, V>
+where
+    K: Hash + Ord,
+    V: Copy,
+{
+    fn insert(&self, key: K, value: V, remove_nodes: &mut Vec<*mut Node<K, V>>) -> Option<*mut V> {
         self.table.insert(key, value, remove_nodes)
     }
 
-    fn get(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
+    fn get(&self, key: &K, remove_nodes: &mut Vec<*mut Node<K, V>>) -> Option<V> {
         self.table.get(key, remove_nodes)
     }
 
-    fn delete(&self, key: usize, remove_nodes: &mut Vec<*mut Node>) -> Option<usize> {
+    fn delete(&self, key: &K, remove_nodes: &mut Vec<*mut Node<K, V>>) -> Option<V> {
         self.table.delete(key, remove_nodes)
     }
 }
@@ -278,12 +289,12 @@ mod tests {
                     if two % 3 == 0 {
                         new_handle.insert(val, val);
                     } else if two % 3 == 1 {
-                        let v = new_handle.get(val);
+                        let v = new_handle.get(&val);
                         if v.is_some() {
                             assert_eq!(v.unwrap(), val);
                         }
                     } else {
-                        new_handle.delete(val);
+                        new_handle.delete(&val);
                     }
                 }
                 assert_eq!(new_handle.epoch_counter.load(OSC), num_iterations * 2);
@@ -313,18 +324,18 @@ mod tests {
         handle.insert(14, 3);
         handle.insert(15, 3);
         handle.insert(16, 3);
-        assert_eq!(handle.get(1).unwrap(), 3);
-        assert_eq!(handle.delete(1).unwrap(), 3);
-        assert_eq!(handle.get(1), None);
-        assert_eq!(handle.delete(2).unwrap(), 5);
-        assert_eq!(handle.delete(16).unwrap(), 3);
-        assert_eq!(handle.get(16), None);
+        assert_eq!(handle.get(&1).unwrap(), 3);
+        assert_eq!(handle.delete(&1).unwrap(), 3);
+        assert_eq!(handle.get(&1), None);
+        assert_eq!(handle.delete(&2).unwrap(), 5);
+        assert_eq!(handle.delete(&16).unwrap(), 3);
+        assert_eq!(handle.get(&16), None);
     }
 
     #[test]
     fn hashmap_basics() {
         let mut new_hashmap = Map::with_capacity(8); //init with 2 buckets
-                                                 //input values
+                                                     //input values
         new_hashmap.insert(1, 1);
         new_hashmap.insert(2, 5);
         new_hashmap.insert(12, 5);
@@ -344,17 +355,17 @@ mod tests {
 
         new_hashmap.insert(3, 8); //repeated
 
-        assert_eq!(new_hashmap.get(20).unwrap(), 5);
-        assert_eq!(new_hashmap.get(12).unwrap(), 5);
-        assert_eq!(new_hashmap.get(1).unwrap(), 1);
-        assert_eq!(new_hashmap.get(0).unwrap(), 0);
-        assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
+        assert_eq!(new_hashmap.get(&20).unwrap(), 5);
+        assert_eq!(new_hashmap.get(&12).unwrap(), 5);
+        assert_eq!(new_hashmap.get(&1).unwrap(), 1);
+        assert_eq!(new_hashmap.get(&0).unwrap(), 0);
+        assert!(new_hashmap.get(&3).unwrap() != 2); // test that it changed
 
         // try the same assert_eqs
-        assert_eq!(new_hashmap.get(20).unwrap(), 5);
-        assert_eq!(new_hashmap.get(12).unwrap(), 5);
-        assert_eq!(new_hashmap.get(1).unwrap(), 1);
-        assert_eq!(new_hashmap.get(0).unwrap(), 0);
-        assert!(new_hashmap.get(3).unwrap() != 2); // test that it changed
+        assert_eq!(new_hashmap.get(&20).unwrap(), 5);
+        assert_eq!(new_hashmap.get(&12).unwrap(), 5);
+        assert_eq!(new_hashmap.get(&1).unwrap(), 1);
+        assert_eq!(new_hashmap.get(&0).unwrap(), 0);
+        assert!(new_hashmap.get(&3).unwrap() != 2); // test that it changed
     }
 }

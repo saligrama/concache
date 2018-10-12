@@ -4,17 +4,25 @@ use std::sync::atomic::{AtomicPtr, Ordering};
 const OSC: Ordering = Ordering::SeqCst;
 
 #[derive(Debug)]
-pub(super) struct Node {
-    key: Option<usize>,
-    pub val: AtomicPtr<usize>,
-    next: AtomicPtr<Node>,
+pub(super) struct Node<K, V> {
+    key: Option<K>,
+    pub val: AtomicPtr<V>,
+    next: AtomicPtr<Node<K, V>>,
 }
 
-impl Node {
-    fn new(key: Option<usize>, val: usize) -> Node {
+impl<K, V> Node<K, V> {
+    fn empty() -> Self {
+        Node {
+            key: None,
+            val: AtomicPtr::new(ptr::null_mut()),
+            next: AtomicPtr::new(ptr::null_mut()),
+        }
+    }
+
+    fn new(key: K, val: V) -> Self {
         let v = Box::new(val);
         Node {
-            key,
+            key: Some(key),
             val: AtomicPtr::new(Box::into_raw(v)),
             next: AtomicPtr::new(ptr::null_mut()),
         }
@@ -22,15 +30,15 @@ impl Node {
 }
 
 #[derive(Debug)]
-pub(super) struct LinkedList {
-    head: AtomicPtr<Node>,
-    tail: AtomicPtr<Node>,
+pub(super) struct LinkedList<K, V> {
+    head: AtomicPtr<Node<K, V>>,
+    tail: AtomicPtr<Node<K, V>>,
 }
 
-impl LinkedList {
-    pub(super) fn new() -> Self {
-        let head = Box::new(Node::new(None, 0));
-        let tail = Box::into_raw(Box::new(Node::new(None, 0)));
+impl<K, V> Default for LinkedList<K, V> {
+    fn default() -> Self {
+        let head = Box::new(Node::empty());
+        let tail = Box::into_raw(Box::new(Node::empty()));
         head.next.store(tail, OSC);
 
         LinkedList {
@@ -38,20 +46,32 @@ impl LinkedList {
             tail: AtomicPtr::new(tail),
         }
     }
+}
 
+impl<K, V> LinkedList<K, V>
+where
+    K: Ord,
+    V: Copy,
+{
     pub(super) fn insert(
         &self,
-        key: usize,
-        val: usize,
-        remove_nodes: &mut Vec<*mut Node>,
-    ) -> Option<*mut usize> {
-        let mut new_node = Box::new(Node::new(Some(key), val));
-        let mut left_node: *mut Node = ptr::null_mut();
+        key: K,
+        val: V,
+        remove_nodes: &mut Vec<*mut Node<K, V>>,
+    ) -> Option<*mut V> {
+        let mut new_node = Box::new(Node::new(key, val));
+        let mut left_node = ptr::null_mut();
 
         loop {
-            let right_node = self.search(key, &mut left_node, remove_nodes);
+            let right_node =
+                self.search(new_node.key.as_ref().unwrap(), &mut left_node, remove_nodes);
 
-            if right_node != self.tail.load(OSC) && unsafe { &*right_node }.key == Some(key) {
+            if right_node != self.tail.load(OSC) && unsafe { &*right_node }
+                .key
+                .as_ref()
+                .map(|k| k == new_node.key.as_ref().unwrap())
+                .unwrap_or(false)
+            {
                 let rn = unsafe { &*right_node };
                 let v = Box::new(val);
                 let old = rn.val.swap(Box::into_raw(v), OSC);
@@ -72,14 +92,15 @@ impl LinkedList {
         }
     }
 
-    pub(super) fn get(
-        &self,
-        search_key: usize,
-        remove_nodes: &mut Vec<*mut Node>,
-    ) -> Option<usize> {
-        let mut left_node: *mut Node = ptr::null_mut();
-        let right_node = self.search(search_key, &mut left_node, remove_nodes);
-        if right_node == self.tail.load(OSC) || unsafe { &*right_node }.key != Some(search_key) {
+    pub(super) fn get(&self, search_key: &K, remove_nodes: &mut Vec<*mut Node<K, V>>) -> Option<V> {
+        let mut left_node = ptr::null_mut();
+        let right_node = self.search(&search_key, &mut left_node, remove_nodes);
+        if right_node == self.tail.load(OSC) || unsafe { &*right_node }
+            .key
+            .as_ref()
+            .map(|k| k != search_key)
+            .unwrap_or(true)
+        {
             None
         } else {
             unsafe { Some(*(&*right_node).val.load(OSC)) }
@@ -88,17 +109,20 @@ impl LinkedList {
 
     pub(super) fn delete(
         &self,
-        search_key: usize,
-        remove_nodes: &mut Vec<*mut Node>,
-    ) -> Option<usize> {
-        let mut left_node: *mut Node = ptr::null_mut();
+        search_key: &K,
+        remove_nodes: &mut Vec<*mut Node<K, V>>,
+    ) -> Option<V> {
+        let mut left_node = ptr::null_mut();
         let mut right_node;
         let mut right_node_next;
 
         loop {
             right_node = self.search(search_key, &mut left_node, remove_nodes);
-            if (right_node == self.tail.load(OSC))
-                || unsafe { &*right_node }.key != Some(search_key)
+            if (right_node == self.tail.load(OSC)) || unsafe { &*right_node }
+                .key
+                .as_ref()
+                .map(|k| k != search_key)
+                .unwrap_or(true)
             {
                 return None; //failed delete
             }
@@ -124,7 +148,7 @@ impl LinkedList {
             != right_node
         {
             let _ = self.search(
-                unsafe { &*right_node }.key.unwrap(),
+                unsafe { &*right_node }.key.as_ref().unwrap(),
                 &mut left_node,
                 remove_nodes,
             );
@@ -133,23 +157,23 @@ impl LinkedList {
         Some(old) //successful delete
     }
 
-    fn is_marked_reference(ptr: *mut Node) -> bool {
+    fn is_marked_reference(ptr: *mut Node<K, V>) -> bool {
         (ptr as usize & 0x1) == 1
     }
-    fn get_marked_reference(ptr: *mut Node) -> *mut Node {
-        (ptr as usize | 0x1) as *mut Node
+    fn get_marked_reference(ptr: *mut Node<K, V>) -> *mut Node<K, V> {
+        (ptr as usize | 0x1) as *mut _
     }
-    fn get_unmarked_reference(ptr: *mut Node) -> *mut Node {
-        (ptr as usize & !0x1) as *mut Node
+    fn get_unmarked_reference(ptr: *mut Node<K, V>) -> *mut Node<K, V> {
+        (ptr as usize & !0x1) as *mut _
     }
 
     fn search(
         &self,
-        search_key: usize,
-        left_node: &mut *mut Node,
-        remove_nodes: &mut Vec<*mut Node>,
-    ) -> *mut Node {
-        let mut left_node_next: *mut Node = ptr::null_mut();
+        search_key: &K,
+        left_node: &mut *mut Node<K, V>,
+        remove_nodes: &mut Vec<*mut Node<K, V>>,
+    ) -> *mut Node<K, V> {
+        let mut left_node_next = ptr::null_mut();
         let mut right_node;
 
         //search
@@ -168,7 +192,12 @@ impl LinkedList {
                     break;
                 }
                 t_next = unsafe { &*t }.next.load(OSC);
-                if !Self::is_marked_reference(t_next) && unsafe { &*t }.key >= Some(search_key) {
+                if !Self::is_marked_reference(t_next) && unsafe { &*t }
+                    .key
+                    .as_ref()
+                    .map(|k| k >= search_key)
+                    .unwrap_or(false)
+                {
                     break;
                 }
             }
@@ -230,9 +259,9 @@ mod tests {
 
     #[test]
     fn linkedlist_basics() {
-        let mut remove_nodes: Vec<*mut Node> = Vec::new();
+        let mut remove_nodes = Vec::new();
 
-        let new_linked_list = LinkedList::new();
+        let new_linked_list = LinkedList::default();
 
         println!("{:?}", new_linked_list);
         new_linked_list.insert(3, 2, &mut remove_nodes);
@@ -243,16 +272,16 @@ mod tests {
         new_linked_list.insert(6, 6, &mut remove_nodes);
         //new_linked_list.print();
 
-        assert_eq!(new_linked_list.get(3, &mut remove_nodes).unwrap(), 4);
-        assert_eq!(new_linked_list.get(5, &mut remove_nodes).unwrap(), 8);
-        assert_eq!(new_linked_list.get(2, &mut remove_nodes), None);
+        assert_eq!(new_linked_list.get(&3, &mut remove_nodes).unwrap(), 4);
+        assert_eq!(new_linked_list.get(&5, &mut remove_nodes).unwrap(), 8);
+        assert_eq!(new_linked_list.get(&2, &mut remove_nodes), None);
     }
 
     #[test]
     fn more_linked_list_tests() {
-        let mut remove_nodes: Vec<*mut Node> = Vec::new();
+        let mut remove_nodes = Vec::new();
 
-        let new_linked_list = LinkedList::new();
+        let new_linked_list = LinkedList::default();
         println!(
             "Insert: {:?}",
             new_linked_list.insert(5, 3, &mut remove_nodes)
@@ -266,12 +295,12 @@ mod tests {
             new_linked_list.insert(2, 3, &mut remove_nodes)
         );
 
-        println!("Get: {:?}", new_linked_list.get(5, &mut remove_nodes));
+        println!("Get: {:?}", new_linked_list.get(&5, &mut remove_nodes));
 
         // println!("{:?}", new_linked_list.head.load(OSC));
         // new_linked_list.print();
 
-        new_linked_list.delete(5, &mut remove_nodes);
+        new_linked_list.delete(&5, &mut remove_nodes);
 
         // new_linked_list.print();
     }
