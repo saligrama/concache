@@ -1,3 +1,27 @@
+//! A concurrent hash map implementation with a hand-written epoch-based memory management scheme.
+//!
+//! This implementation provides a lock-free hash map using buckets that hold [lock-free linked
+//! lists](https://www.microsoft.com/en-us/research/wp-content/uploads/2001/10/2001-disc.pdf).
+//! Memory is safely destructed and reclaimed using a simplified variant of _Quiescent-State-Based
+//! Reclamation_. Table resizing is not yet supported, but the map will also never fill due to the
+//! linked implementation; instead, performance will decrease as the map is filled with more keys.
+//!
+//! The interface to this map is somewhat different from `HashMap` to support concurrent operation.
+//! When you create a new [`Map`],you are given a [`MapHandle`], which allows access to the map's
+//! data. To read or mutate the map for elsewhere, you call [`MapHandle::clone`], which gives you
+//! a new `MapHandle` that provides concurrent access to the same map.
+//!
+//! Similarly to [`crossbeam::epoch`](https://docs.rs/crossbeam-epoch/), this `Map` does not
+//! guarantee that destructors are called. In practice though, as long as threads do not leak
+//! `MapHandle`s, destructors will all eventually be called.
+//!
+//! Note that unlike `HashMap`, this `Map` requires its values to be `Copy`. This greatly
+//! simplifies the map's interface; accesses to the map's data have to be carefully guarded, and
+//! there is no simple way to expose references into the map through a method call. Later, we may
+//! provide temporary access through closures, similar to `evmap`'s
+//! [`ReadHandle::get_and`](https://docs.rs/evmap/4/evmap/struct.ReadHandle.html#method.get_and),
+//! but for the time being, values have to be `Copy`.
+
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -77,6 +101,10 @@ where
     }
 }
 
+/// A handle to a shared [`Map`].
+///
+/// Any operation performed on this handle affects the map seen by all other related `MapHandle`
+/// instances. To get another handle to the `Map`, simply clone any of its handles.
 pub struct MapHandle<K, V> {
     map: Arc<Map<K, V>>,
     epoch_counter: Arc<AtomicUsize>,
@@ -93,7 +121,7 @@ where
 }
 
 impl<K, V> MapHandle<K, V> {
-    pub fn cleanup(&mut self) {
+    fn cleanup(&mut self) {
         //epoch set up, load all of the values
         let mut started = Vec::new();
         let handles_map = self.map.handles.read().unwrap();
@@ -144,11 +172,32 @@ where
     K: Hash + Ord,
     V: Copy,
 {
+    /// Inserts a key-value pair into the map.
+    ///
+    /// If the map did not have this key present, `None` is returned.
+    ///
+    /// If the map did have this key present, the value is updated, and the old value is returned.
+    /// The key is not updated, though; this matters for types that can be `==` without being
+    /// identical.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use concache::manual::Map;
+    ///
+    /// let mut map = Map::with_capacity(16);
+    /// assert_eq!(map.insert(37, "a"), None);
+    /// assert_eq!(map.is_empty(), false);
+    ///
+    /// map.insert(37, "b");
+    /// assert_eq!(map.insert(37, "c"), Some("b"));
+    /// assert_eq!(map.get(&37), Some("c"));
+    /// ```
     pub fn insert(&mut self, key: K, value: V) -> Option<V> {
         self.refresh += 1;
 
         self.epoch_counter.fetch_add(1, OSC);
-        let val = self.map.insert(key, value, &mut self.remove_nodes);
+        let val = self.map.table.insert(key, value, &mut self.remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
 
         let mut ret = None;
@@ -166,11 +215,23 @@ where
         ret
     }
 
+    /// Returns a reference to the value corresponding to the key.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use concache::manual::Map;
+    ///
+    /// let mut map = Map::with_capacity(16);
+    /// map.insert(1, "a");
+    /// assert_eq!(map.get(&1), Some("a"));
+    /// assert_eq!(map.get(&2), None);
+    /// ```
     pub fn get(&mut self, key: &K) -> Option<V> {
         self.refresh = (self.refresh + 1) % REFRESH_RATE;
 
         self.epoch_counter.fetch_add(1, OSC);
-        let ret = self.map.get(key, &mut self.remove_nodes);
+        let ret = self.map.table.get(key, &mut self.remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
 
         if self.refresh == REFRESH_RATE {
@@ -181,11 +242,24 @@ where
         ret
     }
 
-    pub fn delete(&mut self, key: &K) -> Option<V> {
+    /// Removes a key from the map, returning the value at the key if the key was previously in the
+    /// map.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use concache::manual::Map;
+    ///
+    /// let mut map = Map::with_capacity(16);
+    /// map.insert(1, "a");
+    /// assert_eq!(map.remove(&1), Some("a"));
+    /// assert_eq!(map.remove(&1), None);
+    /// ```
+    pub fn remove(&mut self, key: &K) -> Option<V> {
         self.refresh = (self.refresh + 1) % REFRESH_RATE;
 
         self.epoch_counter.fetch_add(1, OSC);
-        let ret = self.map.delete(key, &mut self.remove_nodes);
+        let ret = self.map.table.delete(key, &mut self.remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
 
         if self.refresh == REFRESH_RATE {
@@ -194,6 +268,38 @@ where
         }
 
         ret
+    }
+
+    /// Returns the number of elements in the map.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use concache::manual::Map;
+    ///
+    /// let mut a = Map::with_capacity(16);
+    /// assert_eq!(a.len(), 0);
+    /// a.insert(1, "a");
+    /// assert_eq!(a.len(), 1);
+    /// ```
+    pub fn len(&self) -> usize {
+        self.map.table.nitems.load(OSC)
+    }
+
+    /// Returns true if the map contains no elements.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use concache::manual::Map;
+    ///
+    /// let mut a = Map::with_capacity(16);
+    /// assert!(a.is_empty());
+    /// a.insert(1, "a");
+    /// assert!(!a.is_empty());
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.map.table.nitems.load(OSC) == 0
     }
 }
 
@@ -214,15 +320,23 @@ impl<K, V> Clone for MapHandle<K, V> {
     }
 }
 
+/// A shared, concurrent hash map.
+///
+/// See [`MapHandle`] for how to interact with this map.
 pub struct Map<K, V> {
     table: Table<K, V>,
     handles: RwLock<Vec<Arc<AtomicUsize>>>, //(started, finished)
 }
 
 impl<K, V> Map<K, V> {
-    pub fn with_capacity(num_items: usize) -> MapHandle<K, V> {
+    /// Create a new, shared map and return a handle to it.
+    ///
+    /// The map will have `nbuckets` buckets to distribute stored keys among. If there are many
+    /// more keys than buckets, performance will suffer, as all the keys in a key's bucket must be
+    /// searched to read or update that key.
+    pub fn with_capacity(nbuckets: usize) -> MapHandle<K, V> {
         let new_hashmap = Map {
-            table: Table::new(num_items),
+            table: Table::new(nbuckets),
             handles: RwLock::new(Vec::new()),
         };
         let ret = MapHandle {
@@ -238,24 +352,6 @@ impl<K, V> Map<K, V> {
         let mut handles_vec = hashmap.handles.write().unwrap();
         handles_vec.push(Arc::clone(&ret.epoch_counter));
         ret
-    }
-}
-
-impl<K, V> Map<K, V>
-where
-    K: Hash + Ord,
-    V: Copy,
-{
-    fn insert(&self, key: K, value: V, remove_nodes: &mut Vec<*mut Node<K, V>>) -> Option<*mut V> {
-        self.table.insert(key, value, remove_nodes)
-    }
-
-    fn get(&self, key: &K, remove_nodes: &mut Vec<*mut Node<K, V>>) -> Option<V> {
-        self.table.get(key, remove_nodes)
-    }
-
-    fn delete(&self, key: &K, remove_nodes: &mut Vec<*mut Node<K, V>>) -> Option<V> {
-        self.table.delete(key, remove_nodes)
     }
 }
 
@@ -294,7 +390,7 @@ mod tests {
                             assert_eq!(v.unwrap(), val);
                         }
                     } else {
-                        new_handle.delete(&val);
+                        new_handle.remove(&val);
                     }
                 }
                 assert_eq!(new_handle.epoch_counter.load(OSC), num_iterations * 2);
@@ -325,10 +421,10 @@ mod tests {
         handle.insert(15, 3);
         handle.insert(16, 3);
         assert_eq!(handle.get(&1).unwrap(), 3);
-        assert_eq!(handle.delete(&1).unwrap(), 3);
+        assert_eq!(handle.remove(&1).unwrap(), 3);
         assert_eq!(handle.get(&1), None);
-        assert_eq!(handle.delete(&2).unwrap(), 5);
-        assert_eq!(handle.delete(&16).unwrap(), 3);
+        assert_eq!(handle.remove(&2).unwrap(), 5);
+        assert_eq!(handle.remove(&16).unwrap(), 3);
         assert_eq!(handle.get(&16), None);
     }
 
