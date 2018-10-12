@@ -3,25 +3,25 @@ mod linked_list;
 use self::linked_list::LinkedList;
 use std::collections::hash_map::DefaultHasher;
 use std::fmt;
-use std::hash::Hasher;
+use std::hash::{Hash, Hasher};
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc,
 };
 
 #[derive(Clone)]
-pub struct Map {
+pub struct Map<K, V> {
     bsize: usize,
     size: Arc<AtomicUsize>,
-    mp: Arc<Vec<LinkedList>>,
+    mp: Arc<Vec<LinkedList<K, V>>>,
 }
 
-impl Map {
+impl<K, V> Map<K, V> {
     pub fn with_capacity(nbuckets: usize) -> Self {
         let mut v = Vec::with_capacity(nbuckets);
 
         for _i in 0..nbuckets {
-            v.push(LinkedList::new());
+            v.push(LinkedList::default());
         }
 
         Map {
@@ -34,10 +34,16 @@ impl Map {
     pub fn size(&self) -> usize {
         self.size.load(Ordering::SeqCst)
     }
+}
 
-    pub fn insert(&self, key: usize, value: usize) -> bool {
+impl<K, V> Map<K, V>
+where
+    K: Eq + Hash,
+    V: Copy,
+{
+    pub fn insert(&self, key: K, value: V) -> bool {
         let mut hsh = DefaultHasher::new();
-        hsh.write_usize(key);
+        key.hash(&mut hsh);
         let h = hsh.finish() as usize;
 
         let ndx = h % self.bsize;
@@ -48,9 +54,9 @@ impl Map {
         false
     }
 
-    pub fn get(&self, key: usize) -> Option<usize> {
+    pub fn get(&self, key: &K) -> Option<V> {
         let mut hsh = DefaultHasher::new();
-        hsh.write_usize(key);
+        key.hash(&mut hsh);
         let h = hsh.finish() as usize;
 
         let ndx = h % self.bsize;
@@ -58,9 +64,9 @@ impl Map {
         self.mp[ndx].get(key)
     }
 
-    pub fn remove(&self, key: usize) -> bool {
+    pub fn remove(&self, key: &K) -> bool {
         let mut hsh = DefaultHasher::new();
-        hsh.write_usize(key);
+        key.hash(&mut hsh);
         let h = hsh.finish() as usize;
 
         let ndx = h % self.bsize;
@@ -73,8 +79,13 @@ impl Map {
     }
 }
 
-impl fmt::Debug for Map {
+impl<K, V> fmt::Debug for Map<K, V>
+where
+    K: fmt::Debug,
+    V: fmt::Debug,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // TODO: use https://doc.rust-lang.org/std/fmt/struct.DebugMap.html
         let mut all = String::new();
         for i in 0..self.bsize {
             // TODO: I'm _sure_ there's a better way to do this

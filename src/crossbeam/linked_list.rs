@@ -1,17 +1,17 @@
 use cx::epoch::{self, Atomic, Owned};
 use std::fmt;
+use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
-use std::sync::{atomic::AtomicBool};
 
-struct Node {
-    kv: (usize, Atomic<usize>),
+struct Node<K, V> {
+    kv: (K, Atomic<V>),
     active: AtomicBool,
-    next: Atomic<Node>,
-    prev: Atomic<Node>,
+    next: Atomic<Node<K, V>>,
+    prev: Atomic<Node<K, V>>,
 }
 
-impl Node {
-    fn new(k: usize, v: usize) -> Self {
+impl<K, V> Node<K, V> {
+    fn new(k: K, v: V) -> Self {
         Node {
             kv: (k, Atomic::new(v)),
             active: AtomicBool::new(true),
@@ -21,18 +21,24 @@ impl Node {
     }
 }
 
-pub(super) struct LinkedList {
-    first: Atomic<Node>,
+pub(super) struct LinkedList<K, V> {
+    first: Atomic<Node<K, V>>,
 }
 
-impl LinkedList {
-    pub(super) fn new() -> Self {
+impl<K, V> Default for LinkedList<K, V> {
+    fn default() -> Self {
         LinkedList {
             first: Atomic::null(),
         }
     }
+}
 
-    pub(super) fn insert(&self, kv: (usize, usize)) -> bool {
+impl<K, V> LinkedList<K, V>
+where
+    K: Eq,
+    V: Copy,
+{
+    pub(super) fn insert(&self, kv: (K, V)) -> bool {
         let guard = epoch::pin();
 
         let mut node = &self.first;
@@ -42,7 +48,7 @@ impl LinkedList {
                 Some(k) => {
                     let mut raw = k.as_raw();
                     let mut cur = unsafe { &*raw };
-                    if cur.kv.0 == kv.0 && cur.active.load(Ordering::SeqCst) {
+                    if &cur.kv.0 == &kv.0 && cur.active.load(Ordering::SeqCst) {
                         // if let Some(old) = cur.kv.1.load(Ordering::SeqCst, &guard) {
                         //     unsafe { guard.unlinked(old); }
                         // }
@@ -70,7 +76,7 @@ impl LinkedList {
         }
     }
 
-    pub(super) fn get(&self, key: usize) -> Option<usize> {
+    pub(super) fn get(&self, key: &K) -> Option<V> {
         let guard = epoch::pin();
 
         let mut node = &self.first;
@@ -79,7 +85,7 @@ impl LinkedList {
                 Some(k) => {
                     let mut raw = k.as_raw();
                     let mut cur = unsafe { &*raw };
-                    if cur.kv.0 == key && cur.active.load(Ordering::SeqCst) {
+                    if &cur.kv.0 == key && cur.active.load(Ordering::SeqCst) {
                         let value = cur.kv.1.load(Ordering::SeqCst, &guard).unwrap();
                         return Some(**value);
                     }
@@ -92,7 +98,7 @@ impl LinkedList {
         }
     }
 
-    pub(super) fn remove(&self, key: usize) -> bool {
+    pub(super) fn remove(&self, key: &K) -> bool {
         let guard = epoch::pin();
 
         let mut node = &self.first;
@@ -101,7 +107,7 @@ impl LinkedList {
                 Some(k) => {
                     let mut raw = k.as_raw();
                     let mut cur = unsafe { &*raw };
-                    if cur.kv.0 == key && cur.active.load(Ordering::SeqCst) {
+                    if &cur.kv.0 == key && cur.active.load(Ordering::SeqCst) {
                         cur.active.store(false, Ordering::SeqCst);
 
                         let next = k.next.load(Ordering::SeqCst, &guard);
@@ -136,8 +142,13 @@ impl LinkedList {
     }
 }
 
-impl fmt::Debug for LinkedList {
+impl<K, V> fmt::Debug for LinkedList<K, V>
+where
+    K: fmt::Debug,
+    V: fmt::Debug,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // TODO: use https://doc.rust-lang.org/std/fmt/struct.DebugList.html
         let guard = epoch::pin();
 
         let mut ret = String::new();
@@ -146,13 +157,13 @@ impl fmt::Debug for LinkedList {
             let mut raw = k.as_raw();
             let mut cur = unsafe { &*raw };
             if cur.active.load(Ordering::SeqCst) {
-                let key = cur.kv.0;
+                let key = &cur.kv.0;
                 let value = cur.kv.1.load(Ordering::SeqCst, &guard).unwrap();
 
                 ret.push_str("(");
-                ret.push_str(&key.to_string());
+                ret.push_str(&format!("{:?}", key));
                 ret.push_str(", ");
-                ret.push_str(&value.to_string());
+                ret.push_str(&format!("{:?}", value));
                 ret.push_str("), ");
             }
             node = &k.next;
