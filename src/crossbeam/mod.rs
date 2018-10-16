@@ -376,3 +376,109 @@ mod benchmarks {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rand::{thread_rng, Rng};
+    use std::thread;
+
+    /*
+    the data produced is a bit strange because of the way I take mod to test only even values 
+    are inserted so the end number of values should be n/2 (computer style) and the capacity 
+    of the map should be equal to the greatest power of 2 less than n/2.
+    */
+    #[test]
+    fn hashmap_concurr() {
+        let handle = Map::with_capacity(8); //changed this,
+        let mut threads = vec![];
+        let nthreads = 5;
+        // let handle = MapHandle::new(Arc::clone(&new_hashmap).table.read().unwrap());
+        for _ in 0..nthreads {
+            let mut new_handle = handle.clone();
+
+            threads.push(thread::spawn(move || {
+                let num_iterations = 1000000;
+                for _ in 0..num_iterations {
+                    let mut rng = thread_rng();
+                    let val = rng.gen_range(0, 128);
+                    let two = rng.gen_range(0, 3);
+
+                    if two % 3 == 0 {
+                        new_handle.insert(val, val);
+                    } else if two % 3 == 1 {
+                        let v = new_handle.get(&val);
+                        if v.is_some() {
+                            assert_eq!(v.unwrap(), val);
+                        }
+                    } else {
+                        new_handle.remove(&val);
+                    }
+                }
+            }));
+        }
+        for t in threads {
+            t.join().unwrap();
+        }
+    }
+
+    #[test]
+    fn hashmap_delete() {
+        let mut handle = Map::with_capacity(8);
+        handle.insert(1, 3);
+        handle.insert(2, 5);
+        handle.insert(3, 8);
+        handle.insert(4, 3);
+        handle.insert(5, 4);
+        handle.insert(6, 5);
+        handle.insert(7, 3);
+        handle.insert(8, 3);
+        handle.insert(9, 3);
+        handle.insert(10, 3);
+        handle.insert(11, 3);
+        handle.insert(12, 3);
+        handle.insert(13, 3);
+        handle.insert(14, 3);
+        handle.insert(15, 3);
+        handle.insert(16, 3);
+        assert_eq!(handle.get(&1).unwrap(), 3);
+        assert_eq!(handle.remove(&1), true);
+        assert_eq!(handle.get(&1), None);
+        assert_eq!(handle.remove(&2), true);
+        assert_eq!(handle.remove(&16), true);
+        assert_eq!(handle.get(&16), None);
+    }
+
+    #[test]
+    fn hashmap_basics() {
+        let mut new_hashmap = Map::with_capacity(8); //init with 2 buckets
+                                                     //input values
+        new_hashmap.insert(1, 1);
+        new_hashmap.insert(2, 5);
+        new_hashmap.insert(12, 5);
+        new_hashmap.insert(13, 7);
+        new_hashmap.insert(0, 0);
+
+        new_hashmap.insert(20, 3);
+        new_hashmap.insert(3, 2);
+        new_hashmap.insert(4, 1);
+
+        assert_eq!(new_hashmap.insert(20, 5), true); //repeated new
+        assert_eq!(new_hashmap.insert(3, 8), true); //repeated new
+
+        new_hashmap.insert(3, 8); //repeated
+
+        assert_eq!(new_hashmap.get(&20).unwrap(), 5);
+        assert_eq!(new_hashmap.get(&12).unwrap(), 5);
+        assert_eq!(new_hashmap.get(&1).unwrap(), 1);
+        assert_eq!(new_hashmap.get(&0).unwrap(), 0);
+        assert!(new_hashmap.get(&3).unwrap() != 2); // test that it changed
+
+        // try the same assert_eqs
+        assert_eq!(new_hashmap.get(&20).unwrap(), 5);
+        assert_eq!(new_hashmap.get(&12).unwrap(), 5);
+        assert_eq!(new_hashmap.get(&1).unwrap(), 1);
+        assert_eq!(new_hashmap.get(&0).unwrap(), 0);
+        assert!(new_hashmap.get(&3).unwrap() != 2); // test that it changed
+    }
+}

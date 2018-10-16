@@ -226,9 +226,9 @@ impl Backend for sync::Arc<sync::RwLock<HashMap<usize, usize>>> {
     }
 }
 
-impl Backend for concache::crossbeam::Map {
+impl Backend for concache::crossbeam::Map<usize, usize> {
     fn b_get(&mut self, key: usize) -> usize {
-        self.get(key as usize).unwrap_or(0) as usize
+        self.get(&(key as usize)).unwrap_or(0) as usize
     }
 
     fn b_put(&mut self, key: usize, value: usize) {
@@ -236,9 +236,9 @@ impl Backend for concache::crossbeam::Map {
     }
 }
 
-impl Backend for concache::manual::MapHandle {
+impl Backend for concache::manual::MapHandle<usize, usize> {
     fn b_get(&mut self, key: usize) -> usize {
-        self.get(key as usize).unwrap_or(0) as usize
+        self.get(&(key as usize)).unwrap_or(0) as usize
     }
 
     fn b_put(&mut self, key: usize, value: usize) {
