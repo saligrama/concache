@@ -384,8 +384,8 @@ mod tests {
     use std::thread;
 
     /*
-    the data produced is a bit strange because of the way I take mod to test only even values 
-    are inserted so the end number of values should be n/2 (computer style) and the capacity 
+    the data produced is a bit strange because of the way I take mod to test only even values
+    are inserted so the end number of values should be n/2 (computer style) and the capacity
     of the map should be equal to the greatest power of 2 less than n/2.
     */
     #[test]
@@ -424,7 +424,7 @@ mod tests {
 
     #[test]
     fn hashmap_delete() {
-        let mut handle = Map::with_capacity(8);
+        let handle = Map::with_capacity(8);
         handle.insert(1, 3);
         handle.insert(2, 5);
         handle.insert(3, 8);
@@ -451,7 +451,7 @@ mod tests {
 
     #[test]
     fn hashmap_basics() {
-        let mut new_hashmap = Map::with_capacity(8); //init with 2 buckets
+        let new_hashmap = Map::with_capacity(8); //init with 2 buckets
                                                      //input values
         new_hashmap.insert(1, 1);
         new_hashmap.insert(2, 5);
@@ -463,8 +463,8 @@ mod tests {
         new_hashmap.insert(3, 2);
         new_hashmap.insert(4, 1);
 
-        assert_eq!(new_hashmap.insert(20, 5), true); //repeated new
-        assert_eq!(new_hashmap.insert(3, 8), true); //repeated new
+        assert_eq!(new_hashmap.insert(20, 5), false); //repeated new
+        assert_eq!(new_hashmap.insert(3, 8), false); //repeated new
 
         new_hashmap.insert(3, 8); //repeated
 
