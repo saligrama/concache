@@ -38,7 +38,7 @@ where
     K: Eq,
     V: Copy,
 {
-    pub(super) fn insert(&self, kv: (K, V)) -> bool {
+    pub(super) fn insert(&self, kv: (K, V)) -> Option<*mut V> {
         let guard = epoch::pin();
 
         let mut node = &self.first;
@@ -53,8 +53,9 @@ where
                         //     unsafe { guard.unlinked(old); }
                         // }
                         let mut ins = Owned::new(kv.1);
-                        cur.kv.1.store_and_ref(ins, Ordering::SeqCst, &guard);
-                        return false;
+                        let old = cur.kv.1.load(Ordering::SeqCst, &guard);
+                        cur.kv.1.cas_and_ref(old, ins, Ordering::SeqCst, &guard);
+                        return Some(old.unwrap().as_raw());
                     }
                     node = &k.next;
 
@@ -63,14 +64,14 @@ where
                         let mut ins = Owned::new(Node::new(kv.0, kv.1));
                         ins.prev.store_shared(l, Ordering::SeqCst);
                         cur.next.store_and_ref(ins, Ordering::SeqCst, &guard);
-                        return true;
+                        return None;
                     }
                 }
                 None => {
                     // first is null
                     let mut ins = Owned::new(Node::new(kv.0, kv.1));
                     self.first.store_and_ref(ins, Ordering::SeqCst, &guard);
-                    return true;
+                    return None;
                 }
             };
         }

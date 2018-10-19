@@ -130,17 +130,17 @@ where
     /// assert_eq!(map.insert(37, "c"), false);
     /// assert_eq!(map.get(&37), Some("c"));
     /// ```
-    pub fn insert(&self, key: K, value: V) -> bool {
+    pub fn insert(&self, key: K, value: V) -> Option<*mut V> {
         let mut hsh = DefaultHasher::new();
         key.hash(&mut hsh);
         let h = hsh.finish() as usize;
 
         let ndx = h % self.bsize;
-        if self.mp[ndx].insert((key, value)) {
+        let ret = self.mp[ndx].insert((key, value));
+        if ret.is_none() {
             self.size.fetch_add(1, Ordering::SeqCst);
-            return true;
         }
-        false
+        ret
     }
 
     /// Returns a reference to the value corresponding to the key.
