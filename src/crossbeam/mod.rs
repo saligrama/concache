@@ -123,24 +123,28 @@ where
     /// use concache::crossbeam::Map;
     ///
     /// let mut map = Map::with_capacity(16);
-    /// assert_eq!(map.insert(37, "a"), true);
+    /// assert_eq!(map.insert(37, "a"), None);
     /// assert_eq!(map.is_empty(), false);
     ///
     /// map.insert(37, "b");
-    /// assert_eq!(map.insert(37, "c"), false);
+    /// assert_eq!(map.insert(37, "c"), Some("b"));
     /// assert_eq!(map.get(&37), Some("c"));
     /// ```
-    pub fn insert(&self, key: K, value: V) -> Option<*mut V> {
+    pub fn insert(&self, key: K, value: V) -> Option<V> {
         let mut hsh = DefaultHasher::new();
         key.hash(&mut hsh);
         let h = hsh.finish() as usize;
 
         let ndx = h % self.bsize;
         let ret = self.mp[ndx].insert((key, value));
-        if ret.is_none() {
-            self.size.fetch_add(1, Ordering::SeqCst);
-        }
-        ret
+
+        return match ret {
+            Some(v) => Some(unsafe{ *v }),
+            None => {
+                self.size.fetch_add(1, Ordering::SeqCst);
+                None
+            }
+        };
     }
 
     /// Returns a reference to the value corresponding to the key.
@@ -463,8 +467,8 @@ mod tests {
         new_hashmap.insert(3, 2);
         new_hashmap.insert(4, 1);
 
-        assert_eq!(new_hashmap.insert(20, 5), false); //repeated new
-        assert_eq!(new_hashmap.insert(3, 8), false); //repeated new
+        assert_eq!(new_hashmap.insert(20, 5).unwrap(), 3); //repeated new
+        assert_eq!(new_hashmap.insert(3, 8).unwrap(), 2); //repeated new
 
         new_hashmap.insert(3, 8); //repeated
 
