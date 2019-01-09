@@ -32,7 +32,7 @@ mod linked_list;
 use self::linked_list::{LinkedList, Node};
 
 const OSC: Ordering = Ordering::SeqCst;
-const REFRESH_RATE: usize = 100;
+const REFRESH_RATE: usize = 1000;
 
 struct Table<K, V> {
     nbuckets: usize,
@@ -120,52 +120,52 @@ where
 {
 }
 
-// impl<K, V> MapHandle<K, V> {
-//     fn cleanup(&mut self) {
-//         //epoch set up, load all of the values
-//         let mut started = Vec::new();
-//         let handles_map = self.map.handles.read().unwrap();
-//         for h in handles_map.iter() {
-//             started.push(h.load(OSC));
-//         }
-//         for (i, h) in handles_map.iter().enumerate() {
-//             if started[i] % 2 == 0 {
-//                 continue;
-//             }
-//             let mut check = h.load(OSC);
-//             let mut iter = 0;
-//             while (check <= started[i]) && (check % 2 == 1) {
-//                 if iter % 4 == 0 {
-//                     // we may be waiting for a thread that isn't currently running
-//                     thread::yield_now();
-//                 }
-//                 check = h.load(OSC);
-//                 iter += 1;
-//                 //do nothing, epoch spinning
-//             }
-//         }
+impl<K, V> MapHandle<K, V> {
+    fn cleanup(&mut self) {
+        //epoch set up, load all of the values
+        let mut started = Vec::new();
+        let handles_map = self.map.handles.read().unwrap();
+        for h in handles_map.iter() {
+            started.push(h.load(OSC));
+        }
+        for (i, h) in handles_map.iter().enumerate() {
+            if started[i] % 2 == 0 {
+                continue;
+            }
+            let mut check = h.load(OSC);
+            let mut iter = 0;
+            while (check <= started[i]) && (check % 2 == 1) {
+                if iter % 4 == 0 {
+                    // we may be waiting for a thread that isn't currently running
+                    thread::yield_now();
+                }
+                check = h.load(OSC);
+                iter += 1;
+                //do nothing, epoch spinning
+            }
+        }
 
-//         //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
-//         //epoch rolled over, so we know we have exclusive access to the node
+        //physical deletion, epoch has rolled over so we are safe to proceed with physical deletion
+        //epoch rolled over, so we know we have exclusive access to the node
 
-//         // println!("{:?}", &self.remove_nodes.len());
-//         for to_drop in &self.remove_nodes {
-//             let n = unsafe { (&**to_drop).val.load(OSC) };
-//             self.remove_val.push(n);
-//             //[drop the value inside of the node, or add to remove_val]
-//             drop(unsafe { Box::from_raw(*to_drop) });
-//         }
+        // println!("{:?}", &self.remove_nodes.len());
+        for to_drop in &self.remove_nodes {
+            let n = unsafe { (&**to_drop).val.load(OSC) };
+            self.remove_val.push(n);
+            //[drop the value inside of the node, or add to remove_val]
+            drop(unsafe { Box::from_raw(*to_drop) });
+        }
 
-//         // println!("{:?}", &self.remove_val.len());
-//         for to_drop in &self.remove_val {
-//             drop(unsafe { Box::from_raw(*to_drop) });
-//         }
+        // println!("{:?}", &self.remove_val.len());
+        for to_drop in &self.remove_val {
+            drop(unsafe { Box::from_raw(*to_drop) });
+        }
 
-//         //reset
-//         self.remove_nodes = Vec::new();
-//         self.remove_val = Vec::new();
-//     }
-// }
+        //reset
+        self.remove_nodes = Vec::new();
+        self.remove_val = Vec::new();
+    }
+}
 
 impl<K, V> MapHandle<K, V>
 where
@@ -194,7 +194,7 @@ where
     /// assert_eq!(map.get(&37), Some("c"));
     /// ```
     pub fn insert(&mut self, key: K, value: V) -> Option<V> {
-        // self.refresh = (self.refresh + 1) % REFRESH_RATE;
+        self.refresh = self.refresh + 1;
 
         self.epoch_counter.fetch_add(1, OSC);
         let val = self.map.table.insert(key, value, &mut self.remove_nodes);
@@ -228,16 +228,16 @@ where
     /// assert_eq!(map.get(&2), None);
     /// ```
     pub fn get(&mut self, key: &K) -> Option<V> {
-        // self.refresh = (self.refresh + 1) % REFRESH_RATE;
+        self.refresh = self.refresh + 1;
 
         self.epoch_counter.fetch_add(1, OSC);
         let ret = self.map.table.get(key, &mut self.remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
 
-        // if self.refresh == REFRESH_RATE {
-        //     self.refresh = 0;
-        //     self.cleanup();
-        // }
+        if self.refresh == REFRESH_RATE {
+            self.refresh = 0;
+            self.cleanup();
+        }
 
         ret
     }
@@ -256,16 +256,16 @@ where
     /// assert_eq!(map.remove(&1), None);
     /// ```
     pub fn remove(&mut self, key: &K) -> Option<V> {
-        // self.refresh = (self.refresh + 1) % REFRESH_RATE;
+        self.refresh = self.refresh + 1;
 
         self.epoch_counter.fetch_add(1, OSC);
         let ret = self.map.table.delete(key, &mut self.remove_nodes);
         self.epoch_counter.fetch_add(1, OSC);
 
-        // if self.refresh == REFRESH_RATE {
-        //     self.refresh = 0;
-        //     self.cleanup();
-        // }
+        if self.refresh == REFRESH_RATE {
+            self.refresh = 0;
+            self.cleanup();
+        }
 
         ret
     }
@@ -402,7 +402,7 @@ mod tests {
     }
 
     #[test]
-    fn hashmap_delete() {
+    fn hashmap_remove() {
         let mut handle = Map::with_capacity(8);
         handle.insert(1, 3);
         handle.insert(2, 5);
@@ -430,8 +430,8 @@ mod tests {
 
     #[test]
     fn hashmap_basics() {
-        let mut new_hashmap = Map::with_capacity(8); //init with 2 buckets
-                                                     //input values
+        let mut new_hashmap = Map::with_capacity(8);
+
         new_hashmap.insert(1, 1);
         new_hashmap.insert(2, 5);
         new_hashmap.insert(12, 5);
@@ -444,7 +444,7 @@ mod tests {
 
         assert_eq!(new_hashmap.insert(20, 5).unwrap(), 3); //repeated
         assert_eq!(new_hashmap.insert(3, 8).unwrap(), 2); //repeated
-        assert_eq!(new_hashmap.insert(5, 5), None); //repeated
+        assert_eq!(new_hashmap.insert(5, 5), None);
 
         let cln = Arc::clone(&new_hashmap.map);
         assert_eq!(cln.table.nitems.load(OSC), 9);
