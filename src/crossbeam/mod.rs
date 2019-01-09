@@ -123,24 +123,28 @@ where
     /// use concache::crossbeam::Map;
     ///
     /// let mut map = Map::with_capacity(16);
-    /// assert_eq!(map.insert(37, "a"), true);
+    /// assert_eq!(map.insert(37, "a"), None);
     /// assert_eq!(map.is_empty(), false);
     ///
     /// map.insert(37, "b");
-    /// assert_eq!(map.insert(37, "c"), false);
+    /// assert_eq!(map.insert(37, "c"), Some("b"));
     /// assert_eq!(map.get(&37), Some("c"));
     /// ```
-    pub fn insert(&self, key: K, value: V) -> bool {
+    pub fn insert(&self, key: K, value: V) -> Option<V> {
         let mut hsh = DefaultHasher::new();
         key.hash(&mut hsh);
         let h = hsh.finish() as usize;
 
         let ndx = h % self.bsize;
-        if self.mp[ndx].insert((key, value)) {
-            self.size.fetch_add(1, Ordering::SeqCst);
-            return true;
-        }
-        false
+        let ret = self.mp[ndx].insert((key, value));
+
+        return match ret {
+            Some(v) => Some(unsafe{ *v }),
+            None => {
+                self.size.fetch_add(1, Ordering::SeqCst);
+                None
+            }
+        };
     }
 
     /// Returns a reference to the value corresponding to the key.
@@ -384,8 +388,8 @@ mod tests {
     use std::thread;
 
     /*
-    the data produced is a bit strange because of the way I take mod to test only even values 
-    are inserted so the end number of values should be n/2 (computer style) and the capacity 
+    the data produced is a bit strange because of the way I take mod to test only even values
+    are inserted so the end number of values should be n/2 (computer style) and the capacity
     of the map should be equal to the greatest power of 2 less than n/2.
     */
     #[test]
@@ -424,7 +428,7 @@ mod tests {
 
     #[test]
     fn hashmap_delete() {
-        let mut handle = Map::with_capacity(8);
+        let handle = Map::with_capacity(8);
         handle.insert(1, 3);
         handle.insert(2, 5);
         handle.insert(3, 8);
@@ -451,7 +455,7 @@ mod tests {
 
     #[test]
     fn hashmap_basics() {
-        let mut new_hashmap = Map::with_capacity(8); //init with 2 buckets
+        let new_hashmap = Map::with_capacity(8); //init with 2 buckets
                                                      //input values
         new_hashmap.insert(1, 1);
         new_hashmap.insert(2, 5);
@@ -463,8 +467,8 @@ mod tests {
         new_hashmap.insert(3, 2);
         new_hashmap.insert(4, 1);
 
-        assert_eq!(new_hashmap.insert(20, 5), true); //repeated new
-        assert_eq!(new_hashmap.insert(3, 8), true); //repeated new
+        assert_eq!(new_hashmap.insert(20, 5).unwrap(), 3); //repeated new
+        assert_eq!(new_hashmap.insert(3, 8).unwrap(), 2); //repeated new
 
         new_hashmap.insert(3, 8); //repeated
 

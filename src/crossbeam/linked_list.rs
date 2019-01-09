@@ -38,7 +38,7 @@ where
     K: Eq,
     V: Copy,
 {
-    pub(super) fn insert(&self, kv: (K, V)) -> bool {
+    pub(super) fn insert(&self, kv: (K, V)) -> Option<*mut V> {
         let guard = epoch::pin();
 
         let mut node = &self.first;
@@ -53,8 +53,9 @@ where
                         //     unsafe { guard.unlinked(old); }
                         // }
                         let mut ins = Owned::new(kv.1);
-                        cur.kv.1.store_and_ref(ins, Ordering::SeqCst, &guard);
-                        return false;
+                        let old = cur.kv.1.load(Ordering::SeqCst, &guard);
+                        cur.kv.1.cas_and_ref(old, ins, Ordering::SeqCst, &guard);
+                        return Some(old.unwrap().as_raw());
                     }
                     node = &k.next;
 
@@ -63,14 +64,14 @@ where
                         let mut ins = Owned::new(Node::new(kv.0, kv.1));
                         ins.prev.store_shared(l, Ordering::SeqCst);
                         cur.next.store_and_ref(ins, Ordering::SeqCst, &guard);
-                        return true;
+                        return None;
                     }
                 }
                 None => {
                     // first is null
                     let mut ins = Owned::new(Node::new(kv.0, kv.1));
                     self.first.store_and_ref(ins, Ordering::SeqCst, &guard);
-                    return true;
+                    return None;
                 }
             };
         }
@@ -113,26 +114,45 @@ where
                         let next = k.next.load(Ordering::SeqCst, &guard);
                         let prev = k.prev.load(Ordering::SeqCst, &guard);
 
-                        node.cas_shared(Some(k), next, Ordering::Release);
+                        if next.is_some() {
+                            if prev.is_some() {
+                                let n = next.unwrap();
+                                let p = prev.unwrap();
 
-                        let mut new_node = match node.load(Ordering::SeqCst, &guard) {
-                            Some(k) => k,
-                            None => {
-                                continue;
+                                if !p.next.cas_shared(Some(k), next, Ordering::SeqCst) {
+                                    return false;
+                                }
+                                if !n.prev.cas_shared(Some(k), next, Ordering::SeqCst) {
+                                    return false;
+                                }
+                            } else {
+                                let n = next.unwrap();
+                                if !n.prev.cas_shared(Some(k), None, Ordering::SeqCst) {
+                                    return false;
+                                }
+                                if !self.first.cas_shared(Some(k), next, Ordering::SeqCst) {
+                                    return false;
+                                }
                             }
-                        };
-                        let mut new_node_raw_cur = unsafe { &*new_node.as_raw() };
+                        } else {
+                            if prev.is_some() {
+                                let p = prev.unwrap();
 
-                        if new_node_raw_cur
-                            .prev
-                            .cas_shared(Some(k), prev, Ordering::Release)
-                        {
-                            unsafe { guard.unlinked(k) };
-                            return true;
+                                if !p.next.cas_shared(Some(k), None, Ordering::SeqCst) {
+                                    return false;
+                                }
+                            } else {
+                                if !self.first.cas_shared(Some(k), next, Ordering::SeqCst) {
+                                    return false;
+                                }
+                            }
                         }
+
+                        unsafe { guard.unlinked(k) };
+                        return true;
                     }
                     node = &k.next;
-                }
+                },
                 None => {
                     // the node with key key didn't exist
                     return false;
