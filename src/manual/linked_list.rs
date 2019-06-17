@@ -29,13 +29,13 @@ impl<K, V> Node<K, V> {
     }
 }
 
-impl<K, V> Drop for Node<K, V> {
-    fn drop(&mut self) {    
-        unsafe {    
-            drop(Box::from_raw(self.val.load(OSC)));    
-        }    
-    }                                   
-}  
+// impl<K, V> Drop for Node<K, V> {
+//     fn drop(&mut self) {
+//         unsafe {
+//             drop(Box::from_raw(self.val.load(OSC)));
+//         }
+//     }
+// }
 
 #[derive(Debug)]
 pub(super) struct LinkedList<K, V> {
@@ -83,7 +83,8 @@ where
                 let rn = unsafe { &*right_node };
                 let v = Box::new(val);
                 let old = rn.val.swap(Box::into_raw(v), OSC);
-                drop(new_node);
+                // drop(new_node);
+                remove_nodes.push(Box::into_raw(new_node));
                 return Some(old);
             }
 

@@ -162,9 +162,9 @@ where
             drop(unsafe { Box::from_raw(*to_drop) });
         }
 
-        // for to_drop in &self.remove_val {
-        //     drop(unsafe { Box::from_raw(*to_drop) });
-        // }
+        for to_drop in &self.remove_val {
+            drop(unsafe { Box::from_raw(*to_drop) });
+        }
 
         //reset
         self.remove_nodes = Vec::new();
@@ -209,7 +209,7 @@ where
 
         if let Some(v) = val {
             ret = Some(unsafe { *v });
-            drop(unsafe { Box::from_raw(v) });
+            // drop(unsafe { Box::from_raw(v) });
             self.remove_val.push(v);
         }
 
@@ -382,7 +382,7 @@ mod tests {
             let mut new_handle = handle.clone();
 
             threads.push(thread::spawn(move || {
-                let num_iterations = 10000;
+                let num_iterations = 1000000;
                 for _ in 0..num_iterations {
                     let mut rng = thread_rng();
                     let val = rng.gen_range(0, 8);
@@ -471,26 +471,26 @@ mod tests {
         assert!(new_hashmap.get(&3).unwrap() != 2); // test that it changed
     }
 
-    /**
-     * Added Test Case from https://gitlab.nebulanet.cc/xacrimon/rs-hm-bench
-     */
-    #[test]
-    fn rs_hm_bench() {
-        const ITER_C: usize = 20000;
-        const INSV: [u128; 16] = [18, 38, 86182734, 9491, 8471, 98591, 9, 871, 98123, 98391, 9863, 1982, 9386923, 1986, 9824, 1982];
-        const INSV2: [u128; 16] = [9491, 18, 38, 86182734, 8471, 98591, 9, 871, 98123, 98391, 9863, 1982, 9386923, 1986, 9824, 1982];
-        let chunk_iter_c = (0..ITER_C).step_by(1250);
-        let map_h = Map::with_capacity(ITER_C);
+    // /**
+    //  * Added Test Case from https://gitlab.nebulanet.cc/xacrimon/rs-hm-bench
+    //  */
+    // #[test]
+    // fn rs_hm_bench() {
+    //     const ITER_C: usize = 20000;
+    //     const INSV: [u128; 16] = [18, 38, 86182734, 9491, 8471, 98591, 9, 871, 98123, 98391, 9863, 1982, 9386923, 1986, 9824, 1982];
+    //     const INSV2: [u128; 16] = [9491, 18, 38, 86182734, 8471, 98591, 9, 871, 98123, 98391, 9863, 1982, 9386923, 1986, 9824, 1982];
+    //     let chunk_iter_c = (0..ITER_C).step_by(1250);
+    //     let map_h = Map::with_capacity(ITER_C);
 
-        for chunk in chunk_iter_c {
-            let mut map = map_h.clone();
-            thread::spawn(move || {
-                let end = chunk + 1250;
-                for i in chunk..end {
-                    map.insert(i, INSV);
-                    map.insert(i, INSV2);
-                }
-            });
-        }
-    }
+    //     for chunk in chunk_iter_c {
+    //         let mut map = map_h.clone();
+    //         thread::spawn(move || {
+    //             let end = chunk + 1250;
+    //             for i in chunk..end {
+    //                 map.insert(i, INSV);
+    //                 map.insert(i, INSV2);
+    //             }
+    //         });
+    //     }
+    // }
 }
