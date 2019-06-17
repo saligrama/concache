@@ -34,7 +34,7 @@ mod linked_list;
 use self::linked_list::{LinkedList, Node};
 
 const OSC: Ordering = Ordering::SeqCst;
-const REFRESH_RATE: usize = 1;
+const REFRESH_RATE: usize = 1000;
 
 struct Table<K, V> {
     nbuckets: usize,
