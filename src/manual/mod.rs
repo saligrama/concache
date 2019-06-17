@@ -27,12 +27,14 @@ use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock};
 use std::thread;
+use std::fmt::Debug;
+
 
 mod linked_list;
 use self::linked_list::{LinkedList, Node};
 
 const OSC: Ordering = Ordering::SeqCst;
-const REFRESH_RATE: usize = 1000;
+const REFRESH_RATE: usize = 1;
 
 struct Table<K, V> {
     nbuckets: usize,
@@ -59,7 +61,7 @@ impl<K, V> Table<K, V> {
 impl<K, V> Table<K, V>
 where
     K: Hash + Ord,
-    V: Copy,
+    V: Copy + Debug,
 {
     fn insert(&self, key: K, value: V, remove_nodes: &mut Vec<*mut Node<K, V>>) -> Option<*mut V> {
         let mut hasher = DefaultHasher::new();
@@ -116,11 +118,15 @@ pub struct MapHandle<K, V> {
 unsafe impl<K, V> Send for MapHandle<K, V>
 where
     K: Send + Sync,
-    V: Send,
+    V: Send + Debug,
 {
 }
 
-impl<K, V> MapHandle<K, V> {
+impl<K, V> MapHandle<K, V>
+where
+    V: Debug,
+{
+
     fn cleanup(&mut self) {
         //epoch set up, load all of the values
         let mut started = Vec::new();
@@ -156,10 +162,9 @@ impl<K, V> MapHandle<K, V> {
             drop(unsafe { Box::from_raw(*to_drop) });
         }
 
-        // println!("{:?}", &self.remove_val.len());
-        for to_drop in &self.remove_val {
-            drop(unsafe { Box::from_raw(*to_drop) });
-        }
+        // for to_drop in &self.remove_val {
+        //     drop(unsafe { Box::from_raw(*to_drop) });
+        // }
 
         //reset
         self.remove_nodes = Vec::new();
@@ -170,7 +175,7 @@ impl<K, V> MapHandle<K, V> {
 impl<K, V> MapHandle<K, V>
 where
     K: Hash + Ord,
-    V: Copy,
+    V: Copy + Debug,
 {
     /// Inserts a key-value pair into the map.
     ///
@@ -204,13 +209,14 @@ where
 
         if let Some(v) = val {
             ret = Some(unsafe { *v });
+            drop(unsafe { Box::from_raw(v) });
             self.remove_val.push(v);
         }
 
-        // if self.refresh == REFRESH_RATE {
-        //     self.refresh = 0;
-        //     self.cleanup();
-        // }
+        if self.refresh == REFRESH_RATE {
+            self.refresh = 0;
+            self.cleanup();
+        }
 
         ret
     }
@@ -370,16 +376,16 @@ mod tests {
     fn hashmap_concurr() {
         let handle = Map::with_capacity(8); //changed this,
         let mut threads = vec![];
-        let nthreads = 5;
+        let nthreads = 10;
         // let handle = MapHandle::new(Arc::clone(&new_hashmap).table.read().unwrap());
         for _ in 0..nthreads {
             let mut new_handle = handle.clone();
 
             threads.push(thread::spawn(move || {
-                let num_iterations = 1000000;
+                let num_iterations = 10000;
                 for _ in 0..num_iterations {
                     let mut rng = thread_rng();
-                    let val = rng.gen_range(0, 128);
+                    let val = rng.gen_range(0, 8);
                     let two = rng.gen_range(0, 3);
 
                     if two % 3 == 0 {
@@ -463,5 +469,28 @@ mod tests {
         assert_eq!(new_hashmap.get(&1).unwrap(), 1);
         assert_eq!(new_hashmap.get(&0).unwrap(), 0);
         assert!(new_hashmap.get(&3).unwrap() != 2); // test that it changed
+    }
+
+    /**
+     * Added Test Case from https://gitlab.nebulanet.cc/xacrimon/rs-hm-bench
+     */
+    #[test]
+    fn rs_hm_bench() {
+        const ITER_C: usize = 20000;
+        const INSV: [u128; 16] = [18, 38, 86182734, 9491, 8471, 98591, 9, 871, 98123, 98391, 9863, 1982, 9386923, 1986, 9824, 1982];
+        const INSV2: [u128; 16] = [9491, 18, 38, 86182734, 8471, 98591, 9, 871, 98123, 98391, 9863, 1982, 9386923, 1986, 9824, 1982];
+        let chunk_iter_c = (0..ITER_C).step_by(1250);
+        let map_h = Map::with_capacity(ITER_C);
+
+        for chunk in chunk_iter_c {
+            let mut map = map_h.clone();
+            thread::spawn(move || {
+                let end = chunk + 1250;
+                for i in chunk..end {
+                    map.insert(i, INSV);
+                    map.insert(i, INSV2);
+                }
+            });
+        }
     }
 }

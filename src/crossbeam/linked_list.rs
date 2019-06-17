@@ -46,13 +46,13 @@ where
             let l = node.load(Ordering::SeqCst, &guard);
             match l {
                 Some(k) => {
-                    let mut raw = k.as_raw();
-                    let mut cur = unsafe { &*raw };
+                    let raw = k.as_raw();
+                    let cur = unsafe { &*raw };
                     if &cur.kv.0 == &kv.0 && cur.active.load(Ordering::SeqCst) {
                         // if let Some(old) = cur.kv.1.load(Ordering::SeqCst, &guard) {
                         //     unsafe { guard.unlinked(old); }
                         // }
-                        let mut ins = Owned::new(kv.1);
+                        let ins = Owned::new(kv.1);
                         let old = cur.kv.1.load(Ordering::SeqCst, &guard);
                         cur.kv.1.cas_and_ref(old, ins, Ordering::SeqCst, &guard);
                         return Some(old.unwrap().as_raw());
@@ -61,7 +61,7 @@ where
 
                     // key does not exist
                     if cur.next.load(Ordering::SeqCst, &guard).is_none() {
-                        let mut ins = Owned::new(Node::new(kv.0, kv.1));
+                        let ins = Owned::new(Node::new(kv.0, kv.1));
                         ins.prev.store_shared(l, Ordering::SeqCst);
                         cur.next.store_and_ref(ins, Ordering::SeqCst, &guard);
                         return None;
@@ -69,7 +69,7 @@ where
                 }
                 None => {
                     // first is null
-                    let mut ins = Owned::new(Node::new(kv.0, kv.1));
+                    let ins = Owned::new(Node::new(kv.0, kv.1));
                     self.first.store_and_ref(ins, Ordering::SeqCst, &guard);
                     return None;
                 }
@@ -84,8 +84,8 @@ where
         loop {
             match node.load(Ordering::SeqCst, &guard) {
                 Some(k) => {
-                    let mut raw = k.as_raw();
-                    let mut cur = unsafe { &*raw };
+                    let raw = k.as_raw();
+                    let cur = unsafe { &*raw };
                     if &cur.kv.0 == key && cur.active.load(Ordering::SeqCst) {
                         let value = cur.kv.1.load(Ordering::SeqCst, &guard).unwrap();
                         return Some(**value);
@@ -106,8 +106,8 @@ where
         loop {
             match node.load(Ordering::SeqCst, &guard) {
                 Some(k) => {
-                    let mut raw = k.as_raw();
-                    let mut cur = unsafe { &*raw };
+                    let raw = k.as_raw();
+                    let cur = unsafe { &*raw };
                     if &cur.kv.0 == key && cur.active.load(Ordering::SeqCst) {
                         cur.active.store(false, Ordering::SeqCst);
 
@@ -174,8 +174,8 @@ where
         let mut ret = String::new();
         let mut node = &self.first;
         while let Some(k) = node.load(Ordering::SeqCst, &guard) {
-            let mut raw = k.as_raw();
-            let mut cur = unsafe { &*raw };
+            let raw = k.as_raw();
+            let cur = unsafe { &*raw };
             if cur.active.load(Ordering::SeqCst) {
                 let key = &cur.kv.0;
                 let value = cur.kv.1.load(Ordering::SeqCst, &guard).unwrap();

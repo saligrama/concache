@@ -29,6 +29,14 @@ impl<K, V> Node<K, V> {
     }
 }
 
+impl<K, V> Drop for Node<K, V> {
+    fn drop(&mut self) {    
+        unsafe {    
+            drop(Box::from_raw(self.val.load(OSC)));    
+        }    
+    }                                   
+}  
+
 #[derive(Debug)]
 pub(super) struct LinkedList<K, V> {
     head: AtomicPtr<Node<K, V>>,
@@ -75,6 +83,7 @@ where
                 let rn = unsafe { &*right_node };
                 let v = Box::new(val);
                 let old = rn.val.swap(Box::into_raw(v), OSC);
+                drop(new_node);
                 return Some(old);
             }
 
@@ -152,8 +161,10 @@ where
                 &mut left_node,
                 remove_nodes,
             );
+        } else {
+            remove_nodes.push(right_node);
         }
-
+        
         Some(old) //successful delete
     }
 
