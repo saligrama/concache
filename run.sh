@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cargo build --release
+cargo build --release --bin benchmark --features bench
 rm results.log
 for w in 1 2 4; do
 	for d in uniform skewed; do
