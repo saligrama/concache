@@ -1,9 +1,5 @@
 #!/bin/bash
 
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
 cargo build --release --bin benchmark --features bench
 rm results.log
 for w in 1 2 4; do
