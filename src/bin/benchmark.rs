@@ -151,6 +151,30 @@ fn main() {
         stat("ccl::DHashMap", "read", rres);
     }
 
+    // benchmark kudzu
+    {
+        let map: kudzu::Map<usize, usize> = kudzu::Map::new();
+        let map = sync::Arc::new(map);
+        let start = time::Instant::now();
+        let end = start + dur;
+        join.extend((0..readers).map(|_| {
+            let map = map.clone();
+            let dist = dist.to_owned();
+            thread::spawn(move || drive(map, end, &dist, false, span))
+        }));
+        join.extend((0..writers).map(|_| {
+            let map = map.clone();
+            let dist = dist.to_owned();
+            thread::spawn(move || drive(map, end, &dist, true, span))
+        }));
+        let (wres, rres): (Vec<_>, _) = join
+            .drain(..)
+            .map(|jh| jh.join().unwrap())
+            .partition(|&(write, _)| write);
+        stat("kudzu", "write", wres);
+        stat("kudzu", "read", rres);
+    }
+
     // benchmark concache::manual
     {
         let map = concache::manual::Map::with_capacity(5_000_000);
@@ -230,6 +254,20 @@ impl Backend for sync::Arc<sync::RwLock<HashMap<usize, usize>>> {
 }
 
 impl Backend for sync::Arc<DHashMap<usize, usize>> {
+    fn b_get(&mut self, key: usize) -> usize {
+        match self.get(&(key as usize)) {
+            Some(t) => *t as usize,
+            None => 0,
+        }
+        //*self.get(&(key as usize)).unwrap() as usize
+    }
+
+    fn b_put(&mut self, key: usize, value: usize) {
+        self.insert(key as usize, value as usize);
+    }
+}
+
+impl Backend for sync::Arc<kudzu::Map<usize, usize>> {
     fn b_get(&mut self, key: usize) -> usize {
         match self.get(&(key as usize)) {
             Some(t) => *t as usize,
