@@ -243,20 +243,6 @@ impl Backend for sync::Arc<DHashMap<usize, usize>> {
     }
 }
 
-impl Backend for sync::Arc<kudzu::Map<usize, usize>> {
-    fn b_get(&mut self, key: usize) -> usize {
-        match self.get(&(key as usize)) {
-            Some(t) => *t as usize,
-            None => 0,
-        }
-        //*self.get(&(key as usize)).unwrap() as usize
-    }
-
-    fn b_put(&mut self, key: usize, value: usize) {
-        self.insert(key as usize, value as usize);
-    }
-}
-
 impl Backend for concache::manual::MapHandle<usize, usize> {
     fn b_get(&mut self, key: usize) -> usize {
         self.get(&(key as usize)).unwrap_or(0) as usize
