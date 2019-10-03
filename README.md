@@ -17,8 +17,8 @@ Table resizing is not yet supported in either implementation, but the map will a
 due to the linked implementation; instead, performance will decrease as the map is filled with
 more keys.
 
-The crate was written by Aditya Saligrama and Andrew Shen while writing _A practical analysis
-of Rust’s concurrency story_ as their 2018 project for [MIT
+The crate was written by Aditya Saligrama and Andrew Shen while writing [_A practical analysis
+of Rust’s concurrency story_](https://arxiv.org/abs/1904.12210) as their 2018 project for [MIT
 PRIMES](https://math.mit.edu/research/highschool/primes/program.php).
 
 ## Performance
