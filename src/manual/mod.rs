@@ -23,12 +23,11 @@
 //! but for the time being, values have to be `Copy`.
 
 use std::collections::hash_map::DefaultHasher;
+use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock};
 use std::thread;
-use std::fmt::Debug;
-
 
 mod linked_list;
 use self::linked_list::{LinkedList, Node};
@@ -126,7 +125,6 @@ impl<K, V> MapHandle<K, V>
 where
     V: Debug,
 {
-
     fn cleanup(&mut self) {
         //epoch set up, load all of the values
         let mut started = Vec::new();
@@ -368,8 +366,8 @@ mod tests {
     use std::thread;
 
     /*
-    the data produced is a bit strange because of the way I take mod to test only even values 
-    are inserted so the end number of values should be n/2 (computer style) and the capacity 
+    the data produced is a bit strange because of the way I take mod to test only even values
+    are inserted so the end number of values should be n/2 (computer style) and the capacity
     of the map should be equal to the greatest power of 2 less than n/2.
     */
     #[test]

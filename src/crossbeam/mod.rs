@@ -139,7 +139,7 @@ where
         let ret = self.mp[ndx].insert((key, value));
 
         return match ret {
-            Some(v) => Some(unsafe{ *v }),
+            Some(v) => Some(unsafe { *v }),
             None => {
                 self.size.fetch_add(1, Ordering::SeqCst);
                 None

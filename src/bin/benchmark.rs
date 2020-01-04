@@ -1,10 +1,10 @@
 extern crate chashmap;
 #[macro_use]
 extern crate clap;
+extern crate ccl;
 extern crate concache;
 extern crate rand;
 extern crate zipf;
-extern crate ccl;
 
 use ccl::dhashmap::DHashMap;
 use chashmap::CHashMap;

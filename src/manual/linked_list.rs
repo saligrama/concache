@@ -74,11 +74,12 @@ where
             let right_node =
                 self.search(new_node.key.as_ref().unwrap(), &mut left_node, remove_nodes);
 
-            if right_node != self.tail.load(OSC) && unsafe { &*right_node }
-                .key
-                .as_ref()
-                .map(|k| k == new_node.key.as_ref().unwrap())
-                .unwrap_or(false)
+            if right_node != self.tail.load(OSC)
+                && unsafe { &*right_node }
+                    .key
+                    .as_ref()
+                    .map(|k| k == new_node.key.as_ref().unwrap())
+                    .unwrap_or(false)
             {
                 let rn = unsafe { &*right_node };
                 let v = Box::new(val);
@@ -105,11 +106,12 @@ where
     pub(super) fn get(&self, search_key: &K, remove_nodes: &mut Vec<*mut Node<K, V>>) -> Option<V> {
         let mut left_node = ptr::null_mut();
         let right_node = self.search(&search_key, &mut left_node, remove_nodes);
-        if right_node == self.tail.load(OSC) || unsafe { &*right_node }
-            .key
-            .as_ref()
-            .map(|k| k != search_key)
-            .unwrap_or(true)
+        if right_node == self.tail.load(OSC)
+            || unsafe { &*right_node }
+                .key
+                .as_ref()
+                .map(|k| k != search_key)
+                .unwrap_or(true)
         {
             None
         } else {
@@ -128,11 +130,12 @@ where
 
         loop {
             right_node = self.search(search_key, &mut left_node, remove_nodes);
-            if (right_node == self.tail.load(OSC)) || unsafe { &*right_node }
-                .key
-                .as_ref()
-                .map(|k| k != search_key)
-                .unwrap_or(true)
+            if (right_node == self.tail.load(OSC))
+                || unsafe { &*right_node }
+                    .key
+                    .as_ref()
+                    .map(|k| k != search_key)
+                    .unwrap_or(true)
             {
                 return None; //failed delete
             }
@@ -165,7 +168,7 @@ where
         } else {
             remove_nodes.push(right_node);
         }
-        
+
         Some(old) //successful delete
     }
 
@@ -204,11 +207,12 @@ where
                     break;
                 }
                 t_next = unsafe { &*t }.next.load(OSC);
-                if !Self::is_marked_reference(t_next) && unsafe { &*t }
-                    .key
-                    .as_ref()
-                    .map(|k| k >= search_key)
-                    .unwrap_or(false)
+                if !Self::is_marked_reference(t_next)
+                    && unsafe { &*t }
+                        .key
+                        .as_ref()
+                        .map(|k| k >= search_key)
+                        .unwrap_or(false)
                 {
                     break;
                 }
