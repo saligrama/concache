@@ -152,7 +152,7 @@ where
                         return true;
                     }
                     node = &k.next;
-                },
+                }
                 None => {
                     // the node with key key didn't exist
                     return false;
